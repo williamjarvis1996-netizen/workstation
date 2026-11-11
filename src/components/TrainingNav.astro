@@ -8,6 +8,6 @@ const items = [
   { key: 'strength', label: 'Strength', href: base + 'strength/' },
 ];
 ---
-<nav class="training-nav" aria-label="Training">
+<nav class="training-nav" aria-label="Exercise">
   {items.map(item => <a href={item.href} aria-current={item.key === active ? 'page' : undefined}>{item.label}</a>)}
 </nav>
