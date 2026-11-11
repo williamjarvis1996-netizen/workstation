@@ -2,6 +2,8 @@ import { projectRisks } from './planning.mjs';
 import { portfolioProjects, readLife, updateLife, today } from './life.mjs';
 import { externalLink, make, safeUrl } from './storage.mjs';
 
+const base = import.meta.env.BASE_URL;
+
 const phaseGroups = [
   ['Pitch & development', /pitch|develop|concept/i],
   ['Pre-production', /pre.production/i],
@@ -68,7 +70,11 @@ document.addEventListener('astro:page-load', () => {
       } catch { feedback.textContent = 'Could not save the project handover.'; }
     });
     editor.append(make('summary', 'Edit handover'), form);
-    tile.append(top, make('h3', project.name, 'pcard-name'), make('div', [project.client, project.phase].filter(Boolean).join(' · '), 'pcard-client'),
+    const nameEl = make('h3', '', 'pcard-name');
+    const nameLink = make('a', project.name);
+    nameLink.href = base + 'work/' + project.code.toLowerCase() + '/';
+    nameEl.append(nameLink);
+    tile.append(top, nameEl, make('div', [project.client, project.phase].filter(Boolean).join(' · '), 'pcard-client'),
       milestone, editor, make('p', project.statusSummary, 'pcard-status'));
     const links = make('div', '', 'pcard-links');
     for (const link of project.links || []) {

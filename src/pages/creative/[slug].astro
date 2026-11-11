@@ -1,0 +1,55 @@
+---
+import Base from '../../layouts/Base.astro';
+import { dashboard } from '../../content/dashboard';
+
+export function getStaticPaths() {
+  return dashboard.creativeProjects.map(project => ({
+    params: { slug: project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '') },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const base = import.meta.env.BASE_URL;
+
+const statusColor: Record<string, string> = {
+  'Post-production': 'var(--color-accent)',
+  'Development': 'var(--color-warn)',
+  'Optioned': 'var(--color-success)',
+  'Festival circulation': '#a78bfa',
+};
+---
+<Base title={`${project.name} | Creative`} active="creative">
+  <div class="dashboard project-detail">
+    <nav class="project-breadcrumb">
+      <a href={base + 'creative/'}>Creative slate</a>
+      <span>/</span>
+      <span>{project.name}</span>
+    </nav>
+
+    <header class="project-hero" style={`--health-color: ${statusColor[project.status] || 'var(--color-accent)'}`}>
+      <div class="project-hero-top">
+        <span class="pcard-health" style={`background: ${statusColor[project.status] || 'var(--color-accent)'}22; color: ${statusColor[project.status] || 'var(--color-accent)'}`}>{project.status}</span>
+        <span class="project-priority">{project.type}</span>
+      </div>
+      <h1>{project.name}</h1>
+      <p class="project-meta">{project.type}</p>
+    </header>
+
+    <div class="project-grid">
+      <section class="panel project-section project-section--wide">
+        <h2>Summary</h2>
+        <p>{project.summary}</p>
+      </section>
+
+      {project.nextAction && (
+        <section class="panel project-section">
+          <h2>Next action</h2>
+          <div class="project-milestone-card">
+            <strong>{project.nextAction}</strong>
+          </div>
+        </section>
+      )}
+    </div>
+  </div>
+</Base>

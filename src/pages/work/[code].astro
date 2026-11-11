@@ -1,0 +1,116 @@
+---
+import Base from '../../layouts/Base.astro';
+import { dashboard } from '../../content/dashboard';
+import { safeUrl } from '../../lib/storage.mjs';
+
+export function getStaticPaths() {
+  return dashboard.projects.map(project => ({
+    params: { code: project.code.toLowerCase() },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const base = import.meta.env.BASE_URL;
+
+const tasks = dashboard.tasks.filter(t =>
+  t.project?.includes(project.code) || t.project?.includes(project.name.split(' ')[0])
+);
+const activity = dashboard.log.filter(entry =>
+  entry.title.toLowerCase().includes(project.name.split(' ')[0].toLowerCase()) ||
+  entry.title.toLowerCase().includes(project.code.toLowerCase()) ||
+  entry.content.toLowerCase().includes(project.code.toLowerCase())
+);
+
+const health: Record<string, string> = {
+  'on-track': 'var(--color-success)',
+  'at-risk': 'var(--color-warn)',
+  blocked: 'var(--color-danger)',
+};
+const priorityIcon: Record<string, string> = { high: '!', medium: '-', low: '·' };
+const sourceColors: Record<string, string> = {
+  slack: '#e01e5a', email: '#38bdf8', todoist: '#f87171', obsidian: '#a78bfa', manual: '#64748b',
+};
+---
+<Base title={`${project.name} | Work`} active="work">
+  <div class="dashboard project-detail">
+    <nav class="project-breadcrumb">
+      <a href={base + 'work/'}>Production board</a>
+      <span>/</span>
+      <span>{project.code}</span>
+    </nav>
+
+    <header class="project-hero" style={`--health-color: ${health[project.health] || health['on-track']}`}>
+      <div class="project-hero-top">
+        <span class="pcard-code">{project.code}</span>
+        <span class={`pcard-health pcard-health--${project.health}`}>{project.health.replace('-', ' ')}</span>
+        <span class="project-priority project-priority--{project.priority}">{project.priority}</span>
+      </div>
+      <h1>{project.name}</h1>
+      <p class="project-meta">{[project.client, project.phase, project.status !== 'active' && project.status].filter(Boolean).join(' · ')}</p>
+    </header>
+
+    <div class="project-grid">
+      <section class="panel project-section">
+        <h2>Status</h2>
+        <p>{project.statusSummary}</p>
+        {project.notes && <div class="project-notes"><h3>Notes</h3><p>{project.notes}</p></div>}
+      </section>
+
+      <section class="panel project-section">
+        <h2>Milestone</h2>
+        <div class="project-milestone-card">
+          <strong>{project.nextMilestone || 'No milestone set'}</strong>
+          {project.nextMilestoneDate && <span class="project-due">Due {project.nextMilestoneDate}</span>}
+        </div>
+        {(project.links?.length ?? 0) > 0 && (
+          <div class="project-links">
+            <h3>Links</h3>
+            <div class="pcard-links">
+              {project.links!.map(link => (
+                <a href={safeUrl(link.url)} target="_blank" rel="noopener">{link.label}
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4M9 3v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {tasks.length > 0 && (
+        <section class="panel project-section project-section--wide">
+          <h2>Tasks <span class="pill">{tasks.filter(t => !t.completed).length}</span></h2>
+          <div class="project-task-list">
+            {tasks.map(task => (
+              <div class={`project-task ${task.completed ? 'project-task--done' : ''}`}>
+                <span class={`project-task-priority project-task-priority--${task.priority}`}>{priorityIcon[task.priority]}</span>
+                <span class="project-task-title">{task.title}</span>
+                {task.due && <span class="project-task-due">{task.due}</span>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {activity.length > 0 && (
+        <section class="panel project-section project-section--wide">
+          <h2>Activity</h2>
+          <div class="project-activity">
+            {activity.map(entry => (
+              <details class="feed-item">
+                <summary>
+                  <span class="feed-dot" style={`background: ${sourceColors[entry.source]}`}></span>
+                  <span class="feed-title">{entry.title}</span>
+                  <span class="feed-source" style={`background: ${sourceColors[entry.source]}22; color: ${sourceColors[entry.source]}`}>{entry.source}</span>
+                  <span class="feed-date">{entry.date}</span>
+                  <span class="feed-chevron" aria-hidden="true"></span>
+                </summary>
+                <p class="feed-detail">{entry.content}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  </div>
+</Base>

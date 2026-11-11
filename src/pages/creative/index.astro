@@ -19,7 +19,7 @@ function artwork(value?: string) {
       {creativeProjects.map((project, index) => <article class="slate-tile" data-tone={index % 4}>
         <div class="slate-cover">
           {artwork(project.artwork) && <img src={artwork(project.artwork)} alt="" loading="lazy" />}
-          <div><span>{project.type}</span><h2>{project.name}</h2></div>
+          <div><span>{project.type}</span><h2><a href={base + 'creative/' + project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '') + '/'}>{project.name}</a></h2></div>
         </div>
         <div class="slate-copy">
           <span class="pill">{project.status}</span><p>{project.summary}</p>
