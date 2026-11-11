@@ -3,25 +3,36 @@ import { weekStart, workoutDistance } from './life.mjs';
 
 const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 
+function logDate(raw, year) {
+  const day = /^(\d{1,2})\s+([a-z]{3})$/i.exec(raw);
+  if (!day) return '';
+  const month = months.indexOf(day[2].toLowerCase()) + 1;
+  if (!month) return '';
+  const date = `${year}-${String(month).padStart(2, '0')}-${day[1].padStart(2, '0')}`;
+  const actual = new Date(date + 'T00:00:00Z');
+  return Number.isFinite(actual.getTime()) && actual.toISOString().slice(0, 10) === date ? date : '';
+}
+
+function tableRows(text, heading, year) {
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) throw new Error('Enter the year covered by the training log.');
+  const pattern = new RegExp(String.raw`^##[ \t]+${heading}[ \t]*\r?\n([\s\S]*?)(?=^##\s|$(?![\s\S]))`, 'm');
+  const table = text.match(pattern)?.[1];
+  if (!table) throw new Error('This file needs the Obsidian log’s “' + heading + '” table.');
+  return table.split(/\r?\n/).filter(line => line.startsWith('|')).flatMap(line => {
+    const [rawDate, ...cells] = line.split('|').slice(1).map(cell => cell.replace(/\*\*/g, '').trim());
+    const date = logDate(rawDate, year);
+    return date ? [[date, ...cells]] : [];
+  });
+}
+
 export function parseRunningLog(text, year) {
-  if (!Number.isInteger(year) || year < 2000 || year > 2100) throw new Error('Enter the year covered by the running log.');
-  const table = text.match(/^##\s+Log\s*\r?\n([\s\S]*?)(?=^##\s|$(?![\s\S]))/m)?.[1];
-  if (!table) throw new Error('This file needs the Obsidian Running Log’s “Log” table.');
   const workouts = [];
   let excludedHikes = 0;
   const ids = new Set();
-  for (const line of table.split(/\r?\n/)) {
-    if (!line.startsWith('|')) continue;
-    const [rawDay, location, distanceCell, time, pace, hr, ascent] = line.split('|').slice(1).map(cell => cell.replace(/\*\*/g, '').trim());
-    const day = /^(\d{1,2})\s+([a-z]{3})$/i.exec(rawDay);
+  for (const [date, location, distanceCell, time, pace, hr, ascent] of tableRows(text, 'Log', year)) {
     const distance = /^(\d+(?:\.\d+)?)\s*(km|mi)\b/i.exec(distanceCell || '');
     const duration = /^\d{1,3}:\d{2}(?::\d{2})?/.exec(time || '');
-    if (!day || !distance || !duration) continue;
-    const month = months.indexOf(day[2].toLowerCase()) + 1;
-    if (!month) continue;
-    const date = `${year}-${String(month).padStart(2, '0')}-${day[1].padStart(2, '0')}`;
-    const actual = new Date(date + 'T00:00:00Z');
-    if (!Number.isFinite(actual.getTime()) || actual.toISOString().slice(0, 10) !== date) continue;
+    if (!location || !distance || !duration) continue;
     if (/lake district.*\((ascent|descent)\)/i.test(location)) { excludedHikes++; continue; }
     const id = `obsidian-run:${date}:${location.toLowerCase()}:${duration[0]}`;
     if (ids.has(id)) continue;
@@ -40,14 +51,38 @@ export function parseRunningLog(text, year) {
   return { workouts, excludedHikes };
 }
 
+export function parseStrengthLog(text, year) {
+  const workouts = [];
+  const dates = new Set();
+  let excludedArtefacts = 0;
+  for (const [date, split, duration, rawSets, rawVolume, detail] of tableRows(text, 'Quick Reference', year)) {
+    if (/watch artefact|false start|accidental record/i.test(detail || '') || /^[—–-]$/.test(split)) {
+      excludedArtefacts++;
+      continue;
+    }
+    const sets = Number(rawSets);
+    if (!split || !Number.isInteger(sets) || sets < 1 || dates.has(date)) continue;
+    dates.add(date);
+    const weight = /^([\d,]+(?:\.\d+)?)\s*kg\b/i.exec(rawVolume || '');
+    const gym = /new gym/i.test(split) ? 'New gym' : /old gym/i.test(split) ? 'Old gym' : /hotel/i.test(split) ? 'Hotel gym' : '';
+    workouts.push({ id: 'obsidian-strength:' + date, date, title: split, type: 'gym', source: 'obsidian-strength',
+      imported: true, sets, ...(duration ? { duration } : {}), ...(gym ? { gym } : {}),
+      ...(weight ? { volume: weight[1] + ' kg', volumeKg: Number(weight[1].replaceAll(',', '')) } : {}) });
+  }
+  if (!workouts.length) throw new Error('No strength visits with a date and set count were found.');
+  return { workouts, excludedArtefacts };
+}
+
 export function mergeTrainingSessions(snapshot, captured, demo = false) {
   const imports = captured.filter(item => item.imported);
   const sameRun = (a, b) => a.type === 'run' && b.type === 'run' && a.date === b.date
     && a.duration === b.duration && Math.abs(workoutDistance(a) - workoutDistance(b)) < 0.05;
-  const matched = item => imports.some(entry => entry.date === item.date && (entry.title === item.title || sameRun(entry, item)));
-  const local = captured.filter(item => item.source !== 'obsidian-run'
-    ? !imports.some(entry => entry.source === 'obsidian-run' && entry.id !== item.id && sameRun(item, entry))
-    : true);
+  const sameStrength = (a, b) => a.type === 'gym' && b.type === 'gym' && a.date === b.date && a.volume && a.volume === b.volume;
+  const matched = item => imports.some(entry => entry.date === item.date && entry.type === item.type
+    && (entry.title === item.title || sameRun(entry, item) || sameStrength(entry, item)));
+  const local = captured.filter(item => !imports.some(entry => entry.id !== item.id
+    && ((item.source !== 'obsidian-run' && entry.source === 'obsidian-run' && sameRun(item, entry))
+      || (item.source !== 'obsidian-strength' && entry.source === 'obsidian-strength' && sameStrength(item, entry)))));
   const base = demo && imports.length ? [] : snapshot.filter(item => !matched(item));
   return [...local.slice().reverse(), ...base].sort((a, b) => b.date.localeCompare(a.date));
 }
