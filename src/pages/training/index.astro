@@ -2,10 +2,11 @@
 import Base from '../../layouts/Base.astro';
 import { dashboard, isDemo } from '../../content/dashboard';
 const { marathonTraining: marathon, exerciseSessions } = dashboard;
+const base = import.meta.env.BASE_URL;
 ---
 <Base title="Training | Workstation" active="training">
   <div class="dashboard" id="training-page" data-sessions={JSON.stringify(exerciseSessions)} data-goals={JSON.stringify(dashboard.personalGoals)} data-demo={String(isDemo)}>
-    <header class="area-header"><h1>Training</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <header class="area-header"><h1>Training</h1><a class="action-button" href={base + "training/full-year/"}>Full-year view &rarr;</a>{isDemo && <span class="top-sync">Sample data</span>}</header>
     {marathon && <section class="race-hero">
       <div><span class="top-sync">Race countdown</span><h2>{marathon.raceName}</h2>
         <strong id="weeks-to-race" data-race-date={marathon.raceDate}>{marathon.weeksToRace} weeks</strong>

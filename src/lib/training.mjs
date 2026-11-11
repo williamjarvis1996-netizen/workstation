@@ -1,6 +1,7 @@
 import { addDays } from './time.mjs';
 import { readLife, weekStart, workoutDistance, workoutPace } from './life.mjs';
 import { make } from './storage.mjs';
+import { mergeTrainingSessions } from './training-year.mjs';
 
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const dayLabel = day => dateFormat.format(new Date(day + 'T00:00:00Z'));
@@ -18,10 +19,7 @@ document.addEventListener('astro:page-load', () => {
   const stats = document.getElementById('training-stats');
 
   function render() {
-    const workouts = readLife().workouts;
-    const importedKeys = new Set(workouts.filter(item => item.imported).map(item => JSON.stringify([item.title,item.date])));
-    const base = root.dataset.demo === 'true' && importedKeys.size ? [] : snapshot.filter(item => !importedKeys.has(JSON.stringify([item.title,item.date])));
-    const sessions = [...workouts.slice().reverse(), ...base].sort((a, b) => b.date.localeCompare(a.date));
+    const sessions = mergeTrainingSessions(snapshot, readLife().workouts, root.dataset.demo === 'true');
     const measured = sessions.filter(session => session.type === 'run' && workoutDistance(session) > 0);
     const mostRecent = sessions[0];
     document.getElementById('workout-count').textContent = `${sessions.length} logged`;
