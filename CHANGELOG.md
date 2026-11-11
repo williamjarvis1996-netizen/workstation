@@ -1,5 +1,10 @@
 # Changelog
 
+## Training navigation
+
+- Split Training into Overview, Running and Strength, with shared tabs and the old Full-year URL redirecting to Running.
+- Added year and gym filters, running distance milestones, weekly gym visits, split counts and searchable ledgers.
+
 ## Planning, project dependencies and shared data
 
 - Added an explainable Day plan with task estimates, milestone links, reorder/pin controls, calendar-aware time blocks and committed plans.

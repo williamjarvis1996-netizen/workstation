@@ -1,4 +1,4 @@
-import { addDays } from './time.mjs';
+import { addDays, londonDay } from './time.mjs';
 import { readLife, weekStart, workoutDistance, workoutPace } from './life.mjs';
 import { make } from './storage.mjs';
 import { mergeTrainingSessions } from './training-year.mjs';
@@ -22,16 +22,17 @@ document.addEventListener('astro:page-load', () => {
     const sessions = mergeTrainingSessions(snapshot, readLife().workouts, root.dataset.demo === 'true');
     const measured = sessions.filter(session => session.type === 'run' && workoutDistance(session) > 0);
     const mostRecent = sessions[0];
-    document.getElementById('workout-count').textContent = `${sessions.length} logged`;
 
-    const totalDistance = measured.reduce((sum, s) => sum + workoutDistance(s), 0);
-    const runs = sessions.filter(s => s.type === 'run').length;
-    const gyms = sessions.filter(s => s.type === 'gym').length;
+    const now = londonDay(Date.now());
+    const monday = weekStart(now);
+    const thisWeek = sessions.filter(session => session.date >= monday && session.date <= now);
+    const runs = thisWeek.filter(session => session.type === 'run').length;
+    const gyms = thisWeek.filter(session => session.type === 'gym').length;
+    const distance = thisWeek.filter(session => session.type === 'run').reduce((sum, session) => sum + workoutDistance(session), 0);
     const statCards = [
-      { label: 'Total sessions', value: String(sessions.length), accent: 'var(--color-fg)' },
-      { label: 'Running distance', value: totalDistance ? kmLabel(totalDistance) : '0 km', accent: 'var(--area-accent)' },
-      { label: 'Runs', value: String(runs), accent: 'var(--area-accent)' },
-      { label: 'Gym sessions', value: String(gyms), accent: 'var(--color-fg-muted)' },
+      { label: 'Runs this week', value: String(runs), accent: 'var(--area-accent)' },
+      { label: 'Gym visits this week', value: String(gyms), accent: 'var(--area-accent)' },
+      { label: 'Running distance this week', value: kmLabel(distance), accent: 'var(--color-fg)' },
     ];
     if (stats) {
       stats.replaceChildren(...statCards.map(s => {
@@ -76,7 +77,9 @@ document.addEventListener('astro:page-load', () => {
       chart.append(list);
     } else chart.append(make('p', 'No runs with a recorded distance yet.', 'empty-state-sm'));
 
-    log.replaceChildren(...sessions.map(session => {
+    const recent = sessions.slice(0, 5);
+    document.getElementById('workout-count').textContent = `${recent.length} shown`;
+    log.replaceChildren(...recent.map(session => {
       const row = make('div', '', `ex-item ex-item--${session.type}`);
       const copy = make('div', '', 'ex-body');
       const facts = [session.distance, session.duration, session.type === 'run' && workoutPace(session),

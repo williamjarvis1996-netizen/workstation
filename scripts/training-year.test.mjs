@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { annualMileage, mergeTrainingSessions, parseRunningLog } from '../src/lib/training-year.mjs';
+import { annualMileage, annualStrength, runningMilestones, mergeTrainingSessions, parseRunningLog } from '../src/lib/training-year.mjs';
 
 test('imports the summary table, preserves units and calibration, and excludes hikes and laps', () => {
   const md = [
@@ -44,4 +44,31 @@ test('imports real strength visits, skips artefacts and preserves missing volume
   assert.deepEqual(result.workouts.map(item => [item.sets, item.volumeKg, item.gym]), [[15, 4000, 'New gym'], [12, undefined, undefined]]);
   const existing = { date: '2026-11-09', title: 'Snapshot lift', volume: '4,000 kg', type: 'gym' };
   assert.equal(mergeTrainingSessions([existing], result.workouts).length, 2);
+});
+
+test('strength totals distinguish unknown set counts and filter only by recorded gym label', () => {
+  const sessions = [
+    { date: '2026-01-01', type: 'gym', title: 'Pull + shoulders', gym: 'New gym', sets: 10 },
+    { date: '2026-01-02', type: 'gym', title: 'Push', sets: 8 },
+    { date: '2026-01-06', type: 'gym', title: 'Legacy' },
+    { date: '2026-01-07', type: 'run', title: 'Running', distance: '4 km' },
+  ];
+  const annual = annualStrength(sessions, 2026);
+  assert.equal(annual.visits.length, 3);
+  assert.equal(annual.measured, 2);
+  assert.equal(annual.sets, 18);
+  assert.equal(annual.weeks[0].visits, 2);
+  assert.equal(annual.splits.get('Pull'), 1);
+  assert.equal(annualStrength(sessions, 2026, 'Unspecified').visits.length, 2);
+  assert.equal(annualStrength(sessions, 2026, 'New gym').sets, 10);
+});
+
+test('running milestones preserve chronological improvements across miles and kilometres', () => {
+  const runs = [
+    { date: '2026-02-01', type: 'run', distance: '4 km' },
+    { date: '2026-02-04', type: 'run', distance: '3 mi' },
+    { date: '2026-02-08', type: 'run', distance: '4.5 km' },
+  ];
+  assert.deepEqual(runningMilestones(runs.slice().reverse()), runs.slice(0, 2));
+  assert(annualMileage(runs, 2026).weeks.some(week => week.longest > 4.8));
 });

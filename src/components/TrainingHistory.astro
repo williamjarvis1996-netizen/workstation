@@ -1,0 +1,78 @@
+---
+import Base from '../layouts/Base.astro';
+import TrainingNav from './TrainingNav.astro';
+import { dashboard } from '../content/dashboard';
+import '../styles/training-year.css';
+interface Props { discipline: 'running' | 'strength' }
+const { discipline } = Astro.props;
+const running = discipline === 'running';
+const title = running ? 'Running' : 'Strength';
+const { marathonTraining: marathon, exerciseSessions } = dashboard;
+const sessions = exerciseSessions.filter(item => item.type === (running ? 'run' : 'gym'));
+const race = sessions.find(item => item.date === '2026-05-17' && item.title === 'Hackney Half Marathon');
+---
+<Base title={title + ' | Workstation'} active="training">
+  <div class="dashboard training-year" id="training-year" data-discipline={discipline} data-sessions={JSON.stringify(sessions)}>
+    <header class="area-header"><h1>{title}</h1></header>
+    <TrainingNav active={discipline} />
+    {running && marathon && <section class="panel year-race">
+      <div><span class="top-sync">Team Shelter · Marathon build</span><h2>{marathon.raceName}</h2>
+        <strong id="weeks-to-race" data-race-date={marathon.raceDate}>{marathon.weeksToRace} weeks</strong></div>
+      <dl><div><dt>Target time</dt><dd>{marathon.targetTime}</dd></div><div><dt>Next long run</dt><dd>{marathon.nextLongRunTarget}</dd></div>
+        <div><dt>Current block</dt><dd>{marathon.currentPhase} · Week {marathon.weekNumber}</dd></div></dl>
+    </section>}
+    <section class="panel year-mileage">
+      <div class="panel-head">
+        <h2>{running ? 'Weekly mileage' : 'Weekly gym visits'}</h2>
+        <div class="training-controls">
+          <label>Year <select id="training-year-filter"><option>2026</option><option>2027</option></select></label>
+          {!running && <label>Gym <select id="training-gym-filter"><option value="">All gyms</option></select></label>}
+        </div>
+      </div>
+      <div id="year-stats" class="task-stats"></div>
+      <div id="year-chart" class="year-chart" aria-hidden="true"></div>
+      <div class="year-legend"><span>{running ? 'Recorded mileage' : 'Recorded visits'}</span><span>No sessions recorded</span>{running && <span>Race week</span>}</div>
+      <details class="year-ledger"><summary>Weekly figures</summary>
+        <table><thead><tr><th scope="col">Week of</th><th scope="col">{running ? 'Distance' : 'Sets recorded'}</th><th scope="col">{running ? 'Runs' : 'Visits'}</th><th scope="col">{running ? 'Longest run' : 'Split breakdown'}</th></tr></thead><tbody id="year-weeks"></tbody></table>
+      </details>
+    </section>
+    {running ? <div class="training-year-grid">
+      <section class="panel year-milestones">
+        <h2>Long-run progression</h2>
+        <ol id="year-progression" class="training-progression"></ol>
+        <p class="year-note">New longest distances in the selected year. Race efforts are included.</p>
+      </section>
+      <section class="panel year-milestones">
+        <h2>Race archive</h2>
+        <dl><div><dt>17 May 2026</dt><dd>Hackney Half Marathon</dd></div>
+          <div><dt>Recorded finish</dt><dd id="hackney-finish">{race?.duration || 'Time unrecorded'}</dd></div></dl>
+      </section>
+    </div> : <section class="panel year-milestones">
+      <h2>Push, pull and mixed</h2><dl id="year-splits"></dl>
+      <p class="year-note">Gym filters use the labels in your log. Unlabelled visits are kept separate. Compare loads on comparable equipment.</p>
+    </section>}
+    <section class="panel year-ledger">
+      <div class="panel-head">
+        <h2>{running ? 'Run ledger' : 'Strength ledger'}</h2>
+        <div class="training-controls"><label>Search <input id="training-ledger-search" type="search" placeholder={running ? 'Route or run' : 'Split or gym'} /></label></div>
+      </div>
+      <p id="training-ledger-count" class="top-sync" role="status"></p>
+      <div class="year-table-scroll" tabindex="0" aria-label={running ? 'Run ledger table' : 'Strength ledger table'}>
+        <table><thead><tr>{(running ? ['Date','Run','Distance','Time','Pace','Avg HR','Ascent'] : ['Date','Split','Gym','Duration','Sets','Volume']).map(label => <th scope="col">{label}</th>)}</tr></thead><tbody id="year-session-ledger"></tbody></table>
+      </div>
+    </section>
+    <details class="panel year-milestones training-import">
+      <summary>{running ? 'Add newer running logs' : 'Add newer strength logs'}</summary>
+      <p>Import a newer Obsidian export to add sessions in this browser. Your existing 2026 history is already loaded.</p>
+      <form id="year-import">
+        <label>Log year <input name="year" type="number" min="2000" max="2100" value="2026" required /></label>
+        <label>Obsidian log <input name="file" type="file" accept=".md,.txt,text/plain,text/markdown" required /></label>
+        <button type="submit" class="action-button">Import sessions</button>
+      </form>
+      <p id="year-import-status" class="top-sync" role="status"></p>
+    </details>
+  </div>
+</Base>
+<script>
+  import '../lib/training-year-view.mjs';
+</script>
