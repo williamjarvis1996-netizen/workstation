@@ -1,4 +1,3 @@
-.training-year { --area-accent: #4ade80; --area-tint: #142a21; }
 .training-year-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
 .training-year h2 { font: 650 clamp(1rem, 2vw, 1.32rem)/1.2 var(--font-sans); text-transform: none; letter-spacing: -.025em; }
 .year-race { background: radial-gradient(ellipse at top right, #1e4932, transparent 75%), #111f19; border-color: #3b825b; }
