@@ -19,16 +19,24 @@ const sourceColors: Record<string, string> = {
 <Base title="Workstation" active="overview">
   <div class="dashboard" id="blue-dashboard" data-client-id={clientId} data-demo={isDemo ? "true" : "false"}
     data-tasks={JSON.stringify(tasks)} data-calendar={JSON.stringify(calendarEvents)}>
-    {isDemo && <p class="top-sync">Sample data</p>}
 
     <!-- ===== DATE + WEATHER BAR ===== -->
     <section class="top-bar">
-      <div class="top-date">
-        <span class="top-day-name" id="day-name"></span>
-        <span class="top-day-num" id="day-number"></span>
-        <span class="top-month" id="day-month"></span>
+      <div class="overview-heading">
+        <h1>Overview</h1>
+        <div class="top-date">
+          <span id="day-name"></span>
+          <span id="day-number"></span>
+          <span id="day-month"></span>
+        </div>
+        {isDemo && <span class="top-sync">Sample data</span>}
       </div>
-      <div class="top-meta">
+      <div class="overview-clock">
+        <time id="overview-clock"></time>
+        <span class="top-sync">London time</span>
+      </div>
+      <div class="top-meta weather-card">
+        <span class="top-sync">London weather</span>
         <span class="top-weather" id="weather-inline">Loading London weather…</span>
         <span class="top-sync" id="weather-forecast"></span>
         {lastUpdated && <span class="top-sync">Snapshot {lastUpdated}</span>}

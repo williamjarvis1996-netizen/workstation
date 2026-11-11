@@ -27,7 +27,12 @@ const demo: Dashboard = {
     { label: 'Todoist', url: 'https://app.todoist.com/', category: 'Planning' },
     { label: 'Gmail', url: 'https://mail.google.com/', category: 'Communication' },
   ],
-  exerciseSessions: [{ date: '2026-11-11', type: 'run', title: 'Easy run', duration: '35 min', distance: '5 km' }],
+  exerciseSessions: [
+    { date: '2026-11-11', type: 'run', title: 'Easy run', duration: '35 min', distance: '5 km' },
+    { date: '2026-11-08', type: 'run', title: 'Long run', duration: '73 min', distance: '12 km' },
+    { date: '2026-11-05', type: 'gym', title: 'Strength session', duration: '40 min' },
+    { date: '2026-11-03', type: 'run', title: 'Steady run', duration: '43 min', distance: '7 km' },
+  ],
   marathonTraining: { raceName: 'Spring Marathon 2027', raceDate: '2027-04-25', targetTime: 'Sub-4 hours',
     currentPhase: 'Base training', weekNumber: 3, lastLongRun: '12 km', lastLongRunDate: '2026-11-08',
     nextLongRunTarget: '14 km', weeksToRace: 24, weeklyStructure: '3 runs and 2 strength sessions' },

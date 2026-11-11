@@ -2,7 +2,8 @@
 
 ## Daily overview and life pages
 
-- Added Work, Training, Creative and Goals pages with dedicated navigation. Kept Activity and Links.
+- Added Work, Training, Creative and Goals pages with a desktop sidebar and wrapping mobile navigation. Kept Activity and Links.
+- Added a prominent London clock and a weather card on Overview. Training now shows session totals and a distance chart based on logged runs.
 - Added next meeting, due today and focus-window summaries. Separated the Today agenda from a compact to-do panel with overdue tasks grouped by project and upcoming tasks grouped by date.
 - Moved calendar setup into Settings, preserved the live calendar session during in-site navigation and added a connection label to Today.
 - Added an Activity expand indicator and enabled wrapping for long titles.

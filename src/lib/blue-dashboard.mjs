@@ -97,6 +97,7 @@ function mountOverview() {
 
   function render(now) {
     const day = londonDay(now);
+    byId('overview-clock').textContent = londonClock(now);
     const visibleTasks = demo ? [
       ...tasks,
       { title: 'Review first edit', project: 'Social Series', priority: 'high', due: addDays(day, -1) },
@@ -248,7 +249,7 @@ function mountOverview() {
     try {
       const result = await londonWeather(AbortSignal.any([lifecycle.signal, AbortSignal.timeout(12000)]));
       if (lifecycle.signal.aborted) return;
-      weather.textContent = `${result.headline} · London`;
+      weather.textContent = result.headline;
       byId('weather-forecast').textContent = result.details;
     } catch {
       if (lifecycle.signal.aborted) return;
