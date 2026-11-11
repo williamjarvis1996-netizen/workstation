@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { durationSeconds, spotifyPlaylistId } from '../src/lib/overview-widgets.mjs';
+import { durationSeconds, spotifyPlaylistId } from '../src/lib/mixtape.mjs';
 
 test('mixtape durations support minutes and seconds and reject malformed entries', () => {
   assert.equal(durationSeconds('4:05'), 245);
