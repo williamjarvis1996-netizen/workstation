@@ -3,13 +3,14 @@ import Base from '../../layouts/Base.astro';
 import { dashboard } from '../../content/dashboard';
 
 export function getStaticPaths() {
-  return dashboard.creativeProjects.map(project => ({
+  return dashboard.creativeProjects.map((project, index) => ({
     params: { slug: project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '') },
-    props: { project },
+    props: { project, index },
   }));
 }
 
-const { project } = Astro.props;
+const { project, index } = Astro.props;
+const actionKey = JSON.stringify([project.name, project.type, index]);
 const base = import.meta.env.BASE_URL;
 
 const statusColor: Record<string, string> = {
@@ -33,23 +34,47 @@ const statusColor: Record<string, string> = {
         <span class="project-priority">{project.type}</span>
       </div>
       <h1>{project.name}</h1>
-      <p class="project-meta">{project.type}</p>
     </header>
 
     <div class="project-grid">
-      <section class="panel project-section project-section--wide">
-        <h2>Summary</h2>
+      <section class="panel project-section">
+        <h2>Next action</h2>
+        <form class="slate-action creative-project-action" data-action-key={actionKey}>
+          <label>What moves this project forward?
+            <input name="action" value={project.nextAction || ''} maxlength="180" />
+          </label>
+          <button type="submit">Save</button>
+        </form>
+        <p class="top-sync" id="creative-action-feedback" role="status"></p>
+      </section>
+      <section class="panel project-section">
+        <h2>Project summary</h2>
         <p>{project.summary}</p>
       </section>
-
-      {project.nextAction && (
-        <section class="panel project-section">
-          <h2>Next action</h2>
-          <div class="project-milestone-card">
-            <strong>{project.nextAction}</strong>
-          </div>
-        </section>
-      )}
     </div>
   </div>
 </Base>
+<script>
+  import { readLife, updateLife } from '../../lib/life.mjs';
+
+  document.addEventListener('astro:page-load', () => {
+    const form = document.querySelector<HTMLFormElement>('.creative-project-action');
+    const feedback = document.getElementById('creative-action-feedback');
+    if (!form || !feedback) return;
+    const key = form.dataset.actionKey!;
+    const input = form.elements.namedItem('action') as HTMLInputElement;
+    const saved = readLife().creativeActions;
+    if (Object.hasOwn(saved, key)) input.value = saved[key];
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const action = input.value.trim();
+      try {
+        updateLife(data => { data.creativeActions[key] = action; });
+        input.value = action;
+        feedback.textContent = action ? 'Next action saved.' : 'Next action cleared.';
+      } catch {
+        feedback.textContent = 'Could not save the next action.';
+      }
+    });
+  });
+</script>

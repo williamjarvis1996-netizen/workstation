@@ -1218,3 +1218,15 @@ body {
   #blue-dashboard .analog-clock { display: none; }
   #blue-dashboard .overview-heading h1 { font-size: 1.55rem; }
 }
+
+.slate-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); flex-wrap: wrap; }
+.slate-toolbar .task-tabs { margin: 0; }
+.slate-cover h2 a { color: inherit; }
+.slate-cover h2 a:hover { text-decoration: underline; text-underline-offset: .15em; }
+.slate-tile { display: flex; flex-direction: column; }
+.slate-copy { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-xs); }
+.slate-next { width: 100%; margin-top: auto; padding-top: var(--space-sm); }
+.slate-next span { display: block; border-top: 1px solid var(--color-border-hover); padding-top: var(--space-sm); color: var(--area-accent); font: .72rem var(--font-mono); }
+.slate-next strong { display: block; margin-top: var(--space-xs); overflow-wrap: anywhere; }
+.creative-project-action input, .creative-project-action button { min-height: 2.5rem; }
+#captured-ideas { scroll-margin-top: 7rem; }
