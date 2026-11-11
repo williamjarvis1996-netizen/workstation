@@ -1074,6 +1074,13 @@ body {
 .plan-blocks .overflow-item, #portfolio-risks li { border-color: var(--color-warn); }
 .plan-blocks small, #portfolio-risks small { color: var(--color-fg-muted); }
 .plan-time { color: var(--area-accent); font: .74rem var(--font-mono); }
+.plan-today-link { margin-inline-start: auto; color: var(--color-fg); }
+.planner-day .task-tabs { margin-bottom: 0; }
+#plan-save:enabled { background: var(--area-accent); color: var(--color-bg); }
+#plan-feedback:not(:empty) { margin-top: var(--space-sm); }
+#plan-events li { border-color: var(--color-border-hover); }
+#plan-events li.is-busy { border-color: var(--color-accent); }
+#plan-candidates .plan-candidate:last-child { border-bottom: 0; }
 .plan-candidate { border-bottom: 1px solid var(--color-border); padding-block: .55rem; }
 .plan-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .4rem; margin-block: .35rem; }
 .plan-controls label, .project-handover label { display: grid; gap: .2rem; font-size: .74rem; color: var(--color-fg-muted); min-width: 0; }
@@ -1218,12 +1225,3 @@ body {
   #blue-dashboard .analog-clock { display: none; }
   #blue-dashboard .overview-heading h1 { font-size: 1.55rem; }
 }
-
-
-.plan-today-link { margin-inline-start: auto; color: var(--color-fg); }
-.planner-day .task-tabs { margin-bottom: 0; }
-#plan-save:enabled { background: var(--area-accent); color: var(--color-bg); }
-#plan-feedback:not(:empty) { margin-top: var(--space-sm); }
-#plan-events li { border-color: var(--color-border-hover); }
-#plan-events li.is-busy { border-color: var(--color-accent); }
-#plan-candidates .plan-candidate:last-child { border-bottom: 0; }
