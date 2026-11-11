@@ -11,6 +11,19 @@ function description(code) {
   return 'Thunderstorms';
 }
 
+function weatherIcon(code, isNight) {
+  if (code === 0) return isNight ? '\u{1F319}' : '\u{2600}\u{FE0F}';
+  if (code <= 2) return isNight ? '\u{1F319}' : '\u{26C5}';
+  if (code === 3) return '\u{2601}\u{FE0F}';
+  if (code <= 48) return '\u{1F32B}\u{FE0F}';
+  if (code <= 57) return '\u{1F326}\u{FE0F}';
+  if (code <= 67) return '\u{1F327}\u{FE0F}';
+  if (code <= 77) return '\u{1F328}\u{FE0F}';
+  if (code <= 82) return '\u{1F326}\u{FE0F}';
+  if (code <= 86) return '\u{1F328}\u{FE0F}';
+  return '\u{26C8}\u{FE0F}';
+}
+
 export async function londonWeather(signal) {
   const query = new URLSearchParams({
     latitude: '51.5074', longitude: '-0.1278', timezone: 'Europe/London', forecast_days: '1',
@@ -23,7 +36,12 @@ export async function londonWeather(signal) {
   const high = Math.round(daily.temperature_2m_max[0]);
   const low = Math.round(daily.temperature_2m_min[0]);
   const rain = daily.precipitation_probability_max[0];
+  const hour = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London', hour: 'numeric', hourCycle: 'h23' });
+  const isNight = +hour < 6 || +hour >= 20;
   return {
+    icon: weatherIcon(current.weather_code, isNight),
+    temperature,
+    condition: description(current.weather_code),
     headline: `${temperature}° · ${description(current.weather_code)}`,
     details: `High ${high}° · Low ${low}° · ${rain}% chance of precipitation`,
   };

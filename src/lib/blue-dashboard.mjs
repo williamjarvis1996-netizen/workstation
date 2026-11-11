@@ -27,6 +27,7 @@ function mountOverview() {
   });
   const dayFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const upcomingFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short' });
+  const timePartsFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' });
   const timeline = byId('today-timeline');
   const taskFilters = [...root.querySelectorAll('[data-filter]')];
   let taskFilter = 'Priority';
@@ -85,14 +86,32 @@ function mountOverview() {
     })) : [];
     const model = agenda(liveEvents ?? (showDemo ? demoEvents : snapshot), now);
     const active = Boolean(token && liveEvents);
-    const usableSchedule = active || showDemo;
+    const usableSchedule = active || showDemo || snapshot.length > 0;
     if (londonDate !== day) {
       londonDate = day;
       const parts = Object.fromEntries(dayFormat.formatToParts(now).map(({type, value}) => [type, value]));
-      byId('day-name').textContent = parts.weekday;
+      byId('day-name-full').textContent = parts.weekday;
       byId('day-number').textContent = parts.day;
       byId('day-month').textContent = `${parts.month} ${parts.year}`;
       dirtyTasks = true;
+    }
+    const timeParts = Object.fromEntries(timePartsFormat.formatToParts(now).map(({type, value}) => [type, value]));
+    const h = +timeParts.hour, m = +timeParts.minute, s = +timeParts.second;
+    const hourAngle = ((h % 12) + m / 60) * 30;
+    const minuteAngle = (m + s / 60) * 6;
+    const secondAngle = s * 6;
+    const hourHand = byId('clock-hour');
+    const minuteHand = byId('clock-minute');
+    const secondHand = byId('clock-second');
+    if (hourHand) {
+      hourHand.setAttribute('transform', `rotate(${hourAngle} 100 100)`);
+      minuteHand.setAttribute('transform', `rotate(${minuteAngle} 100 100)`);
+      secondHand.setAttribute('transform', `rotate(${secondAngle} 100 100)`);
+    }
+    const greeting = byId('hero-greeting');
+    if (greeting) {
+      const g = h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+      greeting.textContent = g;
     }
 
     if (dirtyTasks) { renderTasks(groups); dirtyTasks = false; }
@@ -240,15 +259,23 @@ function mountOverview() {
 
   async function refreshWeather(now) {
     weatherAt = now;
-    const weather = byId('weather-inline');
+    const weather = byId('weather-temp');
     try {
       const result = await londonWeather(AbortSignal.any([lifecycle.signal, AbortSignal.timeout(12000)]));
       if (lifecycle.signal.aborted) return;
-      weather.textContent = result.headline;
+      weather.textContent = `${result.temperature}°`;
+      const icon = byId('weather-icon');
+      const condition = byId('weather-condition');
+      if (icon) icon.textContent = result.icon || '';
+      if (condition) condition.textContent = result.condition || '';
       byId('weather-forecast').textContent = result.details;
     } catch {
       if (lifecycle.signal.aborted) return;
-      weather.textContent = 'London weather unavailable';
+      weather.textContent = '--°';
+      const icon = byId('weather-icon');
+      const condition = byId('weather-condition');
+      if (icon) icon.textContent = '';
+      if (condition) condition.textContent = 'Unavailable';
       byId('weather-forecast').textContent = '';
     }
   }
@@ -269,7 +296,7 @@ function mountOverview() {
   warmIdentity();
   renderConnection();
   tick();
-  const timer = setInterval(tick, 30000);
+  const timer = setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); }, { signal: lifecycle.signal });
   document.addEventListener('astro:before-swap', () => {
     const pending = request;
