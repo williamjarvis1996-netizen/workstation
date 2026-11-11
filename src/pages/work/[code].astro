@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import WorkNav from '../../components/WorkNav.astro';
 import { dashboard } from '../../content/dashboard';
 import { safeUrl } from '../../lib/storage.mjs';
 
@@ -34,6 +35,7 @@ const sourceColors: Record<string, string> = {
 ---
 <Base title={`${project.name} | Work`} active="work">
   <div class="dashboard project-detail">
+    <WorkNav active="board" />
     <nav class="project-breadcrumb">
       <a href={base + 'work/'}>Production board</a>
       <span>/</span>
