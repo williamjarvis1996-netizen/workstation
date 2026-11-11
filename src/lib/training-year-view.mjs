@@ -1,5 +1,5 @@
 import { readLife, updateLife, today, weekStart, workoutDistance, workoutPace } from './life.mjs';
-import { annualMileage, mergeTrainingSessions, parseRunningLog } from './training-year.mjs';
+import { annualMileage, mergeTrainingSessions, parseRunningLog, parseStrengthLog } from './training-year.mjs';
 import { make } from './storage.mjs';
 
 const dateLabel = new Intl.DateTimeFormat('en-GB', { day:'numeric', month:'short', timeZone:'UTC' });
@@ -70,6 +70,11 @@ document.addEventListener('astro:page-load', () => {
       item.append(make('dt', label), make('dd', count ? `${count} logged` : 'No sessions recorded'));
       cross.append(item);
     }
+    const strength = byId('year-strength');
+    strength.replaceChildren();
+    const visits = sessions.filter(item => item.type === 'gym' && item.date.startsWith(String(year)));
+    for (const visit of visits) row(strength, [dateLabel.format(dateOf(visit.date)), visit.title, visit.gym || 'Unspecified', visit.sets ? String(visit.sets) : 'Unrecorded', visit.volume || 'Unrecorded']);
+    if (!visits.length) row(strength, ['—', 'No strength visits recorded for this year', '—', '—', '—']);
     const runLedger = byId('year-runs');
     runLedger.replaceChildren();
     for (const run of runs) row(runLedger, [dateLabel.format(dateOf(run.date)), [run.title, run.dataNote].filter(Boolean).join(' · '), run.distance, run.duration || 'Unrecorded', run.recordedPace || workoutPace(run) || 'Unrecorded']);
@@ -83,7 +88,9 @@ document.addEventListener('astro:page-load', () => {
     if (!file || file.size > 1000000) { status.textContent = 'Choose a Markdown or text file under 1 MB.'; return; }
     const year = Number(form.elements.year.value);
     try {
-      const { workouts, excludedHikes } = parseRunningLog(await file.text(), year);
+      const text = await file.text();
+      const strengthLog = /^#\s+Strength Training Log\s*$/m.test(text);
+      const { workouts, excludedHikes, excludedArtefacts } = strengthLog ? parseStrengthLog(text, year) : parseRunningLog(text, year);
       if (controller.signal.aborted) return;
       updateLife(data => {
         data.workouts = [...new Map([...data.workouts, ...workouts].map(item => [item.id, item])).values()];
@@ -92,7 +99,9 @@ document.addEventListener('astro:page-load', () => {
       filter.value = String(year);
       form.elements.file.value = '';
       render();
-      status.textContent = `${workouts.length} running entries imported. ${excludedHikes ? excludedHikes + ' hiking entries excluded.' : 'No hiking entries found.'}`;
+      status.textContent = strengthLog
+        ? `${workouts.length} strength visits imported.${excludedArtefacts ? ' ' + excludedArtefacts + ' watch artefact excluded.' : ''}`
+        : `${workouts.length} running entries imported.${excludedHikes ? ' ' + excludedHikes + ' hiking entries excluded.' : ''}`;
     } catch (error) { status.textContent = error.message; }
   });
   filter.addEventListener('change', render);

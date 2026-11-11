@@ -45,12 +45,12 @@ const { marathonTraining: marathon, exerciseSessions } = dashboard;
           <div><dt>Recorded finish</dt><dd id="hackney-finish">Import the race log to display the recorded time</dd></div></dl>
       </section>
       <section class="panel year-milestones">
-        <h2>Running log import</h2>
-        <p>Import the Obsidian Running Log to add recorded runs. Distances stay in their original units in the log and are converted to kilometres for the chart.</p>
+        <h2>Training log import</h2>
+        <p>Import the Running Log or Strength Training Log from Obsidian. Distances stay in their original units in the ledger and are converted to kilometres for the chart.</p>
         <form id="year-import">
           <label>Log year <input name="year" type="number" min="2000" max="2100" value="2026" required /></label>
-          <label>Running Log <input name="file" type="file" accept=".md,.txt,text/plain,text/markdown" required /></label>
-          <button type="submit" class="action-button">Import runs</button>
+          <label>Obsidian log <input name="file" type="file" accept=".md,.txt,text/plain,text/markdown" required /></label>
+          <button type="submit" class="action-button">Import sessions</button>
         </form>
         <p id="year-import-status" class="top-sync" role="status"></p>
       </section>
@@ -59,6 +59,11 @@ const { marathonTraining: marathon, exerciseSessions } = dashboard;
       <h2>Cross-training</h2>
       <p>Track strength sessions and logged swims alongside the running block. The running log import leaves hiking out of mileage and preserves treadmill calibration notes.</p>
       <dl id="year-cross-training"></dl>
+    </section>
+    <section class="panel year-ledger">
+      <h2>Strength ledger</h2>
+      <p class="year-note">Machine stacks differ by gym. Recorded volume describes each visit. Compare loads only on comparable equipment.</p>
+      <div class="year-table-scroll"><table><thead><tr><th scope="col">Date</th><th scope="col">Split</th><th scope="col">Gym</th><th scope="col">Sets</th><th scope="col">Volume</th></tr></thead><tbody id="year-strength"></tbody></table></div>
     </section>
     <section class="panel year-ledger">
       <h2>Run ledger</h2>

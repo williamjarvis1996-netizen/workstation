@@ -31,3 +31,17 @@ test('prefers the imported record for a run already in the snapshot and groups k
   assert.equal(year.weeks[0].runs, 2);
   assert(Math.abs(year.total - 8.218688) < 0.00002);
 });
+
+test('imports real strength visits, skips artefacts and preserves missing volume', async () => {
+  const { parseStrengthLog } = await import('../src/lib/training-year.mjs');
+  const log = ['## Quick Reference',
+    '| 9 Nov | Pull (new gym) | 40 min | 15 | 4,000 kg | Corrected |',
+    '| 8 Nov | — | 1:50 | 2 | — | Watch artefact |',
+    '| 7 Nov | Mixed | 35 min | 12 | — | No weight data |',
+    '## Session Detail', '| 6 Nov | Skip | 15 min | 5 | 100 kg | — |'].join('\n');
+  const result = parseStrengthLog(log, 2026);
+  assert.equal(result.excludedArtefacts, 1);
+  assert.deepEqual(result.workouts.map(item => [item.sets, item.volumeKg, item.gym]), [[15, 4000, 'New gym'], [12, undefined, undefined]]);
+  const existing = { date: '2026-11-09', title: 'Snapshot lift', volume: '4,000 kg', type: 'gym' };
+  assert.equal(mergeTrainingSessions([existing], result.workouts).length, 2);
+});
