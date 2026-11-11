@@ -87,10 +87,29 @@ const sourceColors: Record<string, string> = {
     </section>
 
     <section class="daily-summary" aria-label="Day at a glance">
-      <div class="day-stat"><span>Next meeting</span><strong id="next-meeting">Calendar disconnected</strong></div>
-      <div class="day-stat"><span>Due today</span><strong id="due-today">0 tasks</strong></div>
+      <div class="day-stat"><span>Next up</span><strong id="next-meeting">Calendar disconnected</strong></div>
+      <a class="day-stat task-summary-link" href={base + 'tasks/'}><span>Needs attention</span><strong id="due-today">Checking tasks…</strong></a>
       <div class="day-stat"><span>Best focus window</span><strong id="focus-window">Calendar disconnected</strong></div>
     </section>
+
+    <aside class="day-brief" aria-label="Current priority"><span id="day-brief-label">Your day</span><strong id="day-brief-text"></strong></aside>
+    <div class="day-grid">
+      <section class="panel panel--today">
+        <div class="panel-head">
+          <h2>Agenda</h2>
+          <div class="agenda-meta"><span class="top-sync" id="calendar-connection">Calendar disconnected</span><a class="panel-link" id="settings-link" href="#settings">Settings &amp; sync</a></div>
+        </div>
+        <div class="timeline" id="today-timeline"></div>
+      </section>
+      <section class="panel compact-tasks" id="tasks">
+        <div class="panel-head"><h2>Task preview</h2><a class="panel-link" href={base + 'tasks/'}>All tasks &rarr;</a></div>
+        <div class="task-tabs" aria-label="Filter preview">
+          {['Priority', 'Today', 'Upcoming', 'Overdue'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
+        </div>
+        <div id="today-tasks"></div>
+        <p role="status" class="top-sync" id="task-feedback"></p>
+      </section>
+    </div>
 
     <!-- ===== QUICK LINKS BAR ===== -->
     <nav class="links-bar">
@@ -102,28 +121,9 @@ const sourceColors: Record<string, string> = {
       ))}
     </nav>
 
-    <aside class="day-brief" aria-label="Current priority"><span id="day-brief-label">Your day</span><strong id="day-brief-text"></strong></aside>
-    <div class="day-grid">
-      <section class="panel panel--today">
-        <div class="panel-head">
-          <h2>Today</h2>
-          <span class="top-sync" id="calendar-connection">Calendar disconnected</span>
-        </div>
-        <div class="timeline" id="today-timeline"></div>
-      </section>
-      <section class="panel compact-tasks" id="tasks">
-        <div class="panel-head"><h2>To-dos</h2><a class="panel-link" href={base + 'tasks/'}>All tasks &rarr;</a></div>
-        <div class="task-tabs" aria-label="Filter preview">
-          {['Priority', 'Today', 'Upcoming', 'Overdue'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
-        </div>
-        <div id="today-tasks"></div>
-        <p role="status" class="top-sync" id="task-feedback"></p>
-      </section>
-    </div>
-
       <section class="panel">
         <div class="panel-head">
-          <h2>Activity</h2>
+          <h2>Recent activity</h2><a class="panel-link" href={base + 'work/activity/'}>Work activity &rarr;</a>
         </div>
         <div class="feed-grid">
           {recentLog.map(entry => (

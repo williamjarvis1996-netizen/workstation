@@ -54,13 +54,21 @@ function mountOverview() {
   form.elements.client.value = settings.client;
   form.elements.ids.value = settings.ids.join(', ');
 
+  function nextActions(groups) {
+    const priority = priorityToday(groups);
+    return priority.length ? priority : groups.Upcoming.length ? groups.Upcoming : groups['No date'];
+  }
+
   function renderTasks(groups) {
     const target = byId('today-tasks');
     const count = groups.Today.length;
-    const selected = taskFilter === 'Priority' ? priorityToday(groups) : groups[taskFilter];
+    const selected = taskFilter === 'Priority' ? nextActions(groups) : groups[taskFilter];
     target.replaceChildren(...selected.slice(0, 3).map(task => taskRow(task, [task.project, task.due].filter(Boolean).join(' · '))));
     if (!selected.length) target.append(make('p', 'No tasks in this view.', 'empty-state-sm'));
-    byId('due-today').textContent = `${count} ${count === 1 ? 'task' : 'tasks'}`;
+    const overdue = groups.Overdue.length;
+    byId('due-today').textContent = overdue || count ? `${overdue} overdue · ${count} today`
+      : groups.Upcoming.length ? `${groups.Upcoming.length} upcoming · none due today`
+        : groups['No date'].length ? `${groups['No date'].length} undated` : 'No open tasks';
   }
 
   for (const button of taskFilters) button.addEventListener('click', () => {
@@ -134,7 +142,7 @@ function mountOverview() {
         : focusNow && nextTask ? ['Focus now', `${nextTask.title} · free until ${londonClock(focus.end)}`]
         : nextTask ? ['Next task', nextTask.title]
         : usableSchedule && focus ? ['Focus window', `${londonClock(focus.start)}–${londonClock(focus.end)}`]
-        : ['Your day', 'No priority tasks due'];
+        : ['Your day', groups.Upcoming.length ? 'No tasks due today · upcoming work below' : 'No dated tasks due today'];
     byId('day-brief-label').textContent = brief[0];
     byId('day-brief-text').textContent = brief[1];
     const signature = JSON.stringify([model.today, model.current, focus, clock, active]);
