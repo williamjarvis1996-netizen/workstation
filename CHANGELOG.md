@@ -1,5 +1,12 @@
 # Changelog
 
+## Daily overview and life pages
+
+- Added Work, Training, Creative and Goals pages with dedicated navigation. Kept Activity and Links.
+- Added next meeting, due today and focus-window summaries. Separated the Today agenda from a compact to-do panel with overdue tasks grouped by project and upcoming tasks grouped by date.
+- Moved calendar setup into Settings, preserved the live calendar session during in-site navigation and added a connection label to Today.
+- Added an Activity expand indicator and enabled wrapping for long titles.
+
 ## Blue dashboard revision
 
 - Restored the supplied navy layout, quick links, Today timeline, project health and milestones, marathon, exercise, creative projects, goals, Upcoming and Activity.

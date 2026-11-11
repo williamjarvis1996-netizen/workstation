@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import { dashboard, isDemo } from '../../content/dashboard';
+const { creativeProjects } = dashboard;
+---
+<Base title="Creative | Workstation" active="creative">
+  <div class="dashboard">
+    <header class="area-header"><h1>Creative</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+        <div class="personal-card personal-card--creative">
+          <div class="pc-head">
+            <h3>Creative</h3>
+            <span class="pc-badge pc-badge--purple">{creativeProjects.length} projects</span>
+          </div>
+          <div class="creative-list">
+            {creativeProjects.map(proj => (
+              <div class="cr-item">
+                <div class="cr-top">
+                  <span class="cr-name">{proj.name}</span>
+                  <span class="cr-type">{proj.type}</span>
+                </div>
+                <div class="cr-status">{proj.status}</div>
+                <div class="cr-summary">{proj.summary}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+
+  </div>
+</Base>

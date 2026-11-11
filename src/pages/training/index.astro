@@ -1,0 +1,72 @@
+---
+import Base from '../../layouts/Base.astro';
+import { dashboard, isDemo } from '../../content/dashboard';
+const { marathonTraining: marathon, exerciseSessions } = dashboard;
+---
+<Base title="Training | Workstation" active="training">
+  <div class="dashboard">
+    <header class="area-header"><h1>Training</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <div class="personal-grid">
+        <div class="personal-card personal-card--marathon">
+          <div class="pc-head">
+            <h3>Marathon Training</h3>
+            {marathon && <span class="pc-badge pc-badge--accent" id="weeks-to-race" data-race-date={marathon.raceDate}>{marathon.weeksToRace}w to race</span>}
+          </div>
+          {marathon ? <div><div class="marathon-stats">
+            <div class="mstat">
+              <span class="mstat-val">{marathon.raceName.split(' ').slice(-1)}</span>
+              <span class="mstat-label">Race</span>
+            </div>
+            <div class="mstat">
+              <span class="mstat-val">{marathon.targetTime.replace('Sub-', '<')}</span>
+              <span class="mstat-label">Target</span>
+            </div>
+            <div class="mstat">
+              <span class="mstat-val">Wk {marathon.weekNumber}</span>
+              <span class="mstat-label">{marathon.currentPhase}</span>
+            </div>
+          </div>
+          <div class="marathon-detail">
+            <div class="md-row">
+              <span class="md-label">Last long run</span>
+              <span class="md-val">{marathon.lastLongRun}</span>
+            </div>
+            <div class="md-row">
+              <span class="md-label">Next target</span>
+              <span class="md-val">{marathon.nextLongRunTarget}</span>
+            </div>
+            <div class="md-row">
+              <span class="md-label">Structure</span>
+              <span class="md-val">{marathon.weeklyStructure}</span>
+            </div>
+          </div></div> : <p class="empty-state-sm">Training snapshot unavailable in the demo.</p>}
+        </div>
+
+        <div class="personal-card personal-card--exercise">
+          <div class="pc-head">
+            <h3>Recent Exercise</h3>
+            <span class="pc-badge pc-badge--green">{exerciseSessions.length} sessions</span>
+          </div>
+          <div class="exercise-list">
+            {[...exerciseSessions].sort((a, b) => b.date.localeCompare(a.date)).map(session => (
+              <div class={`ex-item ex-item--${session.type}`}>
+                <div class="ex-type">{session.type}</div>
+                <div class="ex-body">
+                  <span class="ex-title">{session.title}</span>
+                  <span class="ex-meta">
+                    {session.distance && `${session.distance} `}
+                    {session.duration && `${session.duration} `}
+                    {session.avgHR && `HR ${session.avgHR} `}
+                    {session.volume && `Vol ${session.volume}`}
+                  </span>
+                </div>
+                <div class="ex-date">{session.date.slice(5)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+    </div>
+
+  </div>
+</Base>

@@ -1,0 +1,52 @@
+---
+import Base from '../../layouts/Base.astro';
+import { dashboard, isDemo } from '../../content/dashboard';
+const activeProjects = dashboard.projects.filter(project => project.status === 'active');
+const healthColors: Record<string, string> = {
+  'on-track': 'var(--color-success)',
+  'at-risk': 'var(--color-warn)',
+  'blocked': 'var(--color-danger)',
+};
+
+
+---
+<Base title="Work | Workstation" active="work">
+  <div class="dashboard">
+    <header class="area-header"><h1>Work</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <section class="section-wrap">
+      <div class="section-header">
+        <h2 class="section-title">Active projects</h2>
+        <span class="pill">{activeProjects.length} active</span>
+      </div>
+      <div class="project-grid">
+        {activeProjects.map(project => (
+          <div class="pcard" style={`--health-color: ${healthColors[project.health]}`}>
+            <div class="pcard-top">
+              <span class="pcard-code">{project.code}</span>
+              <span class={`pcard-health pcard-health--${project.health}`}>{project.health.replace('-', ' ')}</span>
+            </div>
+            <div class="pcard-name">{project.name}</div>
+            <div class="pcard-client">{project.client}</div>
+            <div class="pcard-phase">{project.phase}</div>
+            <div class="pcard-status">{project.statusSummary}</div>
+            {project.nextMilestone && (
+              <div class="pcard-milestone">
+                <span class="pcard-milestone-label">Next:</span> {project.nextMilestone}
+                {project.nextMilestoneDate && <span class="pcard-milestone-date">{project.nextMilestoneDate}</span>}
+              </div>
+            )}
+            {project.links && project.links.length > 0 && (
+              <div class="pcard-links">
+                {project.links.map(link => (
+                  <a href={link.url} target="_blank" rel="noopener">{link.label}</a>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+
+
+  </div>
+</Base>
