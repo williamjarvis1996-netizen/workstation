@@ -1,17 +1,17 @@
 :root {
-  --color-bg: #0c0e13;
-  --color-bg-raised: #141720;
-  --color-fg: #e0dcd5;
-  --color-fg-muted: #9a9590;
-  --color-fg-subtle: #635f5a;
-  --color-accent: #c8a882;
-  --color-accent-hover: #ddbfa0;
-  --color-accent-dim: rgba(200, 168, 130, 0.1);
-  --color-border: rgba(180, 170, 155, 0.07);
-  --color-border-hover: rgba(180, 170, 155, 0.14);
-  --color-surface: rgba(255, 250, 240, 0.025);
-  --color-surface-raised: rgba(255, 250, 240, 0.04);
-  --color-surface-hover: rgba(255, 250, 240, 0.065);
+  --color-bg: #0b0e14;
+  --color-bg-raised: #121620;
+  --color-fg: #d4dae5;
+  --color-fg-muted: #8a94a4;
+  --color-fg-subtle: #556070;
+  --color-accent: #6ba3d4;
+  --color-accent-hover: #8bbde8;
+  --color-accent-dim: rgba(107, 163, 212, 0.1);
+  --color-border: rgba(140, 165, 200, 0.07);
+  --color-border-hover: rgba(140, 165, 200, 0.14);
+  --color-surface: rgba(180, 210, 255, 0.025);
+  --color-surface-raised: rgba(180, 210, 255, 0.04);
+  --color-surface-hover: rgba(180, 210, 255, 0.065);
   --color-danger: #e87070;
   --color-warn: #e5ad3b;
   --color-success: #65c98a;
@@ -36,20 +36,20 @@
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(200, 168, 130, 0.06);
+  --shadow-glow: 0 0 20px rgba(107, 163, 212, 0.06);
 
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --color-bg: #f5f2ed;
-    --color-fg: #1a1816;
-    --color-fg-muted: #6d6a65;
-    --color-fg-subtle: #a09b95;
-    --color-accent: #9a7a55;
-    --color-accent-hover: #7d6244;
-    --color-accent-dim: rgba(154, 122, 85, 0.08);
+    --color-bg: #f0f2f5;
+    --color-fg: #161a20;
+    --color-fg-muted: #5a6578;
+    --color-fg-subtle: #8a95a5;
+    --color-accent: #3a7cc2;
+    --color-accent-hover: #2a6aaa;
+    --color-accent-dim: rgba(58, 124, 194, 0.08);
     --color-border: rgba(0, 0, 0, 0.06);
     --color-border-hover: rgba(0, 0, 0, 0.12);
     --color-surface: rgba(0, 0, 0, 0.02);
@@ -61,25 +61,25 @@
     --color-purple: #7c3aed;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-glow: 0 0 20px rgba(154, 122, 85, 0.06);
+    --shadow-glow: 0 0 20px rgba(58, 124, 194, 0.06);
     color-scheme: light;
   }
 }
 
 :root[data-theme="dark"] {
-  --color-bg: #0c0e13;
-  --color-bg-raised: #141720;
-  --color-fg: #e0dcd5;
-  --color-fg-muted: #9a9590;
-  --color-fg-subtle: #635f5a;
-  --color-accent: #c8a882;
-  --color-accent-hover: #ddbfa0;
-  --color-accent-dim: rgba(200, 168, 130, 0.1);
-  --color-border: rgba(180, 170, 155, 0.07);
-  --color-border-hover: rgba(180, 170, 155, 0.14);
-  --color-surface: rgba(255, 250, 240, 0.025);
-  --color-surface-raised: rgba(255, 250, 240, 0.04);
-  --color-surface-hover: rgba(255, 250, 240, 0.065);
+  --color-bg: #0b0e14;
+  --color-bg-raised: #121620;
+  --color-fg: #d4dae5;
+  --color-fg-muted: #8a94a4;
+  --color-fg-subtle: #556070;
+  --color-accent: #6ba3d4;
+  --color-accent-hover: #8bbde8;
+  --color-accent-dim: rgba(107, 163, 212, 0.1);
+  --color-border: rgba(140, 165, 200, 0.07);
+  --color-border-hover: rgba(140, 165, 200, 0.14);
+  --color-surface: rgba(180, 210, 255, 0.025);
+  --color-surface-raised: rgba(180, 210, 255, 0.04);
+  --color-surface-hover: rgba(180, 210, 255, 0.065);
   --color-danger: #e87070;
   --color-warn: #e5ad3b;
   --color-success: #65c98a;
@@ -87,7 +87,7 @@
   --color-orange: #e8954a;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(200, 168, 130, 0.06);
+  --shadow-glow: 0 0 20px rgba(107, 163, 212, 0.06);
   color-scheme: dark;
 }
 
@@ -128,7 +128,7 @@ code, pre {
 }
 
 .card {
-  background: linear-gradient(135deg, rgba(255, 250, 240, 0.035), rgba(255, 250, 240, 0.015));
+  background: linear-gradient(135deg, rgba(180, 210, 255, 0.035), rgba(180, 210, 255, 0.015));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
@@ -139,7 +139,7 @@ code, pre {
 
 .card:hover {
   border-color: var(--color-border-hover);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(200, 168, 130, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(107, 163, 212, 0.05);
 }
 
 .badge {
