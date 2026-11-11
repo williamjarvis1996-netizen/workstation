@@ -15,6 +15,8 @@ document.addEventListener('astro:page-load', () => {
   const workout = document.getElementById('last-workout');
   const log = document.getElementById('workout-list');
 
+  const stats = document.getElementById('training-stats');
+
   function render() {
     const workouts = readLife().workouts;
     const importedKeys = new Set(workouts.filter(item => item.imported).map(item => JSON.stringify([item.title,item.date])));
@@ -23,6 +25,25 @@ document.addEventListener('astro:page-load', () => {
     const measured = sessions.filter(session => session.type === 'run' && workoutDistance(session) > 0);
     const mostRecent = sessions[0];
     document.getElementById('workout-count').textContent = `${sessions.length} logged`;
+
+    const totalDistance = measured.reduce((sum, s) => sum + workoutDistance(s), 0);
+    const runs = sessions.filter(s => s.type === 'run').length;
+    const gyms = sessions.filter(s => s.type === 'gym').length;
+    const statCards = [
+      { label: 'Total sessions', value: String(sessions.length), accent: 'var(--color-fg)' },
+      { label: 'Running distance', value: totalDistance ? kmLabel(totalDistance) : '0 km', accent: 'var(--area-accent)' },
+      { label: 'Runs', value: String(runs), accent: 'var(--area-accent)' },
+      { label: 'Gym sessions', value: String(gyms), accent: 'var(--color-fg-muted)' },
+    ];
+    if (stats) {
+      stats.replaceChildren(...statCards.map(s => {
+        const card = make('div', '', 'task-stat-card');
+        const val = make('span', s.value, 'task-stat-value');
+        val.style.color = s.accent;
+        card.append(val, make('span', s.label, 'task-stat-label'));
+        return card;
+      }));
+    }
     workout.replaceChildren();
     if (mostRecent) {
       const details = [mostRecent.distance, mostRecent.duration, mostRecent.type === 'run' && workoutPace(mostRecent)].filter(Boolean);
