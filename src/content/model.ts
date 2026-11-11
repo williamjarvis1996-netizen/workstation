@@ -37,7 +37,7 @@ export interface CalendarEvent {
   startTime?: string;
   endTime?: string;
   location?: string;
-  calendar: 'work' | 'personal';
+  calendar: 'work' | 'personal' | 'fitness' | 'create';
 }
 
 export interface QuickLink {

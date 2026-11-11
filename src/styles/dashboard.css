@@ -26,8 +26,9 @@
 }
 
 .top-day-num {
+  font-family: var(--font-display);
   font-size: 3rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1;
   letter-spacing: -0.03em;
   background: linear-gradient(135deg, var(--color-accent), var(--color-purple));
@@ -844,7 +845,7 @@
 .compact-tasks .upcoming-project { white-space: normal; overflow-wrap: anywhere; }
 .compact-tasks .upcoming-day { margin: .5rem 0; }
 .area-header { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-md); }
-.area-header h1 { font-size: clamp(1.65rem, 4vw, 2.5rem); letter-spacing: -.035em; }
+.area-header h1 { font-family: var(--font-display); font-size: clamp(1.65rem, 4vw, 2.5rem); font-weight: 400; letter-spacing: -.02em; text-transform: uppercase; }
 .feed-chevron { flex: none; width: .45rem; height: .45rem; border: solid var(--color-fg-muted); border-width: 0 1px 1px 0; transform: rotate(45deg); margin: 0 .2rem .2rem .15rem; }
 .feed-item[open] .feed-chevron { transform: rotate(225deg); margin-bottom: 0; }
 .feed-title { white-space: normal; overflow-wrap: anywhere; }
@@ -856,7 +857,7 @@
 #today-tasks, #overdue-tasks, #upcoming-tasks { max-height: 14rem; overflow-y: auto; }
 
 .overview-heading { display: grid; gap: .35rem; }
-.overview-heading h1 { font-size: clamp(2.1rem, 5vw, 3.25rem); letter-spacing: -.055em; line-height: 1.1; text-shadow: 0 0 40px rgba(107, 163, 212, 0.1); }
+.overview-heading h1 { font-family: var(--font-display); font-size: clamp(2.1rem, 5vw, 3.25rem); font-weight: 400; letter-spacing: -.03em; line-height: 1.1; text-transform: uppercase; text-shadow: 0 0 40px rgba(107, 163, 212, 0.1); }
 .overview-heading .top-date { display: flex; flex-wrap: wrap; gap: .35rem; color: var(--color-fg-muted); }
 .overview-clock { display: grid; gap: .1rem; align-content: center; min-width: 8rem; }
 .overview-clock time { color: var(--color-fg); font: 500 clamp(2.25rem, 5vw, 3.75rem)/1 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -.09em; }
@@ -942,13 +943,13 @@ body[data-area="goals"] { --area-accent: #e5ad3b; --area-tint: #2a2210; }
 .production-next span, .production-next time, .production-next small { color: var(--area-accent); font: .68rem var(--font-mono); }
 .production-next strong { font-size: .86rem; }
 .race-hero { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: radial-gradient(ellipse at top left, #1e3a30, #182820 60%, #141a14); border: 1px solid #3a6d58; padding: clamp(1rem, 4vw, 2rem); border-radius: var(--radius-xl); box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3), 0 0 60px rgba(122, 212, 160, 0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.race-hero h2 { font-size: clamp(1.1rem, 3vw, 1.75rem); }
-.race-hero strong { color: var(--area-accent); font-size: clamp(2rem, 6vw, 4rem); line-height: 1.1; letter-spacing: -.06em; text-shadow: 0 0 40px rgba(122, 212, 160, 0.3), 0 0 80px rgba(122, 212, 160, 0.1); }
+.race-hero h2 { font-family: var(--font-display); font-size: clamp(1.1rem, 3vw, 1.75rem); font-weight: 400; text-transform: uppercase; }
+.race-hero strong { font-family: var(--font-display); color: var(--area-accent); font-size: clamp(2rem, 6vw, 4rem); font-weight: 400; line-height: 1.1; letter-spacing: -.03em; text-shadow: 0 0 40px rgba(122, 212, 160, 0.3), 0 0 80px rgba(122, 212, 160, 0.1); }
 .race-hero dl { display: grid; gap: .4rem; align-content: center; }
 .race-hero dt { font: .68rem var(--font-mono); color: var(--color-fg-muted); }
 .race-hero dd { font-weight: 600; }
 .training-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--space-md); }
-.workout-spotlight h3 { font-size: 1.25rem; margin: .25rem 0; }
+.workout-spotlight h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 400; margin: .25rem 0; }
 .workout-spotlight strong { color: var(--area-accent); }
 .creative-slate, .goal-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .9rem; }
 .slate-tile { min-width: 0; overflow: hidden; border: 1px solid var(--color-border-hover); background: linear-gradient(145deg, rgba(180, 210, 255, 0.025), rgba(180, 210, 255, 0.005)); border-radius: var(--radius-lg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(180, 210, 255, 0.02); transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s; }
@@ -960,7 +961,7 @@ body[data-area="goals"] { --area-accent: #e5ad3b; --area-tint: #2a2210; }
 .slate-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
 .slate-cover:has(img)::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(transparent 25%, #0a0b0eeb); }
 .slate-cover span { font: .68rem var(--font-mono); color: #d4dae5; }
-.slate-cover h2 { line-height: 1.13; font-size: 1.4rem; }
+.slate-cover h2 { font-family: var(--font-display); line-height: 1.13; font-size: 1.4rem; font-weight: 400; text-transform: uppercase; }
 .slate-copy { padding: .8rem 1rem; font-size: .85rem; }
 .slate-copy p { margin-top: .4rem; }
 .creative-slate.is-list { grid-template-columns: 1fr; }

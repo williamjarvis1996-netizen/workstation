@@ -142,12 +142,43 @@ const snapshot: Dashboard = {
   ],
   calendarEvents: [
     {
+      title: 'Gym - Back',
+      date: '2026-11-11',
+      startTime: '18:30',
+      endTime: '20:00',
+      calendar: 'fitness',
+    },
+    {
       title: 'Weekly Production Scheduling Meeting',
       date: '2026-11-12',
       startTime: '10:30',
       endTime: '11:30',
       location: 'Meeting Room 2 / Google Meet',
       calendar: 'work',
+    },
+    {
+      title: 'Spotify — £12.99',
+      date: '2026-11-13',
+      calendar: 'personal',
+    },
+    {
+      title: 'Gym - Chest',
+      date: '2026-11-14',
+      startTime: '11:30',
+      endTime: '13:00',
+      calendar: 'fitness',
+    },
+    {
+      title: 'Apple subscription — £8.99',
+      date: '2026-11-16',
+      calendar: 'personal',
+    },
+    {
+      title: 'Run',
+      date: '2026-11-17',
+      startTime: '18:30',
+      endTime: '20:00',
+      calendar: 'fitness',
     },
   ],
   quickLinks: [

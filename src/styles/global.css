@@ -18,7 +18,8 @@
   --color-purple: #b89efa;
   --color-orange: #e8954a;
 
-  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  --font-mono: 'Space Mono', 'Fira Code', ui-monospace, monospace;
+  --font-display: 'Archivo Black', 'Impact', sans-serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 
   --space-2xs: 0.125rem;
