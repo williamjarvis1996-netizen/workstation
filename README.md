@@ -29,7 +29,7 @@ npm run build
 
 ## Planning and private sync
 
-- **Day plan** uses 09:00–18:00 London time and the remaining free windows in your calendar. Set estimates and milestone links, move tasks up or down, pin start times, then commit the proposed plan. A missing estimate defaults to 30 minutes and is labelled. The planner flags blocked tasks and tasks that do not fit.
+- Open **Day planner** from **Tasks** or use **Plan today** on Overview. Choose **Today** or **Tomorrow**. Suggested blocks use free time between 09:00 and 18:00 London time. Adjust task estimates, link milestones, reorder tasks or pin start times before saving. A missing estimate defaults to 30 minutes. The planner explains what could not fit and labels the calendar source. Connect Google Calendar from **Settings & sync** on Overview. Saved plans stay separate by date and do not create Google Calendar events.
 - **Work** handovers hold the deliverable, owner, milestone date, dependencies and anything the project is waiting on. The attention list traces downstream impact.
 - **Sync** shows each source and its last successful refresh. The private Sites Worker saves changes by record in D1 using the signed-in Site identity. Public GitHub Pages continues to use browser-only storage. The private build uses `PUBLIC_SHARED_SYNC=1` and the Worker build script with a Sites `DB` binding.
 - Export your existing local snapshot with `node scripts/export-snapshot.mjs /path/to/workstation-snapshot.json` (Node 22.13+). Import that file on the private preview's **Sync** page. Only the explicitly selected file is uploaded to your private account storage. Captured data remains separate.

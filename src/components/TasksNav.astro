@@ -1,0 +1,9 @@
+---
+interface Props { active: 'triage' | 'plan' }
+const { active } = Astro.props;
+const base = import.meta.env.BASE_URL + 'tasks/';
+---
+<nav class="tasks-nav" aria-label="Tasks">
+  <a href={base} aria-current={active === 'triage' ? 'page' : undefined}>Task list</a>
+  <a href={base + 'plan/'} aria-current={active === 'plan' ? 'page' : undefined}>Day planner</a>
+</nav>

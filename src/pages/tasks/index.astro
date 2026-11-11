@@ -1,10 +1,12 @@
 ---
 import Base from '../../layouts/Base.astro';
+import TasksNav from '../../components/TasksNav.astro';
 import { dashboard, isDemo } from '../../content/dashboard';
 ---
 <Base title="Tasks | Workstation" active="tasks">
   <div class="dashboard" id="task-page" data-tasks={JSON.stringify(dashboard.tasks)} data-demo={String(isDemo)}>
     <header class="area-header"><h1>Tasks</h1><span class="top-sync" id="open-task-count"></span>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <TasksNav active="triage" />
     <div class="task-stats" id="task-stats"></div>
     <div class="task-tabs" aria-label="Filter tasks">
       {['Triage', 'Today', 'Overdue', 'Upcoming', 'No date', 'Completed'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}

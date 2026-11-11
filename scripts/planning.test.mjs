@@ -31,3 +31,14 @@ test('circular dependencies and milestone-to-delivery conflicts are flagged', ()
   assert(risks.every(project => project.reasons.includes('Circular project dependency')));
   assert(risks[0].reasons.includes('Milestone falls after delivery'));
 });
+
+test('after hours, tomorrow starts at opening time and skips its own commitments', () => {
+  const tomorrow = '2026-11-12';
+  const meeting = { start: londonTime(tomorrow, '09:00'), end: londonTime(tomorrow, '10:00'), busy: true };
+  const tasks = [{ id: 'due-tomorrow', due: tomorrow, minutes: 30 }];
+  const now = at('22:00');
+  assert.deepEqual(planDay({ tasks, events: [meeting], projects: [], day, now }).blocks, []);
+  const plan = planDay({ tasks, events: [meeting], projects: [], day: tomorrow, now });
+  assert.equal(plan.blocks[0].start, londonTime(tomorrow, '10:00'));
+  assert.equal(plan.blocks[0].end, londonTime(tomorrow, '10:30'));
+});
