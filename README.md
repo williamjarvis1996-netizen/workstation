@@ -1,6 +1,8 @@
 # Workstation
 
-Astro dashboard with a compact daily Overview and dedicated Work, Training, Creative and Goals pages. Activity and Links have their own pages. The browser uses London time to update date-sensitive information and retrieves weather directly from Open-Meteo.
+Astro dashboard with a compact daily Overview and dedicated Work, Training, Creative and Goals pages. Tasks, Activity and Links have their own pages. Work groups projects by production phase, Training charts logged running distance, Creative supports optional artwork and editable next actions, and Goals includes weekly check-ins and milestone dates.
+
+Use **+ Capture** or **Ctrl/Command + Shift + K** to add tasks, workouts and creative ideas. Captured entries, task completions, creative next actions and goal plans are saved in browser storage for this site. They do not sync to the snapshot, your vault or other devices. The browser uses London time to update date-sensitive information and retrieves weather directly from Open-Meteo.
 
 ## Run with your personal snapshot
 

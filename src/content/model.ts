@@ -75,6 +75,8 @@ export interface CreativeProject {
   type: string;
   status: string;
   summary: string;
+  artwork?: string;
+  nextAction?: string;
 }
 
 export interface PersonalGoal {
@@ -82,4 +84,7 @@ export interface PersonalGoal {
   category: string;
   status: string;
   detail: string;
+  target?: string;
+  nextAction?: string;
+  milestoneDate?: string;
 }

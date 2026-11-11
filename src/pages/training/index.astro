@@ -2,98 +2,25 @@
 import Base from '../../layouts/Base.astro';
 import { dashboard, isDemo } from '../../content/dashboard';
 const { marathonTraining: marathon, exerciseSessions } = dashboard;
-const orderedSessions = [...exerciseSessions].sort((a, b) => b.date.localeCompare(a.date));
-const runs = orderedSessions.filter(session => session.type === 'run');
-const measuredRuns = runs.flatMap(run => {
-  const distance = run.distance?.match(/^([0-9]+(?:\.[0-9]+)?)\s*km$/i);
-  return distance ? [{ ...run, km: Number(distance[1]) }] : [];
-}).slice(0, 6);
-const chartMax = Math.max(1, ...measuredRuns.map(run => run.km));
-const dateLabel = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 ---
 <Base title="Training | Workstation" active="training">
-  <div class="dashboard">
+  <div class="dashboard" id="training-page" data-sessions={JSON.stringify(exerciseSessions)}>
     <header class="area-header"><h1>Training</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
-    <section class="daily-summary training-metrics" aria-label="Training snapshot">
-      <div class="day-stat"><span>Sessions logged</span><strong>{orderedSessions.length}</strong></div>
-      <div class="day-stat"><span>Runs logged</span><strong>{runs.length}</strong></div>
-      <div class="day-stat"><span>Latest run</span><strong>{runs[0]?.distance || runs[0]?.duration || 'No run logged'}</strong></div>
-    </section>
-    <div class="personal-grid">
-        <div class="personal-card personal-card--marathon">
-          <div class="pc-head">
-            <h3>Marathon Training</h3>
-            {marathon && <span class="pc-badge pc-badge--accent" id="weeks-to-race" data-race-date={marathon.raceDate}>{marathon.weeksToRace}w to race</span>}
-          </div>
-          {marathon ? <div><div class="marathon-stats">
-            <div class="mstat">
-              <span class="mstat-val">{marathon.raceName.split(' ').slice(-1)}</span>
-              <span class="mstat-label">Race</span>
-            </div>
-            <div class="mstat">
-              <span class="mstat-val">{marathon.targetTime.replace('Sub-', '<')}</span>
-              <span class="mstat-label">Target</span>
-            </div>
-            <div class="mstat">
-              <span class="mstat-val">Wk {marathon.weekNumber}</span>
-              <span class="mstat-label">{marathon.currentPhase}</span>
-            </div>
-          </div>
-          <div class="marathon-detail">
-            <div class="md-row">
-              <span class="md-label">Last long run</span>
-              <span class="md-val">{marathon.lastLongRun}</span>
-            </div>
-            <div class="md-row">
-              <span class="md-label">Next target</span>
-              <span class="md-val">{marathon.nextLongRunTarget}</span>
-            </div>
-            <div class="md-row">
-              <span class="md-label">Structure</span>
-              <span class="md-val">{marathon.weeklyStructure}</span>
-            </div>
-          </div></div> : <p class="empty-state-sm">Training snapshot unavailable in the demo.</p>}
-        </div>
-
-        <div class="personal-card personal-card--exercise">
-          <div class="pc-head">
-            <h3>Recent Exercise</h3>
-            <span class="pc-badge pc-badge--green">{exerciseSessions.length} sessions</span>
-          </div>
-          <div class="exercise-list">
-            {orderedSessions.map(session => (
-              <div class={`ex-item ex-item--${session.type}`}>
-                <div class="ex-type">{session.type}</div>
-                <div class="ex-body">
-                  <span class="ex-title">{session.title}</span>
-                  <span class="ex-meta">
-                    {session.distance && `${session.distance} `}
-                    {session.duration && `${session.duration} `}
-                    {session.avgHR && `HR ${session.avgHR} `}
-                    {session.volume && `Vol ${session.volume}`}
-                  </span>
-                </div>
-                <div class="ex-date">{session.date.slice(5)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
+    {marathon && <section class="race-hero">
+      <div><span class="top-sync">Race countdown</span><h2>{marathon.raceName}</h2>
+        <strong id="weeks-to-race" data-race-date={marathon.raceDate}>{marathon.weeksToRace} weeks</strong>
+      </div>
+      <dl><div><dt>Next long run</dt><dd>{marathon.nextLongRunTarget}</dd></div>
+        <div><dt>Target time</dt><dd>{marathon.targetTime}</dd></div>
+        <div><dt>Training phase</dt><dd>{marathon.currentPhase} · Week {marathon.weekNumber}</dd></div></dl>
+    </section>}
+    <div class="training-grid">
+      <section class="panel run-chart"><h2>Weekly running distance</h2><div id="weekly-distance"></div></section>
+      <section class="panel workout-spotlight"><h2>Last workout</h2><div id="last-workout"></div></section>
     </div>
-
-    <section class="panel run-chart">
-      <h2>Recent run distances</h2>
-      {measuredRuns.length ? (
-        <ul>
-          {[...measuredRuns].reverse().map(run => (
-            <li>
-              <time datetime={run.date}>{dateLabel.format(new Date(run.date + 'T00:00:00Z'))}</time>
-              <span class="run-chart-track" aria-hidden="true"><span style={`--run-width: ${run.km / chartMax * 100}%`}></span></span>
-              <strong>{run.km} km</strong>
-            </li>
-          ))}
-        </ul>
-      ) : <p class="empty-state-sm">No runs with a recorded distance yet.</p>}
-    </section>
+    <section class="panel"><div class="panel-head"><h2>Workout log</h2><span class="pill" id="workout-count"></span></div><div id="workout-list"></div></section>
   </div>
 </Base>
+<script>
+  import '../../lib/training.mjs';
+</script>

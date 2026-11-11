@@ -1,30 +1,78 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { dashboard, isDemo } from '../../content/dashboard';
+import { safeUrl } from '../../lib/storage.mjs';
 const { creativeProjects } = dashboard;
+const base = import.meta.env.BASE_URL;
+function artwork(value?: string) {
+  if (!value) return '';
+  return /^\/(?!\/)/.test(value) ? base + value.slice(1) : safeUrl(value);
+}
 ---
 <Base title="Creative | Workstation" active="creative">
-  <div class="dashboard">
-    <header class="area-header"><h1>Creative</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
-        <div class="personal-card personal-card--creative">
-          <div class="pc-head">
-            <h3>Creative</h3>
-            <span class="pc-badge pc-badge--purple">{creativeProjects.length} projects</span>
-          </div>
-          <div class="creative-list">
-            {creativeProjects.map(proj => (
-              <div class="cr-item">
-                <div class="cr-top">
-                  <span class="cr-name">{proj.name}</span>
-                  <span class="cr-type">{proj.type}</span>
-                </div>
-                <div class="cr-status">{proj.status}</div>
-                <div class="cr-summary">{proj.summary}</div>
-              </div>
-            ))}
-          </div>
+  <div class="dashboard" id="creative-page">
+    <header class="area-header"><h1>Creative slate</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <div class="task-tabs" aria-label="Slate view">
+      <button type="button" data-view="slate" aria-pressed="true">Slate</button><button type="button" data-view="list" aria-pressed="false">List</button>
+    </div>
+    <section class="creative-slate" id="slate" aria-label="Projects">
+      {creativeProjects.map((project, index) => <article class="slate-tile" data-tone={index % 4}>
+        <div class="slate-cover">
+          {artwork(project.artwork) && <img src={artwork(project.artwork)} alt="" loading="lazy" />}
+          <div><span>{project.type}</span><h2>{project.name}</h2></div>
         </div>
-
-
+        <div class="slate-copy">
+          <span class="pill">{project.status}</span><p>{project.summary}</p>
+          <form class="slate-action" data-project={JSON.stringify([project.name, project.type, index])}>
+            <label>Next action <input name="action" value={project.nextAction || ''} maxlength="180" /></label>
+            <button type="submit">Save</button>
+          </form>
+        </div>
+      </article>)}
+    </section>
+    <p class="top-sync" id="slate-feedback" role="status"></p>
+    <section class="panel"><h2>Captured ideas</h2><div id="ideas-list"></div></section>
   </div>
 </Base>
+<script>
+  import { readLife, updateLife } from '../../lib/life.mjs';
+  import { make } from '../../lib/storage.mjs';
+  document.addEventListener('astro:page-load', () => {
+    const root = document.getElementById('creative-page');
+    if (!root) return;
+    const controller = new AbortController();
+    const slate = root.querySelector('#slate')!;
+    const ideas = root.querySelector('#ideas-list')!;
+    const saved = readLife().creativeActions;
+    const feedback = root.querySelector('#slate-feedback')!;
+    for (const form of root.querySelectorAll<HTMLFormElement>('form[data-project]')) {
+      const id = form.dataset.project!;
+      const input = form.elements.namedItem('action') as HTMLInputElement;
+      if (Object.hasOwn(saved, id)) input.value = saved[id];
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        try {
+          updateLife(data => { data.creativeActions[id] = input.value.trim(); });
+          feedback.textContent = 'Next action saved.';
+        } catch { feedback.textContent = 'Browser storage is unavailable.'; }
+      });
+    }
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-view]')];
+    for (const button of buttons) button.addEventListener('click', () => {
+      slate.classList.toggle('is-list', button.dataset.view === 'list');
+      buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    });
+    function render() {
+      const entries = readLife().ideas;
+      ideas.replaceChildren(...[...entries].reverse().map(idea => {
+        const item = make('article', '', 'capture-entry');
+        item.append(make('h3', idea.title), make('small', idea.date), make('p', idea.summary));
+        return item;
+      }));
+      if (!entries.length) ideas.append(make('p', 'Ideas captured here will appear in this browser.', 'empty-state-sm'));
+    }
+    document.addEventListener('workstation:change', render, { signal: controller.signal });
+    document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
+    render();
+  });
+</script>

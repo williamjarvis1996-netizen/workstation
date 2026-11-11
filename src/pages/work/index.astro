@@ -1,52 +1,49 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { dashboard, isDemo } from '../../content/dashboard';
-const activeProjects = dashboard.projects.filter(project => project.status === 'active');
-const healthColors: Record<string, string> = {
-  'on-track': 'var(--color-success)',
-  'at-risk': 'var(--color-warn)',
-  'blocked': 'var(--color-danger)',
-};
 
-
+const active = dashboard.projects.filter(project => project.status === 'active');
+const phaseGroups = [
+  { name: 'Pitch & development', pattern: /pitch|develop|concept/i },
+  { name: 'Pre-production', pattern: /pre.production/i },
+  { name: 'Production', pattern: /shoot|^production/i },
+  { name: 'Post & delivery', pattern: /post|delivery|finish/i },
+];
+const phaseFor = (phase: string) => phaseGroups.find(group => group.pattern.test(phase))?.name || 'Other';
+const lanes = [...phaseGroups.map(group => group.name), 'Other'].map(name => ({
+  name,
+  projects: active.filter(project => phaseFor(project.phase) === name).sort((a, b) =>
+    (a.nextMilestoneDate || a.deadline || '9999').localeCompare(b.nextMilestoneDate || b.deadline || '9999')),
+})).filter(group => group.projects.length);
+const attention = active.filter(project => project.health === 'at-risk' || project.health === 'blocked')
+  .sort((a, b) => Number(b.health === 'blocked') - Number(a.health === 'blocked'));
+const healthColors = { 'on-track': 'var(--color-success)', 'at-risk': 'var(--color-warn)', blocked: 'var(--color-danger)' };
 ---
 <Base title="Work | Workstation" active="work">
   <div class="dashboard">
-    <header class="area-header"><h1>Work</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
-    <section class="section-wrap">
-      <div class="section-header">
-        <h2 class="section-title">Active projects</h2>
-        <span class="pill">{activeProjects.length} active</span>
-      </div>
-      <div class="project-grid">
-        {activeProjects.map(project => (
-          <div class="pcard" style={`--health-color: ${healthColors[project.health]}`}>
-            <div class="pcard-top">
-              <span class="pcard-code">{project.code}</span>
-              <span class={`pcard-health pcard-health--${project.health}`}>{project.health.replace('-', ' ')}</span>
-            </div>
-            <div class="pcard-name">{project.name}</div>
-            <div class="pcard-client">{project.client}</div>
-            <div class="pcard-phase">{project.phase}</div>
-            <div class="pcard-status">{project.statusSummary}</div>
-            {project.nextMilestone && (
-              <div class="pcard-milestone">
-                <span class="pcard-milestone-label">Next:</span> {project.nextMilestone}
-                {project.nextMilestoneDate && <span class="pcard-milestone-date">{project.nextMilestoneDate}</span>}
-              </div>
-            )}
-            {project.links && project.links.length > 0 && (
-              <div class="pcard-links">
-                {project.links.map(link => (
-                  <a href={link.url} target="_blank" rel="noopener">{link.label}</a>
-                ))}
-              </div>
-            )}
+    <header class="area-header"><h1>Production board</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    {attention.length > 0 && <section class="risk-strip" aria-label="Projects needing attention">
+      <strong>Needs attention</strong>
+      {attention.map(project => <a href={'#project-' + encodeURIComponent(project.code)} class={project.health}>{project.name} <small>{project.health.replace('-', ' ')}</small></a>)}
+    </section>}
+    <div class="production-board">
+      {lanes.map(lane => <section class="production-lane">
+        <header><h2>{lane.name}</h2><span class="pill">{lane.projects.length}</span></header>
+        {lane.projects.map(project => <article class="pcard" id={'project-' + encodeURIComponent(project.code)} style={`--health-color: ${healthColors[project.health]}`}>
+          <div class="pcard-top"><span class="pcard-code">{project.code}</span><span class={`pcard-health pcard-health--${project.health}`}>{project.health.replace('-', ' ')}</span></div>
+          <h3 class="pcard-name">{project.name}</h3>
+          <div class="pcard-client">{project.client} · {project.phase}</div>
+          <div class="production-next">
+            <span>Next milestone</span>
+            <strong>{project.nextMilestone || 'Milestone pending'}</strong>
+            {(project.nextMilestoneDate || project.deadline) && <time datetime={project.nextMilestoneDate || project.deadline}>{project.nextMilestoneDate || project.deadline}</time>}
+            {project.deadline && project.nextMilestoneDate && project.deadline !== project.nextMilestoneDate && <small>Delivery {project.deadline}</small>}
           </div>
-        ))}
-      </div>
-    </section>
-
-
+          <p class="pcard-status">{project.statusSummary}</p>
+          {project.links?.length && <div class="pcard-links">{project.links.map(link => <a href={link.url} target="_blank" rel="noopener">{link.label}</a>)}</div>}
+        </article>)}
+      </section>)}
+      {!lanes.length && <p class="empty-state-sm">No active projects.</p>}
+    </div>
   </div>
 </Base>

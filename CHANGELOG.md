@@ -1,5 +1,16 @@
 # Changelog
 
+## Dashboard redesign and quick capture
+
+- Rebuilt Today as a time-based agenda with overlapping lanes, a live now marker and a highlighted focus block. Added a daily brief that changes with calendar and task state.
+- Turned Work into a phase-based production board with an attention strip, prominent milestones and dates.
+- Gave Work, Training, Creative and Goals distinct accent colours within the navy shell.
+- Rebuilt Training around the race countdown, next long run, weekly distance, last workout and pace where distance and duration are recorded.
+- Added a Creative poster slate, list view, optional artwork and browser-local next actions.
+- Added editable goal targets, next actions, milestone dates and a seven-day check-in grid.
+- Added a three-item task preview, filters, quick completion, a dedicated Tasks page and a keyboard-accessible capture dock for tasks, workouts and ideas.
+- Added stronger panel contrast, a clock glow and reduced-motion-aware transitions. Demo builds continue to use labelled sample data.
+
 ## Daily overview and life pages
 
 - Added Work, Training, Creative and Goals pages with a desktop sidebar and wrapping mobile navigation. Kept Activity and Links.

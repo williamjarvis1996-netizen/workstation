@@ -1,28 +1,19 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { dashboard, isDemo } from '../../content/dashboard';
-const { personalGoals } = dashboard;
 ---
 <Base title="Goals | Workstation" active="goals">
-  <div class="dashboard">
-    <header class="area-header"><h1>Goals</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
-        <div class="personal-card personal-card--goals">
-          <div class="pc-head">
-            <h3>Goals</h3>
-          </div>
-          <div class="goals-list">
-            {personalGoals.map(goal => (
-              <div class="goal-item">
-                <div class="goal-top">
-                  <span class="goal-name">{goal.name}</span>
-                  <span class="goal-cat">{goal.category}</span>
-                </div>
-                <div class="goal-detail">{goal.detail}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-
+  <div class="dashboard" id="goals-page" data-goals={JSON.stringify(dashboard.personalGoals)}>
+    <header class="area-header"><h1>Goals &amp; habits</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <div class="goal-board" id="goal-board"></div>
+    <section class="panel">
+      <div class="panel-head"><h2>Weekly check-in</h2><span id="habit-week" class="pill"></span></div>
+      <div id="habit-grid"></div>
+    </section>
+    <section class="panel"><h2>Milestones</h2><ol id="goal-milestones" class="goal-milestones"></ol></section>
+    <p id="goal-feedback" class="top-sync" role="status"></p>
   </div>
 </Base>
+<script>
+  import '../../lib/goals.mjs';
+</script>

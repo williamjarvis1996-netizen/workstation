@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import { dashboard, isDemo } from '../../content/dashboard';
+---
+<Base title="Tasks | Workstation" active="tasks">
+  <div class="dashboard" id="task-page" data-tasks={JSON.stringify(dashboard.tasks)} data-demo={String(isDemo)}>
+    <header class="area-header"><h1>Tasks</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <section class="panel">
+      <div class="task-tabs" aria-label="Filter tasks">
+        {['Today', 'Overdue', 'Upcoming', 'No date', 'Completed'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
+      </div>
+      <div id="full-tasks"></div>
+      <p role="status" class="top-sync" id="task-feedback"></p>
+    </section>
+  </div>
+</Base>
+<script>
+  import { groupTasks } from '../../lib/time.mjs';
+  import { mergedTasks, sampleTasks, taskRow, today } from '../../lib/life.mjs';
+  import { make } from '../../lib/storage.mjs';
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('#task-page');
+    if (!root) return;
+    const controller = new AbortController();
+    const tasks = JSON.parse(root.dataset.tasks || '[]');
+    const filters = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const target = root.querySelector('#full-tasks')!;
+    let filter = 'Today';
+    function render() {
+      const day = today();
+      const all = mergedTasks(root?.dataset.demo === 'true' ? [...tasks, ...sampleTasks(day)] : tasks);
+      const groups = groupTasks(all, day);
+      const selected = groups[filter];
+      target.replaceChildren();
+      const sections = new Map();
+      for (const task of selected) {
+        let section = target;
+        if (filter === 'Overdue') {
+          const label = task.project || 'Other tasks';
+          if (!sections.has(label)) {
+            const group = make('section', '', 'overdue-group');
+            group.append(make('h3', label));
+            sections.set(label, group);
+            target.append(group);
+          }
+          section = sections.get(label);
+        }
+        section.append(taskRow(task, [filter !== 'Overdue' && task.project, task.due].filter(Boolean).join(' · ')));
+      }
+      if (!groups[filter].length) target.append(make('p', 'No tasks in this view.', 'empty-state-sm'));
+    }
+    for (const button of filters) button.addEventListener('click', () => {
+      filter = button.dataset.filter || 'Today';
+      filters.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      render();
+    });
+    document.addEventListener('workstation:change', render, { signal: controller.signal });
+    document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
+    render();
+  });
+</script>

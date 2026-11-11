@@ -59,6 +59,7 @@ const sourceColors: Record<string, string> = {
       ))}
     </nav>
 
+    <aside class="day-brief" aria-label="Current priority"><span id="day-brief-label">Your day</span><strong id="day-brief-text"></strong></aside>
     <div class="day-grid">
       <section class="panel panel--today">
         <div class="panel-head">
@@ -68,16 +69,12 @@ const sourceColors: Record<string, string> = {
         <div class="timeline" id="today-timeline"></div>
       </section>
       <section class="panel compact-tasks" id="tasks">
-        <div class="panel-head"><h2>To-dos</h2><span class="pill" id="timeline-count">0 due</span></div>
+        <div class="panel-head"><h2>To-dos</h2><a class="panel-link" href={base + 'tasks/'}>All tasks &rarr;</a></div>
+        <div class="task-tabs" aria-label="Filter preview">
+          {['Priority', 'Today', 'Upcoming', 'Overdue'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
+        </div>
         <div id="today-tasks"></div>
-        <details id="overdue-panel" hidden>
-          <summary id="overdue-summary">Overdue</summary>
-          <div id="overdue-tasks"></div>
-        </details>
-        <details>
-          <summary>Upcoming and undated</summary>
-          <div id="upcoming-tasks"></div>
-        </details>
+        <p role="status" class="top-sync" id="task-feedback"></p>
       </section>
     </div>
 

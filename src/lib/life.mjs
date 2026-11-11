@@ -1,0 +1,95 @@
+import { addDays, londonDay } from './time.mjs';
+import { make } from './storage.mjs';
+
+const key = 'workstation-life-v1';
+const empty = () => ({ tasks: [], workouts: [], ideas: [], completed: {}, goals: {}, habits: {}, creativeActions: {} });
+
+export function readLife() {
+  try {
+    return { ...empty(), ...JSON.parse(localStorage.getItem(key)) };
+  } catch {
+    return empty();
+  }
+}
+
+export function updateLife(change) {
+  const data = readLife();
+  change(data);
+  localStorage.setItem(key, JSON.stringify(data));
+  document.dispatchEvent(new Event('workstation:change'));
+}
+
+export function mergedTasks(tasks) {
+  const data = readLife();
+  const duplicates = new Map();
+  const snapshot = tasks.map(task => {
+    const signature = JSON.stringify([task.title, task.project, task.due]);
+    const occurrence = duplicates.get(signature) || 0;
+    duplicates.set(signature, occurrence + 1);
+    return { ...task, id: task.id || `snapshot:${signature}:${occurrence}` };
+  });
+  return [...snapshot, ...data.tasks].map(task => ({
+    ...task, completed: Object.hasOwn(data.completed, task.id) ? data.completed[task.id] : task.completed,
+  }));
+}
+
+export function taskRow(task, detail) {
+  const row = make('label', '', 'action-task');
+  const check = make('input');
+  check.type = 'checkbox';
+  check.checked = Boolean(task.completed);
+  check.addEventListener('change', () => {
+    try {
+      updateLife(data => { data.completed[task.id] = check.checked; });
+      document.getElementById('task-feedback').textContent = check.checked ? 'Task completed.' : 'Task reopened.';
+      document.querySelector('.task-tabs [aria-pressed="true"]')?.focus();
+    } catch {
+      check.checked = !check.checked;
+      document.getElementById('task-feedback').textContent = 'Browser storage is unavailable.';
+    }
+  });
+  const text = make('span', '', 'action-task-copy');
+  text.append(make('strong', task.title));
+  if (detail) text.append(make('small', detail));
+  row.append(check, text);
+  return row;
+}
+
+export function weekStart(day) {
+  const weekday = new Date(day + 'T00:00:00Z').getUTCDay();
+  return addDays(day, -((weekday + 6) % 7));
+}
+
+export function sampleTasks(day) {
+  return [
+    { id: 'demo-overdue', title: 'Review first edit', project: 'Social Series', priority: 'high', due: addDays(day, -1) },
+    { id: 'demo-today', title: 'Confirm locations', project: 'Brand Film', priority: 'medium', due: day },
+    { id: 'demo-upcoming', title: 'Share budget', project: 'Studio Launch', priority: 'medium', due: addDays(day, 2) },
+  ];
+}
+
+export function priorityToday(groups) {
+  return [...groups.Today, ...groups.Overdue].sort((a, b) => {
+    const rank = { high: 0, medium: 1, low: 2 };
+    return rank[a.priority] - rank[b.priority];
+  });
+}
+
+export function workoutDistance(session) {
+  const match = session.distance?.match(/^([0-9]+(?:\.[0-9]+)?)\s*(km|mi)$/i);
+  return match ? Number(match[1]) * (match[2].toLowerCase() === 'mi' ? 1.609344 : 1) : 0;
+}
+
+export function workoutPace(session) {
+  const raw = session.duration?.trim() || '';
+  const units = raw.match(/^(?:(\d+)h\s*)?(?:(\d+)\s*m(?:in)?)?(?:\s*(\d+)\s*s)?$/i);
+  const clock = /^\d{1,3}:\d{2}(?::\d{2})?$/.test(raw) ? raw.split(':').map(Number) : [];
+  const elapsed = clock.length ? clock.reduce((total, part) => total * 60 + part, 0)
+    : units ? Number(units[1] || 0) * 3600 + Number(units[2] || 0) * 60 + Number(units[3] || 0) : 0;
+  const distance = workoutDistance(session);
+  if (!elapsed || !distance) return '';
+  const seconds = Math.round(elapsed / distance);
+  return seconds ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} /km` : '';
+}
+
+export function today() { return londonDay(Date.now()); }
