@@ -42,7 +42,6 @@ const navigation = [
           {navigation.map(([key, path, label]) => (
             <a href={base + path} data-nav={key} aria-current={active === key ? 'page' : undefined}>{label}</a>
           ))}
-          <a href={base + '#settings'} data-nav="sync" id="settings-link">Settings</a>
         </nav>
       </div>
     </header>
