@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import OverviewWidgets from '../components/OverviewWidgets.astro';
 import { dashboard, isDemo } from '../content/dashboard';
 const { tasks, log, quickLinks, calendarEvents, lastUpdated } = dashboard;
 const recentLog = log.slice(0, 12);
@@ -110,6 +111,8 @@ const sourceColors: Record<string, string> = {
         <p role="status" class="top-sync" id="task-feedback"></p>
       </section>
     </div>
+
+    <OverviewWidgets />
 
     <!-- ===== QUICK LINKS BAR ===== -->
     <nav class="links-bar">
