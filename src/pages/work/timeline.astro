@@ -2,98 +2,140 @@
 import Base from '../../layouts/Base.astro';
 import WorkNav from '../../components/WorkNav.astro';
 import { dashboard } from '../../content/dashboard';
+import { productionDates } from '../../lib/work-timeline.mjs';
 
-const projects = dashboard.projects.filter(p => p.status === 'active');
-const tasks = dashboard.tasks.filter(t => t.due && !t.completed);
-
-type TimelineItem = { date: string; label: string; project: string; type: 'milestone' | 'task'; health?: string };
-const items: TimelineItem[] = [];
-
-for (const p of projects) {
-  if (p.nextMilestone && p.nextMilestoneDate) {
-    items.push({ date: p.nextMilestoneDate, label: p.nextMilestone, project: `${p.name} (${p.code})`, type: 'milestone', health: p.health });
-  }
-  if (p.deadline) {
-    items.push({ date: p.deadline, label: 'Deadline', project: `${p.name} (${p.code})`, type: 'milestone', health: p.health });
-  }
-}
-for (const t of tasks) {
-  if (t.due) {
-    items.push({ date: t.due, label: t.title, project: t.project || '', type: 'task' });
-  }
-}
-items.sort((a, b) => a.date.localeCompare(b.date));
-
-const grouped = new Map<string, TimelineItem[]>();
-for (const item of items) {
-  const list = grouped.get(item.date) || [];
-  list.push(item);
-  grouped.set(item.date, list);
-}
-
-const today = new Date().toISOString().slice(0, 10);
-
-const healthColor: Record<string, string> = {
-  'on-track': 'var(--color-success)',
-  'at-risk': 'var(--color-warn)',
-  blocked: 'var(--color-danger)',
-};
+const dates = productionDates(dashboard.projects);
+const projectRoot = import.meta.env.BASE_URL + 'work/';
 ---
 <Base title="Timeline | Work" active="work">
   <div class="dashboard">
     <header class="area-header"><h1>Timeline</h1></header>
     <WorkNav active="timeline" />
 
-    <div class="timeline-view">
-      {[...grouped.entries()].map(([date, dayItems]) => {
-        const isPast = date < today;
-        const isToday = date === today;
-        return (
-          <div class={`timeline-day ${isPast ? 'timeline-day--past' : ''} ${isToday ? 'timeline-day--today' : ''}`}>
-            <div class="timeline-date">
-              <span class="timeline-date-label">{isToday ? 'Today' : new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-              {isPast && <span class="timeline-overdue">overdue</span>}
-            </div>
-            <div class="timeline-items">
-              {dayItems.map(item => (
-                <div class={`timeline-entry timeline-entry--${item.type}`}>
-                  {item.type === 'milestone' && (
-                    <span class="timeline-dot" style={`background: ${healthColor[item.health || 'on-track']}`}></span>
-                  )}
-                  {item.type === 'task' && (
-                    <span class="timeline-dot timeline-dot--task"></span>
-                  )}
-                  <div class="timeline-content">
-                    <span class="timeline-label">{item.label}</span>
-                    {item.project && <span class="timeline-project">{item.project}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <section class="panel production-timeline" id="production-timeline" data-dates={JSON.stringify(dates)} data-project-root={projectRoot}>
+      <div class="panel-head">
+        <div>
+          <h2>Next 14 days</h2>
+          <p class="top-sync" id="timeline-range"></p>
+        </div>
+        <p class="timeline-clash-summary" id="timeline-clashes"></p>
+      </div>
+      <div id="timeline-weeks"></div>
+      <div id="timeline-other-dates"></div>
+      <noscript><p>Enable JavaScript to show the current London-date timeline.</p></noscript>
+    </section>
   </div>
 </Base>
 
-<style>
-  .timeline-view { display: grid; gap: var(--space-sm); }
-  .timeline-day { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: var(--space-md); padding: var(--panel-inset); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
-  .timeline-day--today { border-color: var(--area-border); background: var(--area-tint); }
-  .timeline-day--today .timeline-date-label { color: var(--area-accent); font-weight: 700; }
-  .timeline-date { display: flex; flex-direction: column; gap: .15rem; font: .78rem var(--font-mono); color: var(--color-fg-muted); padding-top: .15rem; }
-  .timeline-overdue { color: var(--color-danger); font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; }
-  .timeline-items { display: grid; gap: .5rem; }
-  .timeline-entry { display: flex; align-items: start; gap: .55rem; }
-  .timeline-dot { flex: none; width: .5rem; height: .5rem; border-radius: 50%; margin-top: .35rem; background: var(--area-accent, #82b6ff); }
-  .timeline-dot--task { background: var(--color-fg-subtle); }
-  .timeline-content { display: grid; gap: .1rem; min-width: 0; }
-  .timeline-label { font-size: .85rem; font-weight: 600; overflow-wrap: anywhere; }
-  .timeline-entry--milestone .timeline-label { color: var(--color-fg); }
-  .timeline-entry--task .timeline-label { color: var(--color-fg-muted); font-weight: 500; }
-  .timeline-project { font: .7rem var(--font-mono); color: var(--color-fg-subtle); }
-  @media (max-width: 500px) {
-    .timeline-day { grid-template-columns: 1fr; gap: .35rem; }
+<script>
+  import { make } from '../../lib/storage.mjs';
+  import { londonDay } from '../../lib/time.mjs';
+  import { timelineWindow } from '../../lib/work-timeline.mjs';
+
+  const shortDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'UTC' });
+  const format = (formatter: Intl.DateTimeFormat, date: string) => formatter.format(new Date(date + 'T00:00:00Z'));
+
+  document.addEventListener('astro:page-load', () => {
+    const root = document.getElementById('production-timeline');
+    if (!root) return;
+    const range = document.getElementById('timeline-range')!;
+    const clashes = document.getElementById('timeline-clashes')!;
+    const weeks = document.getElementById('timeline-weeks')!;
+    const otherDates = document.getElementById('timeline-other-dates')!;
+    const dates = JSON.parse(root.dataset.dates!);
+    let lastDay = '';
+
+    function projectList(items, showDate = false) {
+      const list = make('ul', '', 'timeline-projects');
+      for (const item of items) {
+        const row = make('li', '', 'timeline-project-date');
+        const link = make('a', item.project);
+        link.href = root!.dataset.projectRoot + encodeURIComponent(item.code.toLowerCase()) + '/';
+        const label = make('span', item.label, item.kind === 'deadline' ? 'timeline-deadline' : 'timeline-milestone');
+        if (showDate) {
+          const time = make('time', format(shortDate, item.date));
+          time.dateTime = item.date;
+          row.append(time);
+        }
+        row.append(link, label);
+        list.append(row);
+      }
+      return list;
+    }
+
+    function refresh() {
+      const today = londonDay(Date.now());
+      if (today === lastDay) return;
+      lastDay = today;
+      const { days, clashes: count, earlier, later } = timelineWindow(dates, today);
+      range.textContent = `${format(shortDate, today)} – ${format(shortDate, days[13].date)} · London`;
+      clashes.textContent = count ? `${count} ${count === 1 ? 'day' : 'days'} with overlapping projects` : 'No overlapping project dates';
+      clashes.classList.toggle('has-clash', count > 0);
+      weeks.replaceChildren();
+      if (!days.some(day => day.items.length)) {
+        weeks.append(make('p', 'No dated production milestones or deadlines in this window.', 'empty-state-sm'));
+      } else {
+        for (const slice of [days.slice(0, 7), days.slice(7)]) {
+          const week = make('div', '', 'timeline-week');
+          for (const day of slice) {
+            const cell = make('section', '', 'timeline-date-cell');
+            cell.classList.toggle('is-empty', !day.items.length);
+            cell.classList.toggle('is-today', day.date === today);
+            cell.classList.toggle('has-clash', day.projectCount > 1);
+            const title = make('h3');
+            const date = make('time', `${format(weekday, day.date)} ${format(shortDate, day.date)}`);
+            date.dateTime = day.date;
+            title.append(date);
+            cell.append(title);
+            if (day.projectCount > 1) cell.append(make('p', `${day.projectCount} projects`, 'timeline-day-clash'));
+            if (day.items.length) cell.append(projectList(day.items));
+            week.append(cell);
+          }
+          weeks.append(week);
+        }
+      }
+      otherDates.replaceChildren();
+      for (const [label, entries] of [['Earlier project dates', earlier], ['Later project dates', later]]) {
+        if (!entries.length) continue;
+        const details = make('details');
+        details.append(make('summary', `${label} (${entries.length})`), projectList(entries, true));
+        otherDates.append(details);
+      }
+    }
+
+    const controller = new AbortController();
+    refresh();
+    const timer = window.setInterval(refresh, 60000);
+    document.addEventListener('visibilitychange', refresh, { signal: controller.signal });
+    document.addEventListener('astro:before-swap', () => {
+      controller.abort();
+      window.clearInterval(timer);
+    }, { once: true });
+  });
+</script>
+
+<style is:global>
+  .production-timeline #timeline-weeks { display: grid; gap: var(--space-sm); }
+  .production-timeline .timeline-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-xs); }
+  .production-timeline .timeline-date-cell { min-width: 0; min-height: 5rem; padding: .55rem; border: 1px solid var(--color-border-hover); border-radius: var(--radius); background: var(--color-surface); }
+  .production-timeline .timeline-date-cell h3 { font: 700 .72rem/1.4 var(--font-mono); color: var(--color-fg-muted); }
+  .production-timeline .timeline-date-cell.is-today { border-color: var(--area-accent); }
+  .production-timeline .timeline-date-cell.is-today h3 { color: var(--area-accent); }
+  .production-timeline .timeline-date-cell.has-clash { background: var(--area-tint); border-color: var(--area-border); }
+  .production-timeline .timeline-clash-summary, .production-timeline .timeline-day-clash { color: var(--color-fg-muted); font: .72rem/1.5 var(--font-mono); }
+  .production-timeline .timeline-clash-summary.has-clash, .production-timeline .timeline-day-clash { color: var(--area-accent); }
+  .production-timeline .timeline-projects { list-style: none; display: grid; gap: .55rem; margin-top: .5rem; }
+  .production-timeline .timeline-project-date { display: grid; gap: .15rem; padding-inline-start: .4rem; border-inline-start: 2px solid var(--area-border); font-size: .79rem; overflow-wrap: anywhere; line-height: 1.4; }
+  .production-timeline .timeline-project-date a { color: var(--color-fg); font-weight: 650; }
+  .production-timeline .timeline-project-date a:hover { color: var(--area-accent); text-decoration: underline; }
+  .production-timeline .timeline-milestone, .production-timeline .timeline-project-date time { color: var(--color-fg-muted); }
+  .production-timeline .timeline-deadline { color: var(--color-warn); }
+  .production-timeline #timeline-other-dates details { margin-top: var(--space-md); border-top: 1px solid var(--color-border); padding-top: var(--space-sm); }
+  .production-timeline #timeline-other-dates summary { color: var(--color-fg-muted); cursor: pointer; }
+  @media (max-width: 960px) {
+    .production-timeline .timeline-week { display: contents; }
+    .production-timeline .timeline-date-cell { min-height: 0; padding: .7rem; }
+    .production-timeline .timeline-date-cell.is-empty { display: none; }
   }
 </style>
