@@ -5,10 +5,11 @@ import { dashboard, isDemo } from '../../content/dashboard';
 <Base title="Tasks | Workstation" active="tasks">
   <div class="dashboard" id="task-page" data-tasks={JSON.stringify(dashboard.tasks)} data-demo={String(isDemo)}>
     <header class="area-header"><h1>Tasks</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
-    <section class="panel">
-      <div class="task-tabs" aria-label="Filter tasks">
-        {['Today', 'Overdue', 'Upcoming', 'No date', 'Completed'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
-      </div>
+    <div class="task-stats" id="task-stats"></div>
+    <div class="task-tabs" aria-label="Filter tasks">
+      {['Today', 'Overdue', 'Upcoming', 'No date', 'Completed'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
+    </div>
+    <section class="panel" id="task-panel">
       <div id="full-tasks"></div>
       <p role="status" class="top-sync" id="task-feedback"></p>
     </section>
@@ -25,29 +26,46 @@ import { dashboard, isDemo } from '../../content/dashboard';
     const tasks = JSON.parse(root.dataset.tasks || '[]');
     const filters = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
     const target = root.querySelector('#full-tasks')!;
+    const stats = root.querySelector('#task-stats')!;
     let filter = 'Today';
     function render() {
       const day = today();
       const all = mergedTasks(root?.dataset.demo === 'true' ? Object.keys(readLife().portfolio).length ? [] : [...tasks, ...sampleTasks(day)] : tasks);
       const groups = groupTasks(all, day);
+      const total = all.filter(t => !t.completed).length;
+      const statCards = [
+        { label: 'Due today', value: groups.Today.length, accent: 'var(--color-accent)' },
+        { label: 'Overdue', value: groups.Overdue.length, accent: 'var(--color-danger)' },
+        { label: 'Upcoming', value: groups.Upcoming.length, accent: 'var(--color-fg-muted)' },
+        { label: 'Total open', value: total, accent: 'var(--color-fg)' },
+      ];
+      stats.replaceChildren(...statCards.map(s => {
+        const card = make('div', '', 'task-stat-card');
+        const val = make('span', String(s.value), 'task-stat-value');
+        val.style.color = s.accent;
+        card.append(val, make('span', s.label, 'task-stat-label'));
+        return card;
+      }));
       const selected = groups[filter];
       target.replaceChildren();
       const sections = new Map();
       for (const task of selected) {
         let section = target;
-        if (filter === 'Overdue') {
-          const label = task.project || 'Other tasks';
-          if (!sections.has(label)) {
-            const group = make('section', '', 'overdue-group');
-            group.append(make('h3', label));
-            sections.set(label, group);
-            target.append(group);
-          }
-          section = sections.get(label);
+        const groupKey = task.project || 'Other';
+        if (!sections.has(groupKey)) {
+          const group = make('section', '', 'task-group');
+          group.append(make('h3', groupKey, 'task-group-label'));
+          sections.set(groupKey, group);
+          target.append(group);
         }
-        section.append(taskRow(task, [filter !== 'Overdue' && task.project, task.due].filter(Boolean).join(' · ')));
+        section = sections.get(groupKey);
+        section.append(taskRow(task, [task.due].filter(Boolean).join(' · ')));
       }
-      if (!groups[filter].length) target.append(make('p', 'No tasks in this view.', 'empty-state-sm'));
+      if (!selected.length) {
+        const empty = make('div', '', 'task-empty');
+        empty.append(make('span', filter === 'Completed' ? 'No completed tasks yet' : filter === 'Overdue' ? 'Nothing overdue' : 'All clear', 'task-empty-text'));
+        target.append(empty);
+      }
     }
     for (const button of filters) button.addEventListener('click', () => {
       filter = button.dataset.filter || 'Today';

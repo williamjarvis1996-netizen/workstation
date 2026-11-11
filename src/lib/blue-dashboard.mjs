@@ -291,7 +291,7 @@ function mountOverview() {
   const settingsPanel = byId('settings');
   function openSettings() { if (location.hash === '#settings') settingsPanel.open = true; }
   window.addEventListener('hashchange', openSettings, { signal: lifecycle.signal });
-  byId('settings-link').addEventListener('click', () => { settingsPanel.open = true; });
+  byId('settings-link')?.addEventListener('click', () => { settingsPanel.open = true; });
   openSettings();
   warmIdentity();
   renderConnection();

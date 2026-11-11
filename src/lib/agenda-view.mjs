@@ -4,15 +4,55 @@ import { externalLink, make } from './storage.mjs';
 export function renderAgenda(target, model, day, now, available) {
   const allDay = model.today.filter(event => event.allDay);
   const timed = model.today.filter(event => !event.allDay);
+
+  if (!available) {
+    target.replaceChildren(make('p', 'Connect Google Calendar in Settings to see your schedule.', 'empty-state-sm'));
+    return;
+  }
+
+  if (timed.length <= 3 && !model.current.length) {
+    const list = make('div', '', 'agenda-compact');
+    if (!timed.length && !allDay.length) {
+      list.append(make('p', 'No events today', 'empty-state-sm'));
+    }
+    for (const event of allDay) {
+      const row = make('div', '', 'agenda-row agenda-row--allday');
+      row.append(make('span', 'All day', 'agenda-row-time'));
+      row.append(event.url ? externalLink(event.title, event.url) : make('strong', event.title));
+      list.append(row);
+    }
+    for (const event of timed) {
+      const row = make('div', '', 'agenda-row');
+      row.append(make('span', `${londonClock(event.start)}–${londonClock(event.end)}`, 'agenda-row-time'));
+      const body = make('div', '', 'agenda-row-body');
+      body.append(event.url ? externalLink(event.title, event.url) : make('strong', event.title));
+      if (event.location) body.append(make('small', event.location));
+      row.append(body);
+      list.append(row);
+    }
+    if (model.longest) {
+      const row = make('div', '', 'agenda-row agenda-row--focus');
+      row.append(make('span', `${londonClock(model.longest.start)}–${londonClock(model.longest.end)}`, 'agenda-row-time'));
+      row.append(make('strong', 'Focus window'));
+      list.append(row);
+    }
+    if (model.upcoming.length) {
+      list.append(make('p', 'Coming up', 'agenda-upcoming-label'));
+      for (const event of model.upcoming.slice(0, 3)) {
+        const row = make('div', '', 'agenda-row agenda-row--upcoming');
+        const dateStr = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short' }).format(event.start);
+        row.append(make('span', event.allDay ? dateStr : `${dateStr} ${londonClock(event.start)}`, 'agenda-row-time'));
+        row.append(event.url ? externalLink(event.title, event.url) : make('strong', event.title));
+        list.append(row);
+      }
+    }
+    target.replaceChildren(list);
+    return;
+  }
+
   const start = Math.min(londonTime(day, '09:00'), ...timed.map(event => event.start));
   const end = Math.max(londonTime(day, '18:00'), ...timed.map(event => event.end));
   const scale = Math.max(1, (end - start) / 3600000);
-  const label = make('p', '', 'empty-state-sm');
-  if (!available) {
-    label.textContent = 'Connect Google Calendar in Settings to see your schedule.';
-    target.replaceChildren(label);
-    return;
-  }
   const axis = make('div', '', 'agenda-axis');
   axis.style.setProperty('--hours', String(Math.min(14, scale)));
   const place = (element, startTime, endTime = startTime) => {

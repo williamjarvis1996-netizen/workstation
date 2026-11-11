@@ -176,24 +176,25 @@ const sourceColors: Record<string, string> = {
 
 <script>
   import '../lib/blue-dashboard.mjs';
+</script>
+<script>
   import { importSnapshot } from '../lib/import-snapshot.mjs';
   import { syncInfo, refreshShared, refreshTodoist } from '../lib/shared.mjs';
   document.addEventListener('astro:page-load', () => {
     const root = document.getElementById('blue-dashboard');
     if (!root) return;
     const controller = new AbortController();
-    const format = new Intl.DateTimeFormat('en-GB', {dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/London'});
     function renderSync() {
       const state = syncInfo();
       for (const key of ['shared','todoist','calendar']) {
-        const el = root.querySelector(`[data-status="${key}"]`);
+        const el = root.querySelector('[data-status="' + key + '"]');
         if (el) el.textContent = state[key].status;
       }
     }
-    root.querySelector('#snapshot-import')?.addEventListener('click', async () => {
-      const picker = root.querySelector<HTMLInputElement>('#snapshot-file');
+    document.getElementById('snapshot-import')?.addEventListener('click', async () => {
+      const picker = /** @type {HTMLInputElement|null} */ (document.getElementById('snapshot-file'));
       const file = picker?.files?.[0];
-      const feedback = root.querySelector('#snapshot-feedback');
+      const feedback = document.getElementById('snapshot-feedback');
       if (!file || file.size > 1000000) { if (feedback) feedback.textContent = 'Choose a JSON file under 1 MB.'; return; }
       try {
         if (feedback) feedback.textContent = importSnapshot(JSON.parse(await file.text()));
@@ -202,8 +203,8 @@ const sourceColors: Record<string, string> = {
         if (feedback) feedback.textContent = error instanceof Error ? error.message : 'Import failed.';
       }
     });
-    root.querySelector('#refresh-shared')?.addEventListener('click', () => { void refreshShared(); });
-    root.querySelector('#refresh-todoist')?.addEventListener('click', () => { void refreshTodoist(); });
+    document.getElementById('refresh-shared')?.addEventListener('click', () => { void refreshShared(); });
+    document.getElementById('refresh-todoist')?.addEventListener('click', () => { void refreshTodoist(); });
     document.addEventListener('workstation:sync', renderSync, { signal: controller.signal });
     document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
     renderSync();
