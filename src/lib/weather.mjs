@@ -43,6 +43,6 @@ export async function londonWeather(signal) {
     temperature,
     condition: description(current.weather_code),
     headline: `${temperature}° · ${description(current.weather_code)}`,
-    details: `High ${high}° · Low ${low}° · ${rain}% chance of precipitation`,
+    details: `High ${high}° · Low ${low}° · ${rain}% precip.`,
   };
 }

@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import OverviewWidgets from '../components/OverviewWidgets.astro';
 import { dashboard, isDemo } from '../content/dashboard';
 const { tasks, log, quickLinks, calendarEvents, lastUpdated } = dashboard;
 const recentLog = log.slice(0, 12);
@@ -33,55 +34,49 @@ const sourceColors: Record<string, string> = {
           {isDemo && <span class="top-sync">Sample data</span>}
         </div>
       </div>
-      <div class="hero-center">
-        <div class="analog-clock" id="analog-clock">
-          <svg viewBox="0 0 200 200" class="clock-face">
-            <circle cx="100" cy="100" r="95" class="clock-ring" />
-            <circle cx="100" cy="100" r="88" class="clock-inner" />
-            {[...Array(12)].map((_, i) => {
-              const angle = (i * 30 - 90) * (Math.PI / 180);
-              const x1 = 100 + 78 * Math.cos(angle);
-              const y1 = 100 + 78 * Math.sin(angle);
-              const x2 = 100 + 88 * Math.cos(angle);
-              const y2 = 100 + 88 * Math.sin(angle);
-              return <line x1={x1} y1={y1} x2={x2} y2={y2} class={`clock-tick ${i % 3 === 0 ? 'clock-tick--major' : ''}`} />;
-            })}
-            {[...Array(60)].map((_, i) => {
-              if (i % 5 === 0) return null;
-              const angle = (i * 6 - 90) * (Math.PI / 180);
-              const x1 = 100 + 84 * Math.cos(angle);
-              const y1 = 100 + 84 * Math.sin(angle);
-              const x2 = 100 + 88 * Math.cos(angle);
-              const y2 = 100 + 88 * Math.sin(angle);
-              return <line x1={x1} y1={y1} x2={x2} y2={y2} class="clock-tick clock-tick--minor" />;
-            })}
-            <line id="clock-hour" x1="100" y1="100" x2="100" y2="48" class="clock-hand clock-hand--hour" />
-            <line id="clock-minute" x1="100" y1="100" x2="100" y2="30" class="clock-hand clock-hand--minute" />
-            <line id="clock-second" x1="100" y1="105" x2="100" y2="26" class="clock-hand clock-hand--second" />
-            <circle cx="100" cy="100" r="4" class="clock-center" />
-          </svg>
-        </div>
-        <div class="overview-clock">
-          <time id="overview-clock"></time>
-          <span class="top-sync clock-label">
-            <svg width="10" height="13" viewBox="0 0 10 13" fill="none" style="vertical-align: -2px; margin-right: 3px;">
-              <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 8 5 8s5-4.25 5-8c0-2.76-2.24-5-5-5zm0 6.8A1.8 1.8 0 1 1 5 3.2a1.8 1.8 0 0 1 0 3.6z" fill="currentColor" opacity="0.6"/>
+      <div class="hero-local" aria-label="London time and weather">
+        <div class="hero-clock">
+          <div class="analog-clock" id="analog-clock" aria-hidden="true">
+            <svg viewBox="0 0 200 200" class="clock-face">
+              <circle cx="100" cy="100" r="95" class="clock-ring" />
+              <circle cx="100" cy="100" r="88" class="clock-inner" />
+              {[...Array(12)].map((_, i) => {
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const x1 = 100 + 78 * Math.cos(angle);
+                const y1 = 100 + 78 * Math.sin(angle);
+                const x2 = 100 + 88 * Math.cos(angle);
+                const y2 = 100 + 88 * Math.sin(angle);
+                return <line x1={x1} y1={y1} x2={x2} y2={y2} class={`clock-tick ${i % 3 === 0 ? 'clock-tick--major' : ''}`} />;
+              })}
+              {[...Array(60)].map((_, i) => {
+                if (i % 5 === 0) return null;
+                const angle = (i * 6 - 90) * (Math.PI / 180);
+                const x1 = 100 + 84 * Math.cos(angle);
+                const y1 = 100 + 84 * Math.sin(angle);
+                const x2 = 100 + 88 * Math.cos(angle);
+                const y2 = 100 + 88 * Math.sin(angle);
+                return <line x1={x1} y1={y1} x2={x2} y2={y2} class="clock-tick clock-tick--minor" />;
+              })}
+              <line id="clock-hour" x1="100" y1="100" x2="100" y2="48" class="clock-hand clock-hand--hour" />
+              <line id="clock-minute" x1="100" y1="100" x2="100" y2="30" class="clock-hand clock-hand--minute" />
+              <line id="clock-second" x1="100" y1="105" x2="100" y2="26" class="clock-hand clock-hand--second" />
+              <circle cx="100" cy="100" r="4" class="clock-center" />
             </svg>
-            London, UK
-          </span>
+          </div>
+          <div class="overview-clock">
+            <time id="overview-clock"></time>
+            <span class="hero-reading-label">London time</span>
+          </div>
         </div>
-      </div>
-      <div class="hero-right">
-        <div class="weather-card">
+        <div class="hero-weather">
           <div class="weather-icon-row">
-            <span class="weather-emoji" id="weather-icon"></span>
+            <span class="weather-emoji" id="weather-icon" aria-hidden="true"></span>
             <div class="weather-temp">
               <span class="weather-degrees" id="weather-temp"></span>
               <span class="weather-condition" id="weather-condition">Loading...</span>
             </div>
           </div>
-          <span class="top-sync" id="weather-forecast"></span>
-          {lastUpdated && <span class="top-sync">Snapshot {lastUpdated}</span>}
+          <span class="hero-forecast" id="weather-forecast"></span>
         </div>
       </div>
     </section>
@@ -110,6 +105,8 @@ const sourceColors: Record<string, string> = {
         <p role="status" class="top-sync" id="task-feedback"></p>
       </section>
     </div>
+
+    <OverviewWidgets />
 
     <!-- ===== QUICK LINKS BAR ===== -->
     <nav class="links-bar">
@@ -143,6 +140,7 @@ const sourceColors: Record<string, string> = {
 
       <details class="calendar-settings" id="settings">
         <summary>Settings &amp; sync</summary>
+        {lastUpdated && <p class="top-sync">Dashboard snapshot {lastUpdated}</p>}
         <div class="settings-grid">
           <div class="settings-section">
             <h3>Google Calendar</h3>
