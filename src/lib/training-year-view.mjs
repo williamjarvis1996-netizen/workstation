@@ -73,12 +73,12 @@ document.addEventListener('astro:page-load', () => {
     const strength = byId('year-strength');
     strength.replaceChildren();
     const visits = sessions.filter(item => item.type === 'gym' && item.date.startsWith(String(year)));
-    for (const visit of visits) row(strength, [dateLabel.format(dateOf(visit.date)), visit.title, visit.gym || 'Unspecified', visit.sets ? String(visit.sets) : 'Unrecorded', visit.volume || 'Unrecorded']);
-    if (!visits.length) row(strength, ['—', 'No strength visits recorded for this year', '—', '—', '—']);
+    for (const visit of visits) row(strength, [dateLabel.format(dateOf(visit.date)), visit.title, visit.gym || 'Unspecified', visit.duration || 'Unrecorded', visit.sets ? String(visit.sets) : 'Unrecorded', visit.volume || 'Unrecorded']);
+    if (!visits.length) row(strength, ['—', 'No strength visits recorded for this year', '—', '—', '—', '—']);
     const runLedger = byId('year-runs');
     runLedger.replaceChildren();
-    for (const run of runs) row(runLedger, [dateLabel.format(dateOf(run.date)), [run.title, run.dataNote].filter(Boolean).join(' · '), run.distance, run.duration || 'Unrecorded', run.recordedPace || workoutPace(run) || 'Unrecorded']);
-    if (!runs.length) row(runLedger, ['—', 'No measured runs in this year', '—', '—', '—']);
+    for (const run of runs) row(runLedger, [dateLabel.format(dateOf(run.date)), [run.title, run.dataNote].filter(Boolean).join(' · '), run.distance, run.duration || 'Unrecorded', run.recordedPace || workoutPace(run) || 'Unrecorded', run.avgHR ? String(run.avgHR) : '—', run.ascent || '—']);
+    if (!runs.length) row(runLedger, ['—', 'No measured runs in this year', '—', '—', '—', '—', '—']);
   }
 
   form.addEventListener('submit', async event => {

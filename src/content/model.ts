@@ -47,6 +47,14 @@ export interface QuickLink {
 }
 
 export interface ExerciseSession {
+  id?: string;
+  source?: 'obsidian-run' | 'obsidian-strength';
+  recordedPace?: string;
+  ascent?: string;
+  dataNote?: string;
+  gym?: string;
+  sets?: number;
+  volumeKg?: number;
   date: string;
   type: 'run' | 'gym' | 'swim' | 'row' | 'cycle';
   title: string;

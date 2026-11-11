@@ -1,3 +1,4 @@
+import training2026 from './training-2026.json';
 import type { CalendarEvent, CreativeProject, ExerciseSession, LogEntry, MarathonTraining, PersonalGoal, Project, QuickLink, Task } from './model';
 
 type Dashboard = {
@@ -190,14 +191,7 @@ const snapshot: Dashboard = {
     { label: 'Todoist', url: 'https://todoist.com', category: 'Tools' },
     { label: 'IKTVA Site', url: 'https://rd-code-storage.github.io/iktva/', category: 'Projects' },
   ],
-  exerciseSessions: [
-    { date: '2026-11-07', type: 'run', title: 'Hackney long run', duration: '1:18:30', distance: '14.01 km', avgHR: 180, notes: 'Longest run since Hackney Half (17 May). Negative-split shape, strong finishing kick 5:24/km. 2+2 week 2 completed.' },
-    { date: '2026-11-05', type: 'gym', title: 'Pull day (new gym)', duration: '~45 min', volume: '10,106 kg', avgHR: 91, notes: '+8% volume on 1 Nov pull. Seated row + lat pulldown ceilings held at 61 kg.' },
-    { date: '2026-11-03', type: 'gym', title: 'Push day (new gym) + Z2 run', duration: '~46 min + 30 min run', volume: '8,894 kg', notes: 'First all-new-gym push session. Triceps hit 32 kg ceiling. Followed by 4.05 km Z2 treadmill (avg HR 139).' },
-    { date: '2026-11-01', type: 'gym', title: 'Pull day (new gym) + Z2 run', duration: '~40 min + 16 min run', volume: '9,336 kg', notes: 'First real Z2 run of 2026 (avg HR 139). 1.99 km treadmill cooldown.' },
-    { date: '2026-10-28', type: 'gym', title: 'Push day + 2 km row', duration: '52 min + 7:50 row', volume: '11,745 kg', notes: 'Hardest + 2nd-longest row on record. Last old-gym session.' },
-    { date: '2026-10-26', type: 'run', title: 'Hackney 12 km', duration: '1:19:56', distance: '12.01 km', avgHR: 158, notes: 'First double-digit km run of the year. Best-controlled, most deliberately-paced long run on record.' },
-  ],
+  exerciseSessions: training2026 as ExerciseSession[],
   marathonTraining: {
     raceName: 'TCS London Marathon 2027',
     raceDate: '2027-04-25',
