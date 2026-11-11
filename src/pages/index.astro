@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import { projects, tasks, log, quickLinks, calendarEvents, lastUpdated } from '../content/dashboard';
 
 const activeTasks = tasks.filter(t => !t.completed);
-const recentLog = log.slice(0, 5);
+const recentLog = log.slice(0, 8);
 const base = import.meta.env.BASE_URL;
 
 const today = new Date();
@@ -15,164 +15,212 @@ const todayStr = today.toISOString().slice(0, 10);
 
 const todayEvents = calendarEvents.filter(e => e.date === todayStr);
 const upcomingEvents = calendarEvents.filter(e => e.date > todayStr).slice(0, 3);
+const nextEvent = todayEvents[0] || upcomingEvents[0];
+
+const overdueTasks = activeTasks.filter(t => t.due && t.due < todayStr);
+const todayTasks = activeTasks.filter(t => t.due === todayStr);
+const upcomingTasks = activeTasks.filter(t => !t.due || t.due > todayStr);
 
 function formatEventDate(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
-function getDueStatus(due?: string): string {
-  if (!due) return '';
-  if (due < todayStr) return 'overdue';
-  if (due === todayStr) return 'today';
+function getNextMeetingLabel(): string {
+  if (!nextEvent) return '';
+  if (nextEvent.date === todayStr && nextEvent.startTime) {
+    return `next meeting at ${nextEvent.startTime}`;
+  }
+  if (nextEvent.date > todayStr) {
+    const d = new Date(nextEvent.date + 'T00:00:00');
+    const diff = Math.ceil((d.getTime() - today.getTime()) / 86400000);
+    const timeStr = nextEvent.startTime ? ` at ${nextEvent.startTime}` : '';
+    return `next meeting in ${diff}d${timeStr}`;
+  }
   return '';
 }
+
+const statusParts: string[] = [];
+if (overdueTasks.length) statusParts.push(`${overdueTasks.length} overdue`);
+if (todayTasks.length) statusParts.push(`${todayTasks.length} due today`);
+const meetingLabel = getNextMeetingLabel();
+if (meetingLabel) statusParts.push(meetingLabel);
+
+const projectHealthMap: Record<string, string> = {};
+projects.forEach(p => {
+  if (p.status === 'completed') projectHealthMap[p.code] = 'done';
+  else if (p.status === 'paused') projectHealthMap[p.code] = 'paused';
+  else projectHealthMap[p.code] = 'active';
+});
 ---
 
 <Base title="Workstation">
   <div class="dashboard">
 
-    <section class="hero">
-      <div class="hero-top">
-        <div class="date-block">
-          <span class="date-day">{dayName}</span>
-          <div class="date-main">
-            <span class="date-num">{dayNum}</span>
-            <div class="date-side">
-              <span class="date-month">{monthName}</span>
-              <span class="date-year">{year}</span>
-            </div>
-          </div>
-        </div>
-        <div class="hero-right">
-          <div class="weather-widget" id="weather">
-            <div class="weather-loading">
-              <span class="weather-icon">--</span>
-              <span class="weather-temp">--</span>
-            </div>
-          </div>
-          <div class="hero-meta">
-            <span class="meta-label">Last synced</span>
-            <span class="meta-value">{lastUpdated}</span>
-          </div>
-        </div>
+    <!-- ===== STATUS BAR ===== -->
+    <section class="status-bar">
+      <div class="status-left">
+        <span class="status-date">{dayName} {dayNum} {monthName} {year}</span>
+        <span class="status-sep">/</span>
+        <span class="status-sync">synced {lastUpdated}</span>
       </div>
+      <div class="status-right" id="weather-inline"></div>
+    </section>
 
-      <div class="agenda-strip">
-        {todayEvents.length > 0 ? (
-          todayEvents.map(ev => (
-            <div class="agenda-item agenda-item--now">
-              <span class="agenda-time">{ev.startTime}{ev.endTime ? ` - ${ev.endTime}` : ''}</span>
-              <span class="agenda-title">{ev.title}</span>
-              {ev.location && <span class="agenda-location">{ev.location}</span>}
-            </div>
-          ))
-        ) : (
-          <div class="agenda-item agenda-item--clear">
-            <span class="agenda-dot"></span>
-            <span class="agenda-title">No meetings today</span>
+    <!-- ===== ALERT BANNER ===== -->
+    {statusParts.length > 0 && (
+      <section class={`alert-banner ${overdueTasks.length > 0 ? 'alert-banner--warn' : ''}`}>
+        <span class="alert-pulse"></span>
+        <span class="alert-text">{statusParts.join(' / ')}</span>
+      </section>
+    )}
+
+    <!-- ===== TOP ROW: Tasks + Agenda ===== -->
+    <div class="grid-top">
+
+      <section class="panel tasks-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Tasks</h2>
+          <span class="panel-count">{activeTasks.length}</span>
+        </div>
+
+        {overdueTasks.length > 0 && (
+          <div class="task-group">
+            <span class="task-group-label task-group-label--overdue">Overdue</span>
+            {overdueTasks.map(task => (
+              <div class="task-row task-row--overdue">
+                <span class="task-dot task-dot--overdue"></span>
+                <span class="task-name">{task.title}</span>
+                {task.project && <span class="task-tag">{task.project}</span>}
+              </div>
+            ))}
           </div>
         )}
-        {upcomingEvents.map(ev => (
-          <div class="agenda-item">
-            <span class="agenda-time">{formatEventDate(ev.date)} {ev.startTime || ''}</span>
-            <span class="agenda-title">{ev.title}</span>
+
+        {todayTasks.length > 0 && (
+          <div class="task-group">
+            <span class="task-group-label task-group-label--today">Today</span>
+            {todayTasks.map(task => (
+              <div class="task-row task-row--today">
+                <span class="task-dot task-dot--today"></span>
+                <span class="task-name">{task.title}</span>
+                {task.project && <span class="task-tag">{task.project}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {upcomingTasks.length > 0 && (
+          <div class="task-group">
+            <span class="task-group-label">Upcoming</span>
+            {upcomingTasks.map(task => (
+              <div class="task-row">
+                <span class="task-dot"></span>
+                <span class="task-name">{task.title}</span>
+                {task.due && <span class="task-due">{task.due}</span>}
+                {task.project && <span class="task-tag">{task.project}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div class="right-stack">
+        <section class="panel agenda-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Agenda</h2>
+          </div>
+          {todayEvents.length > 0 ? (
+            todayEvents.map(ev => (
+              <div class="agenda-row agenda-row--now">
+                <span class="agenda-time">{ev.startTime || 'All day'}</span>
+                <span class="agenda-name">{ev.title}</span>
+                {ev.location && <span class="agenda-loc">{ev.location}</span>}
+              </div>
+            ))
+          ) : (
+            <div class="agenda-row agenda-row--clear">
+              <span class="agenda-clear-dot"></span>
+              <span class="agenda-name">No meetings today</span>
+            </div>
+          )}
+          {upcomingEvents.length > 0 && (
+            <div class="agenda-divider">
+              <span>Coming up</span>
+            </div>
+          )}
+          {upcomingEvents.map(ev => (
+            <div class="agenda-row">
+              <span class="agenda-time">{formatEventDate(ev.date)} {ev.startTime || ''}</span>
+              <span class="agenda-name">{ev.title}</span>
+            </div>
+          ))}
+        </section>
+
+        <section class="panel links-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Links</h2>
+          </div>
+          <div class="links-row">
+            {quickLinks.map(link => (
+              <a href={link.url} target="_blank" rel="noopener" class="link-chip">{link.label}</a>
+            ))}
+          </div>
+        </section>
+      </div>
+
+    </div>
+
+    <!-- ===== PROJECTS ROW ===== -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Projects</h2>
+        <span class="panel-count">{projects.filter(p => p.status === 'active').length} active</span>
+      </div>
+      <div class="project-table">
+        {projects.filter(p => p.status === 'active').map(project => (
+          <div class="project-row">
+            <span class="project-health project-health--active"></span>
+            <span class="project-code">{project.code}</span>
+            <span class="project-name">{project.name}</span>
+            <span class="project-client">{project.client}</span>
+            <div class="project-links">
+              {project.links?.map(link => (
+                <a href={link.url} target="_blank" rel="noopener">{link.label}</a>
+              ))}
+            </div>
           </div>
         ))}
       </div>
     </section>
 
-    <div class="grid-main">
+    <!-- ===== ACTIVITY FEED ===== -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Activity</h2>
+        <a href={`${base}log/`} class="panel-link">Full log &rarr;</a>
+      </div>
+      <div class="feed">
+        {recentLog.map(entry => (
+          <details class="feed-item">
+            <summary class="feed-summary">
+              <span class={`feed-dot feed-dot--${entry.source}`}></span>
+              <span class="feed-title">{entry.title}</span>
+              <span class={`feed-source feed-source--${entry.source}`}>{entry.source}</span>
+              <span class="feed-date">{entry.date}</span>
+            </summary>
+            <p class="feed-detail">{entry.content}</p>
+          </details>
+        ))}
+      </div>
+    </section>
 
-      <section class="card projects-card">
-        <p class="section-label">Active projects</p>
-        <ul class="project-list">
-          {projects.filter(p => p.status === 'active').map(project => (
-            <li class="project-item">
-              <div class="project-header">
-                <span class="project-code">{project.code}</span>
-                <h3 class="project-name">{project.name}</h3>
-                <span class={`badge badge--${project.priority}`}>{project.priority}</span>
-              </div>
-              <p class="project-client">{project.client}</p>
-              {project.notes && <p class="project-notes">{project.notes}</p>}
-              {project.links && project.links.length > 0 && (
-                <div class="project-links">
-                  {project.links.map(link => (
-                    <a href={link.url} target="_blank" rel="noopener">{link.label}</a>
-                  ))}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section class="card tasks-card">
-        <p class="section-label">Open tasks <span class="task-count">{activeTasks.length}</span></p>
-        <ul class="task-list">
-          {activeTasks.map(task => (
-            <li class={`task-item ${getDueStatus(task.due) === 'overdue' ? 'task-item--overdue' : ''} ${getDueStatus(task.due) === 'today' ? 'task-item--today' : ''}`}>
-              <span class="task-check"></span>
-              <div class="task-content">
-                <span class="task-title">{task.title}</span>
-                <div class="task-meta">
-                  {task.project && <span class="task-project">{task.project}</span>}
-                  {task.due && (
-                    <span class={`task-due ${getDueStatus(task.due) === 'overdue' ? 'task-due--overdue' : ''} ${getDueStatus(task.due) === 'today' ? 'task-due--today' : ''}`}>
-                      {getDueStatus(task.due) === 'overdue' ? 'Overdue' : getDueStatus(task.due) === 'today' ? 'Today' : task.due}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <span class={`badge badge--${task.priority}`}>{task.priority}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section class="card log-card">
-        <p class="section-label">Recent activity</p>
-        <ul class="log-list">
-          {recentLog.map(entry => (
-            <li class="log-item">
-              <div class="log-left">
-                <span class={`log-dot log-dot--${entry.source}`}></span>
-                <span class="log-line"></span>
-              </div>
-              <div class="log-body">
-                <div class="log-meta">
-                  <span class="log-date">{entry.date}</span>
-                  <span class={`log-source log-source--${entry.source}`}>{entry.source}</span>
-                </div>
-                <p class="log-title">{entry.title}</p>
-                <p class="log-content">{entry.content}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <a href={`${base}log/`} class="view-all">View full log &rarr;</a>
-      </section>
-
-      <section class="card links-card">
-        <p class="section-label">Quick links</p>
-        <div class="links-grid">
-          {quickLinks.map(link => (
-            <a href={link.url} target="_blank" rel="noopener" class="quick-link">
-              <span class="link-label">{link.label}</span>
-              <span class="link-category">{link.category}</span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-    </div>
   </div>
 </Base>
 
 <script>
   async function loadWeather() {
-    const el = document.getElementById('weather');
+    const el = document.getElementById('weather-inline');
     if (!el) return;
     try {
       const res = await fetch(
@@ -182,21 +230,9 @@ function getDueStatus(due?: string): string {
       const temp = Math.round(data.current.temperature_2m);
       const code = data.current.weather_code;
       const icon = weatherIcon(code);
-      el.innerHTML = `
-        <span class="weather-icon">${icon}</span>
-        <div class="weather-info">
-          <span class="weather-temp">${temp}&deg;C</span>
-          <span class="weather-label">London</span>
-        </div>
-      `;
+      el.textContent = `${icon} ${temp}°C London`;
     } catch {
-      el.innerHTML = `
-        <span class="weather-icon">--</span>
-        <div class="weather-info">
-          <span class="weather-temp">--</span>
-          <span class="weather-label">London</span>
-        </div>
-      `;
+      // silent fail
     }
   }
 
@@ -204,10 +240,8 @@ function getDueStatus(due?: string): string {
     if (code === 0) return '☀️';
     if (code <= 3) return '⛅';
     if (code <= 48) return '☁️';
-    if (code <= 57) return '🌧️';
     if (code <= 67) return '🌧️';
     if (code <= 77) return '❄️';
-    if (code <= 82) return '🌦️';
     if (code <= 86) return '🌨️';
     if (code <= 99) return '⚡';
     return '🌤️';
@@ -220,247 +254,333 @@ function getDueStatus(due?: string): string {
   .dashboard {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2xl);
+    gap: var(--space-md);
   }
 
-  /* ---- Hero ---- */
-  .hero {
+  /* ===== STATUS BAR ===== */
+  .status-bar {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-xl);
-  }
-
-  .hero-top {
-    display: flex;
-    align-items: flex-end;
     justify-content: space-between;
-    gap: var(--space-xl);
-    flex-wrap: wrap;
-  }
-
-  .date-block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xs);
-  }
-
-  .date-day {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--color-accent);
-  }
-
-  .date-main {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-md);
-  }
-
-  .date-num {
-    font-size: clamp(4rem, 10vw, 7rem);
-    font-weight: 300;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
-    color: var(--color-fg);
-  }
-
-  .date-side {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .date-month {
-    font-size: clamp(1.2rem, 3vw, 1.8rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-
-  .date-year {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--color-fg-muted);
-    line-height: 1.6;
-  }
-
-  .hero-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: var(--space-md);
-  }
-
-  .weather-widget {
-    display: flex;
     align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    min-width: 120px;
-  }
-
-  :global(.weather-icon) {
-    font-size: 1.5rem;
-    line-height: 1;
-  }
-
-  :global(.weather-info) {
-    display: flex;
-    flex-direction: column;
-  }
-
-  :global(.weather-temp) {
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--color-fg);
-  }
-
-  :global(.weather-label) {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: var(--color-fg-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .weather-loading {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-  }
-
-  .hero-meta {
-    display: flex;
-    gap: var(--space-sm);
-    align-items: center;
-  }
-
-  .meta-label {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-fg-subtle);
-  }
-
-  .meta-value {
     font-family: var(--font-mono);
     font-size: 0.65rem;
     color: var(--color-fg-muted);
-    background: var(--color-surface);
-    padding: 0.15em 0.5em;
-    border-radius: 4px;
-    border: 1px solid var(--color-border);
-  }
-
-  /* ---- Agenda strip ---- */
-  .agenda-strip {
-    display: flex;
+    letter-spacing: 0.02em;
+    flex-wrap: wrap;
     gap: var(--space-sm);
-    overflow-x: auto;
-    padding-bottom: var(--space-xs);
-    scrollbar-width: none;
   }
 
-  .agenda-strip::-webkit-scrollbar { display: none; }
-
-  .agenda-item {
+  .status-left {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-2xs);
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .status-date {
+    color: var(--color-fg);
+    font-weight: 500;
+  }
+
+  .status-sep {
+    color: var(--color-fg-subtle);
+  }
+
+  .status-right {
+    font-size: 0.65rem;
+  }
+
+  /* ===== ALERT BANNER ===== */
+  .alert-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    min-width: 200px;
-    flex-shrink: 0;
-  }
-
-  .agenda-item--now {
-    border-color: var(--color-accent);
+    border-radius: var(--radius);
     background: var(--color-accent-dim);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-accent);
+    letter-spacing: 0.01em;
   }
 
-  .agenda-item--clear {
-    border-style: dashed;
-    border-color: var(--color-border-hover);
+  .alert-banner--warn {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.2);
+    color: var(--color-danger);
   }
 
-  .agenda-dot {
-    display: inline-block;
+  .alert-pulse {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--color-success);
-    margin-bottom: var(--space-2xs);
+    background: currentColor;
+    animation: pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
   }
 
-  .agenda-time {
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ===== PANELS ===== */
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+  }
+
+  .panel-title {
     font-family: var(--font-mono);
     font-size: 0.65rem;
-    color: var(--color-fg-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .agenda-title {
-    font-size: 0.8rem;
     font-weight: 500;
-    color: var(--color-fg);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-fg-muted);
   }
 
-  .agenda-location {
-    font-size: 0.7rem;
+  .panel-count {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
     color: var(--color-fg-subtle);
+    background: var(--color-surface-raised);
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
   }
 
-  /* ---- Grid ---- */
-  .grid-main {
+  .panel-link {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-fg-subtle);
+    transition: color 0.15s;
+  }
+
+  .panel-link:hover {
+    color: var(--color-accent);
+  }
+
+  /* ===== TOP GRID ===== */
+  .grid-top {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-lg);
+    gap: var(--space-md);
+  }
+
+  .right-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
   }
 
   @media (max-width: 720px) {
-    .grid-main {
+    .grid-top {
       grid-template-columns: 1fr;
     }
   }
 
-  .log-card {
-    grid-column: 1 / -1;
+  /* ===== TASKS ===== */
+  .task-group {
+    margin-bottom: var(--space-sm);
   }
 
-  /* ---- Projects ---- */
-  .project-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
+  .task-group:last-child {
+    margin-bottom: 0;
   }
 
-  .project-item {
-    padding-bottom: var(--space-lg);
-    border-bottom: 1px solid var(--color-border);
+  .task-group-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-fg-subtle);
+    margin-bottom: var(--space-xs);
+    padding-left: 18px;
   }
 
-  .project-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
+  .task-group-label--overdue { color: var(--color-danger); }
+  .task-group-label--today { color: var(--color-accent); }
 
-  .project-header {
+  .task-row {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    padding: 5px var(--space-sm);
+    border-radius: 4px;
+    transition: background 0.1s;
     flex-wrap: wrap;
   }
+
+  .task-row:hover {
+    background: var(--color-surface-raised);
+  }
+
+  .task-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-fg-subtle);
+    flex-shrink: 0;
+  }
+
+  .task-dot--overdue { background: var(--color-danger); }
+  .task-dot--today { background: var(--color-accent); }
+
+  .task-name {
+    font-size: 0.78rem;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-row--overdue .task-name { color: var(--color-danger); }
+  .task-row--today .task-name { color: var(--color-accent); }
+
+  .task-tag {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: var(--color-fg-subtle);
+    background: var(--color-surface-raised);
+    padding: 0.1em 0.45em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .task-due {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: var(--color-fg-subtle);
+    white-space: nowrap;
+  }
+
+  /* ===== AGENDA ===== */
+  .agenda-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 5px var(--space-sm);
+    border-radius: 4px;
+    flex-wrap: wrap;
+  }
+
+  .agenda-row--now {
+    background: var(--color-accent-dim);
+    border-left: 2px solid var(--color-accent);
+    padding-left: calc(var(--space-sm) - 2px);
+  }
+
+  .agenda-row--clear {
+    border-left: 2px solid var(--color-success);
+    padding-left: calc(var(--space-sm) - 2px);
+    opacity: 0.6;
+  }
+
+  .agenda-clear-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-success);
+    flex-shrink: 0;
+  }
+
+  .agenda-time {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-fg-muted);
+    white-space: nowrap;
+    min-width: 50px;
+  }
+
+  .agenda-name {
+    font-size: 0.78rem;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .agenda-loc {
+    font-size: 0.65rem;
+    color: var(--color-fg-subtle);
+    width: 100%;
+    padding-left: 62px;
+  }
+
+  .agenda-divider {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-fg-subtle);
+    padding: var(--space-sm) var(--space-sm) var(--space-2xs);
+  }
+
+  /* ===== LINKS ===== */
+  .links-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .link-chip {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-muted);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+
+  .link-chip:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: var(--color-accent-dim);
+    text-decoration: none;
+  }
+
+  /* ===== PROJECTS TABLE ===== */
+  .project-table {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .project-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-sm);
+    border-radius: 4px;
+    transition: background 0.1s;
+    flex-wrap: wrap;
+  }
+
+  .project-row:hover {
+    background: var(--color-surface-raised);
+  }
+
+  .project-health {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .project-health--active { background: var(--color-success); }
+  .project-health--paused { background: var(--color-warn); }
+  .project-health--done { background: var(--color-fg-subtle); }
 
   .project-code {
     font-family: var(--font-mono);
@@ -468,299 +588,143 @@ function getDueStatus(due?: string): string {
     font-weight: 500;
     color: var(--color-accent);
     background: var(--color-accent-dim);
-    padding: 0.15em 0.55em;
-    border-radius: 4px;
-    letter-spacing: 0.02em;
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
+    flex-shrink: 0;
   }
 
   .project-name {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    min-width: 0;
+    flex: 1;
+    min-width: 120px;
   }
 
   .project-client {
-    font-size: 0.75rem;
-    color: var(--color-fg-muted);
-    margin-top: var(--space-xs);
-    font-weight: 500;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .project-notes {
-    font-size: 0.8rem;
-    color: var(--color-fg-muted);
-    margin-top: var(--space-sm);
-    line-height: 1.6;
+    letter-spacing: 0.06em;
+    color: var(--color-fg-subtle);
+    flex-shrink: 0;
   }
 
   .project-links {
     display: flex;
-    gap: var(--space-sm);
-    margin-top: var(--space-md);
-    flex-wrap: wrap;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .project-links a {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--color-fg-muted);
+    font-size: 0.6rem;
+    color: var(--color-fg-subtle);
     border: 1px solid var(--color-border);
-    padding: 0.25em 0.7em;
-    border-radius: var(--radius);
-    transition: all 0.15s;
+    padding: 2px 8px;
+    border-radius: 3px;
+    transition: all 0.12s;
   }
 
   .project-links a:hover {
-    background: var(--color-accent-dim);
-    border-color: var(--color-accent);
     color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: var(--color-accent-dim);
     text-decoration: none;
   }
 
-  /* ---- Tasks ---- */
-  .task-count {
-    display: inline-flex;
+  @media (max-width: 720px) {
+    .project-row {
+      gap: var(--space-sm);
+    }
+    .project-links {
+      width: 100%;
+      padding-left: 24px;
+    }
+  }
+
+  /* ===== ACTIVITY FEED ===== */
+  .feed {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feed-item {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .feed-item:last-child {
+    border-bottom: none;
+  }
+
+  .feed-summary {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    background: var(--color-surface-raised);
+    gap: var(--space-sm);
+    padding: 7px var(--space-sm);
     border-radius: 4px;
-    padding: 0 0.45em;
-    margin-left: var(--space-xs);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .task-list {
+    cursor: pointer;
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
+    transition: background 0.1s;
   }
 
-  .task-item {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius);
-    transition: background 0.15s;
-  }
+  .feed-summary::-webkit-details-marker { display: none; }
+  .feed-summary::marker { display: none; content: ''; }
 
-  .task-item:hover {
+  .feed-summary:hover {
     background: var(--color-surface-raised);
   }
 
-  .task-item--overdue {
-    background: rgba(248, 113, 113, 0.04);
-  }
-
-  .task-item--today {
-    background: rgba(56, 189, 248, 0.04);
-  }
-
-  .task-check {
-    width: 14px;
-    height: 14px;
-    border: 1.5px solid var(--color-fg-subtle);
-    border-radius: 3px;
-    flex-shrink: 0;
-    margin-top: 3px;
-  }
-
-  .task-content {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .task-title {
-    font-size: 0.82rem;
-    font-weight: 500;
-  }
-
-  .task-meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-  }
-
-  .task-project {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: var(--color-fg-subtle);
-  }
-
-  .task-due {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: var(--color-fg-subtle);
-  }
-
-  .task-due--overdue {
-    color: var(--color-danger);
-    font-weight: 500;
-  }
-
-  .task-due--today {
-    color: var(--color-accent);
-    font-weight: 500;
-  }
-
-  /* ---- Log ---- */
-  .log-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .log-item {
-    display: flex;
-    gap: var(--space-md);
-    padding: var(--space-md) 0;
-  }
-
-  .log-left {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 2px;
-    flex-shrink: 0;
-    width: 12px;
-  }
-
-  .log-dot {
-    width: 8px;
-    height: 8px;
+  .feed-dot {
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
     background: var(--color-fg-subtle);
   }
 
-  .log-dot--slack { background: #e01e5a; }
-  .log-dot--email { background: var(--color-accent); }
-  .log-dot--todoist { background: var(--color-danger); }
-  .log-dot--obsidian { background: var(--color-purple); }
-  .log-dot--manual { background: var(--color-fg-subtle); }
+  .feed-dot--slack { background: #e01e5a; }
+  .feed-dot--email { background: var(--color-accent); }
+  .feed-dot--todoist { background: var(--color-danger); }
+  .feed-dot--obsidian { background: var(--color-purple); }
+  .feed-dot--manual { background: var(--color-fg-subtle); }
 
-  .log-line {
-    flex: 1;
-    width: 1px;
-    background: var(--color-border);
-    margin-top: var(--space-xs);
-  }
-
-  .log-body {
+  .feed-title {
+    font-size: 0.78rem;
+    font-weight: 500;
     flex: 1;
     min-width: 0;
-    padding-bottom: var(--space-sm);
-    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .log-item:last-child .log-body {
-    border-bottom: none;
-  }
-
-  .log-item:last-child .log-line {
-    display: none;
-  }
-
-  .log-meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-2xs);
-  }
-
-  .log-date {
+  .feed-source {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--color-fg-subtle);
-  }
-
-  .log-source {
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
+    font-size: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 0.15em 0.45em;
-    border-radius: 3px;
-    background: var(--color-surface-raised);
-    color: var(--color-fg-muted);
+    padding: 0.15em 0.4em;
+    border-radius: 2px;
+    flex-shrink: 0;
   }
 
-  .log-source--slack { color: #e01e5a; background: rgba(224, 30, 90, 0.1); }
-  .log-source--email { color: var(--color-accent); background: var(--color-accent-dim); }
-  .log-source--todoist { color: var(--color-danger); background: rgba(248, 113, 113, 0.08); }
-  .log-source--obsidian { color: var(--color-purple); background: rgba(167, 139, 250, 0.1); }
-  .log-source--manual { color: var(--color-fg-muted); }
+  .feed-source--slack { color: #e01e5a; background: rgba(224, 30, 90, 0.1); }
+  .feed-source--email { color: var(--color-accent); background: var(--color-accent-dim); }
+  .feed-source--todoist { color: var(--color-danger); background: rgba(248, 113, 113, 0.08); }
+  .feed-source--obsidian { color: var(--color-purple); background: rgba(167, 139, 250, 0.1); }
+  .feed-source--manual { color: var(--color-fg-muted); background: var(--color-surface-raised); }
 
-  .log-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    line-height: 1.4;
+  .feed-date {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: var(--color-fg-subtle);
+    flex-shrink: 0;
   }
 
-  .log-content {
+  .feed-detail {
     font-size: 0.78rem;
     color: var(--color-fg-muted);
     line-height: 1.6;
-    margin-top: var(--space-2xs);
-  }
-
-  .view-all {
-    display: inline-block;
-    margin-top: var(--space-lg);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--color-fg-muted);
-    transition: color 0.15s;
-  }
-
-  .view-all:hover {
-    color: var(--color-accent);
-  }
-
-  /* ---- Quick links ---- */
-  .links-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: var(--space-sm);
-  }
-
-  .quick-link {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius);
-    background: transparent;
-    border: 1px solid var(--color-border);
-    text-decoration: none;
-    color: var(--color-fg);
-    transition: all 0.15s;
-  }
-
-  .quick-link:hover {
-    background: var(--color-accent-dim);
-    border-color: var(--color-accent);
-    text-decoration: none;
-    transform: translateY(-1px);
-  }
-
-  .link-label {
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
-
-  .link-category {
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-fg-subtle);
+    padding: 0 var(--space-sm) var(--space-sm) 22px;
   }
 </style>
