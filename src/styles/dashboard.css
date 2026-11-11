@@ -833,7 +833,7 @@
 .hero-right { display: flex; justify-content: flex-end; }
 .hero-greeting { font-family: var(--font-mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .15em; color: var(--color-fg-subtle); }
 .overview-heading { display: grid; gap: .35rem; }
-.overview-heading h1 { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 400; letter-spacing: -.03em; line-height: 1.1; text-transform: uppercase; text-shadow: 0 0 40px rgba(107, 163, 212, 0.1); }
+.overview-heading h1 { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 400; letter-spacing: -.03em; line-height: 1.1; text-transform: uppercase; }
 .overview-heading .top-date { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; color: var(--color-fg-muted); }
 .overview-heading .top-day-num { font-family: var(--font-display); font-size: 3.2rem; line-height: 1; background: linear-gradient(135deg, var(--color-accent), var(--color-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 24px rgba(107, 163, 212, 0.3)); }
 .overview-clock { display: grid; gap: .1rem; align-content: center; text-align: center; }
@@ -870,19 +870,14 @@
 .run-chart-track { display: block; height: .65rem; border-radius: 999px; background: var(--color-surface-hover); }
 .run-chart-track span { display: block; width: var(--run-width); height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1a5a3a, var(--area-accent)); }
 
-/* Area accents */
-body { --area-accent: #d0d4dc; --area-tint: #1a1c22; background-image: radial-gradient(ellipse at 70% 0%, #121828 0%, transparent 50%), radial-gradient(ellipse at 0% 80%, rgba(107, 163, 212, 0.03) 0%, transparent 50%); }
-body[data-area="work"] { --area-accent: #d4a86b; --area-tint: #1f180f; }
-body[data-area="training"] { --area-accent: #65c98a; --area-tint: #0f2a1a; }
-body[data-area="creative"] { --area-accent: #e8856a; --area-tint: #2a1610; }
-body[data-area="goals"] { --area-accent: #e5ad3b; --area-tint: #2a2210; }
-.area-header h1 { color: var(--area-accent); }
-.site-header nav a[data-nav="work"] { --nav-accent: #6ba3d4; }
-.site-header nav a[data-nav="training"] { --nav-accent: #65c98a; }
-.site-header nav a[data-nav="creative"] { --nav-accent: #d46b6b; }
-.site-header nav a[data-nav="goals"] { --nav-accent: #e5ad3b; }
-.site-header nav a[data-nav="sync"] { --nav-accent: #8a94a4; }
-.site-header nav a[aria-current="page"] { color: var(--nav-accent, var(--area-accent)); box-shadow: inset 2px 0 var(--nav-accent, var(--area-accent)), 0 0 12px color-mix(in srgb, var(--nav-accent, var(--area-accent)) 15%, transparent); padding-inline-start: .6rem; }
+/* Section colours are shared by the page and its navigation link. */
+body, .site-header [data-nav="overview"] { --section-color: #f3f5f9; --section-tint: #202630; }
+body[data-area="work"], .site-header [data-nav="work"] { --section-color: #82b6ff; --section-tint: #172a47; }
+body[data-area="tasks"], .site-header [data-nav="tasks"] { --section-color: #f5d466; --section-tint: #2c2819; }
+body[data-area="training"], .site-header [data-nav="training"] { --section-color: #4ade80; --section-tint: #142a21; }
+body[data-area="creative"], .site-header [data-nav="creative"] { --section-color: #ff7885; --section-tint: #321e29; }
+body { --area-accent: var(--section-color); --area-tint: var(--section-tint); background-image: radial-gradient(ellipse at 70% 0%, #121828 0%, transparent 50%), radial-gradient(ellipse at 0% 80%, rgba(107, 163, 212, 0.03) 0%, transparent 50%); }
+.area-header h1, .overview-heading h1 { color: var(--area-accent); }
 .overview-clock time { color: #e0e6f0; text-shadow: 0 0 30px rgba(107, 163, 212, 0.35), 0 0 80px rgba(107, 163, 212, 0.12); }
 .day-brief { display: flex; gap: .65rem 1rem; flex-wrap: wrap; align-items: center; padding: .75rem 1rem; border-left: 3px solid var(--area-accent); background: linear-gradient(90deg, var(--area-tint), transparent); border-radius: .3rem; }
 .day-brief span { color: var(--area-accent); font: .72rem var(--font-mono); }
