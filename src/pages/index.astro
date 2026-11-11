@@ -1,18 +1,85 @@
 ---
 import Base from '../layouts/Base.astro';
-import { projects, tasks, log, quickLinks, lastUpdated } from '../content/dashboard';
+import { projects, tasks, log, quickLinks, calendarEvents, lastUpdated } from '../content/dashboard';
 
 const activeTasks = tasks.filter(t => !t.completed);
 const recentLog = log.slice(0, 5);
 const base = import.meta.env.BASE_URL;
+
+const today = new Date();
+const dayName = today.toLocaleDateString('en-GB', { weekday: 'long' });
+const dayNum = today.getDate();
+const monthName = today.toLocaleDateString('en-GB', { month: 'long' });
+const year = today.getFullYear();
+const todayStr = today.toISOString().slice(0, 10);
+
+const todayEvents = calendarEvents.filter(e => e.date === todayStr);
+const upcomingEvents = calendarEvents.filter(e => e.date > todayStr).slice(0, 3);
+
+function formatEventDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function getDueStatus(due?: string): string {
+  if (!due) return '';
+  if (due < todayStr) return 'overdue';
+  if (due === todayStr) return 'today';
+  return '';
+}
 ---
 
 <Base title="Workstation">
   <div class="dashboard">
 
     <section class="hero">
-      <p class="section-label">last updated {lastUpdated}</p>
-      <h1>Workstation</h1>
+      <div class="hero-top">
+        <div class="date-block">
+          <span class="date-day">{dayName}</span>
+          <div class="date-main">
+            <span class="date-num">{dayNum}</span>
+            <div class="date-side">
+              <span class="date-month">{monthName}</span>
+              <span class="date-year">{year}</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="weather-widget" id="weather">
+            <div class="weather-loading">
+              <span class="weather-icon">--</span>
+              <span class="weather-temp">--</span>
+            </div>
+          </div>
+          <div class="hero-meta">
+            <span class="meta-label">Last synced</span>
+            <span class="meta-value">{lastUpdated}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="agenda-strip">
+        {todayEvents.length > 0 ? (
+          todayEvents.map(ev => (
+            <div class="agenda-item agenda-item--now">
+              <span class="agenda-time">{ev.startTime}{ev.endTime ? ` - ${ev.endTime}` : ''}</span>
+              <span class="agenda-title">{ev.title}</span>
+              {ev.location && <span class="agenda-location">{ev.location}</span>}
+            </div>
+          ))
+        ) : (
+          <div class="agenda-item agenda-item--clear">
+            <span class="agenda-dot"></span>
+            <span class="agenda-title">No meetings today</span>
+          </div>
+        )}
+        {upcomingEvents.map(ev => (
+          <div class="agenda-item">
+            <span class="agenda-time">{formatEventDate(ev.date)} {ev.startTime || ''}</span>
+            <span class="agenda-title">{ev.title}</span>
+          </div>
+        ))}
+      </div>
     </section>
 
     <div class="grid-main">
@@ -42,14 +109,21 @@ const base = import.meta.env.BASE_URL;
       </section>
 
       <section class="card tasks-card">
-        <p class="section-label">Open tasks ({activeTasks.length})</p>
+        <p class="section-label">Open tasks <span class="task-count">{activeTasks.length}</span></p>
         <ul class="task-list">
           {activeTasks.map(task => (
-            <li class="task-item">
-              <span class="task-check">&#9633;</span>
+            <li class={`task-item ${getDueStatus(task.due) === 'overdue' ? 'task-item--overdue' : ''} ${getDueStatus(task.due) === 'today' ? 'task-item--today' : ''}`}>
+              <span class="task-check"></span>
               <div class="task-content">
                 <span class="task-title">{task.title}</span>
-                {task.project && <span class="task-project">{task.project}</span>}
+                <div class="task-meta">
+                  {task.project && <span class="task-project">{task.project}</span>}
+                  {task.due && (
+                    <span class={`task-due ${getDueStatus(task.due) === 'overdue' ? 'task-due--overdue' : ''} ${getDueStatus(task.due) === 'today' ? 'task-due--today' : ''}`}>
+                      {getDueStatus(task.due) === 'overdue' ? 'Overdue' : getDueStatus(task.due) === 'today' ? 'Today' : task.due}
+                    </span>
+                  )}
+                </div>
               </div>
               <span class={`badge badge--${task.priority}`}>{task.priority}</span>
             </li>
@@ -58,20 +132,26 @@ const base = import.meta.env.BASE_URL;
       </section>
 
       <section class="card log-card">
-        <p class="section-label">Recent log</p>
+        <p class="section-label">Recent activity</p>
         <ul class="log-list">
           {recentLog.map(entry => (
             <li class="log-item">
-              <div class="log-meta">
-                <span class="log-date">{entry.date}</span>
-                <span class={`log-source log-source--${entry.source}`}>{entry.source}</span>
+              <div class="log-left">
+                <span class={`log-dot log-dot--${entry.source}`}></span>
+                <span class="log-line"></span>
               </div>
-              <p class="log-title">{entry.title}</p>
-              <p class="log-content">{entry.content}</p>
+              <div class="log-body">
+                <div class="log-meta">
+                  <span class="log-date">{entry.date}</span>
+                  <span class={`log-source log-source--${entry.source}`}>{entry.source}</span>
+                </div>
+                <p class="log-title">{entry.title}</p>
+                <p class="log-content">{entry.content}</p>
+              </div>
             </li>
           ))}
         </ul>
-        <a href={`${base}log/`} class="view-all">View full log</a>
+        <a href={`${base}log/`} class="view-all">View full log &rarr;</a>
       </section>
 
       <section class="card links-card">
@@ -90,25 +170,261 @@ const base = import.meta.env.BASE_URL;
   </div>
 </Base>
 
+<script>
+  async function loadWeather() {
+    const el = document.getElementById('weather');
+    if (!el) return;
+    try {
+      const res = await fetch(
+        'https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m,weather_code&timezone=Europe/London'
+      );
+      const data = await res.json();
+      const temp = Math.round(data.current.temperature_2m);
+      const code = data.current.weather_code;
+      const icon = weatherIcon(code);
+      el.innerHTML = `
+        <span class="weather-icon">${icon}</span>
+        <div class="weather-info">
+          <span class="weather-temp">${temp}&deg;C</span>
+          <span class="weather-label">London</span>
+        </div>
+      `;
+    } catch {
+      el.innerHTML = `
+        <span class="weather-icon">--</span>
+        <div class="weather-info">
+          <span class="weather-temp">--</span>
+          <span class="weather-label">London</span>
+        </div>
+      `;
+    }
+  }
+
+  function weatherIcon(code: number): string {
+    if (code === 0) return '☀️';
+    if (code <= 3) return '⛅';
+    if (code <= 48) return '☁️';
+    if (code <= 57) return '🌧️';
+    if (code <= 67) return '🌧️';
+    if (code <= 77) return '❄️';
+    if (code <= 82) return '🌦️';
+    if (code <= 86) return '🌨️';
+    if (code <= 99) return '⚡';
+    return '🌤️';
+  }
+
+  loadWeather();
+</script>
+
 <style>
   .dashboard {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-2xl);
   }
 
-  .hero h1 {
+  /* ---- Hero ---- */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-xl);
+    flex-wrap: wrap;
+  }
+
+  .date-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+
+  .date-day {
     font-family: var(--font-mono);
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-accent);
+  }
+
+  .date-main {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-md);
+  }
+
+  .date-num {
+    font-size: clamp(4rem, 10vw, 7rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
     color: var(--color-fg);
   }
 
+  .date-side {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .date-month {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .date-year {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-fg-muted);
+    line-height: 1.6;
+  }
+
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-md);
+  }
+
+  .weather-widget {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    min-width: 120px;
+  }
+
+  :global(.weather-icon) {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  :global(.weather-info) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  :global(.weather-temp) {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-fg);
+  }
+
+  :global(.weather-label) {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .weather-loading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+  }
+
+  .meta-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-fg-subtle);
+  }
+
+  .meta-value {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-muted);
+    background: var(--color-surface);
+    padding: 0.15em 0.5em;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+  }
+
+  /* ---- Agenda strip ---- */
+  .agenda-strip {
+    display: flex;
+    gap: var(--space-sm);
+    overflow-x: auto;
+    padding-bottom: var(--space-xs);
+    scrollbar-width: none;
+  }
+
+  .agenda-strip::-webkit-scrollbar { display: none; }
+
+  .agenda-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    min-width: 200px;
+    flex-shrink: 0;
+  }
+
+  .agenda-item--now {
+    border-color: var(--color-accent);
+    background: var(--color-accent-dim);
+  }
+
+  .agenda-item--clear {
+    border-style: dashed;
+    border-color: var(--color-border-hover);
+  }
+
+  .agenda-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-success);
+    margin-bottom: var(--space-2xs);
+  }
+
+  .agenda-time {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .agenda-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-fg);
+  }
+
+  .agenda-location {
+    font-size: 0.7rem;
+    color: var(--color-fg-subtle);
+  }
+
+  /* ---- Grid ---- */
   .grid-main {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
+    gap: var(--space-lg);
   }
 
   @media (max-width: 720px) {
@@ -121,12 +437,22 @@ const base = import.meta.env.BASE_URL;
     grid-column: 1 / -1;
   }
 
-  /* Projects */
+  /* ---- Projects ---- */
   .project-list {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-lg);
+  }
+
+  .project-item {
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .project-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
   }
 
   .project-header {
@@ -138,76 +464,108 @@ const base = import.meta.env.BASE_URL;
 
   .project-code {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.65rem;
+    font-weight: 500;
     color: var(--color-accent);
     background: var(--color-accent-dim);
-    padding: 0.1em 0.5em;
-    border-radius: 3px;
+    padding: 0.15em 0.55em;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
   }
 
   .project-name {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     min-width: 0;
   }
 
   .project-client {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--color-fg-muted);
-    margin-top: 0.25rem;
+    margin-top: var(--space-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .project-notes {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--color-fg-muted);
-    margin-top: var(--space-xs);
-    line-height: 1.5;
+    margin-top: var(--space-sm);
+    line-height: 1.6;
   }
 
   .project-links {
     display: flex;
     gap: var(--space-sm);
-    margin-top: var(--space-sm);
+    margin-top: var(--space-md);
     flex-wrap: wrap;
   }
 
   .project-links a {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--color-accent);
+    font-size: 0.65rem;
+    color: var(--color-fg-muted);
     border: 1px solid var(--color-border);
-    padding: 0.2em 0.6em;
+    padding: 0.25em 0.7em;
     border-radius: var(--radius);
+    transition: all 0.15s;
   }
 
   .project-links a:hover {
     background: var(--color-accent-dim);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
     text-decoration: none;
   }
 
-  /* Tasks */
+  /* ---- Tasks ---- */
+  .task-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface-raised);
+    border-radius: 4px;
+    padding: 0 0.45em;
+    margin-left: var(--space-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
   .task-list {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    gap: var(--space-xs);
   }
 
   .task-item {
     display: flex;
     align-items: flex-start;
     gap: var(--space-sm);
-    padding: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
     border-radius: var(--radius);
+    transition: background 0.15s;
+  }
+
+  .task-item:hover {
     background: var(--color-surface-raised);
   }
 
+  .task-item--overdue {
+    background: rgba(248, 113, 113, 0.04);
+  }
+
+  .task-item--today {
+    background: rgba(56, 189, 248, 0.04);
+  }
+
   .task-check {
-    font-size: 1.1rem;
-    line-height: 1;
-    color: var(--color-fg-muted);
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--color-fg-subtle);
+    border-radius: 3px;
     flex-shrink: 0;
-    margin-top: 0.1em;
+    margin-top: 3px;
   }
 
   .task-content {
@@ -215,116 +573,194 @@ const base = import.meta.env.BASE_URL;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 2px;
   }
 
   .task-title {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 500;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
   }
 
   .task-project {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--color-fg-muted);
+    font-size: 0.6rem;
+    color: var(--color-fg-subtle);
   }
 
-  /* Log */
+  .task-due {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-fg-subtle);
+  }
+
+  .task-due--overdue {
+    color: var(--color-danger);
+    font-weight: 500;
+  }
+
+  .task-due--today {
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+
+  /* ---- Log ---- */
   .log-list {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: 0;
   }
 
   .log-item {
-    border-left: 2px solid var(--color-border);
-    padding-left: var(--space-md);
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+  }
+
+  .log-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 2px;
+    flex-shrink: 0;
+    width: 12px;
+  }
+
+  .log-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--color-fg-subtle);
+  }
+
+  .log-dot--slack { background: #e01e5a; }
+  .log-dot--email { background: var(--color-accent); }
+  .log-dot--todoist { background: var(--color-danger); }
+  .log-dot--obsidian { background: var(--color-purple); }
+  .log-dot--manual { background: var(--color-fg-subtle); }
+
+  .log-line {
+    flex: 1;
+    width: 1px;
+    background: var(--color-border);
+    margin-top: var(--space-xs);
+  }
+
+  .log-body {
+    flex: 1;
+    min-width: 0;
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .log-item:last-child .log-body {
+    border-bottom: none;
+  }
+
+  .log-item:last-child .log-line {
+    display: none;
   }
 
   .log-meta {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--space-2xs);
   }
 
   .log-date {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--color-fg-muted);
+    font-size: 0.65rem;
+    color: var(--color-fg-subtle);
   }
 
   .log-source {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.1em 0.4em;
-    border-radius: 2px;
+    letter-spacing: 0.06em;
+    padding: 0.15em 0.45em;
+    border-radius: 3px;
     background: var(--color-surface-raised);
     color: var(--color-fg-muted);
   }
 
-  .log-source--slack { color: #4a154b; background: rgba(74, 21, 75, 0.15); }
+  .log-source--slack { color: #e01e5a; background: rgba(224, 30, 90, 0.1); }
   .log-source--email { color: var(--color-accent); background: var(--color-accent-dim); }
-  .log-source--todoist { color: var(--color-danger); background: rgba(239, 83, 80, 0.1); }
-  .log-source--obsidian { color: #7c3aed; background: rgba(124, 58, 237, 0.1); }
+  .log-source--todoist { color: var(--color-danger); background: rgba(248, 113, 113, 0.08); }
+  .log-source--obsidian { color: var(--color-purple); background: rgba(167, 139, 250, 0.1); }
   .log-source--manual { color: var(--color-fg-muted); }
 
   .log-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
+    line-height: 1.4;
   }
 
   .log-content {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--color-fg-muted);
-    line-height: 1.5;
+    line-height: 1.6;
+    margin-top: var(--space-2xs);
   }
 
   .view-all {
     display: inline-block;
-    margin-top: var(--space-md);
+    margin-top: var(--space-lg);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    color: var(--color-fg-muted);
+    transition: color 0.15s;
+  }
+
+  .view-all:hover {
     color: var(--color-accent);
   }
 
-  /* Quick links */
+  /* ---- Quick links ---- */
   .links-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: var(--space-sm);
   }
 
   .quick-link {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    padding: var(--space-sm);
+    gap: 2px;
+    padding: var(--space-sm) var(--space-md);
     border-radius: var(--radius);
-    background: var(--color-surface-raised);
+    background: transparent;
+    border: 1px solid var(--color-border);
     text-decoration: none;
     color: var(--color-fg);
-    transition: background 0.15s;
+    transition: all 0.15s;
   }
 
   .quick-link:hover {
     background: var(--color-accent-dim);
+    border-color: var(--color-accent);
     text-decoration: none;
+    transform: translateY(-1px);
   }
 
   .link-label {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
   }
 
   .link-category {
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-fg-muted);
+    letter-spacing: 0.1em;
+    color: var(--color-fg-subtle);
   }
 </style>

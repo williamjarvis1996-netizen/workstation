@@ -16,11 +16,12 @@ const base = import.meta.env.BASE_URL;
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
+    <div class="noise"></div>
     <header class="site-header">
       <div class="container header-inner">
         <a href={base} class="logo">
@@ -37,10 +38,25 @@ const base = import.meta.env.BASE_URL;
       <slot />
     </main>
     <footer class="site-footer">
-      <div class="container">
+      <div class="container footer-inner">
         <span class="footer-text">WJ workstation</span>
+        <span class="footer-text" id="footer-time"></span>
       </div>
     </footer>
+    <script>
+      function updateFooterTime() {
+        const el = document.getElementById('footer-time');
+        if (!el) return;
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Europe/London',
+        }) + ' GMT';
+      }
+      updateFooterTime();
+      setInterval(updateFooterTime, 30000);
+    </script>
   </body>
 </html>
 
@@ -49,12 +65,24 @@ const base = import.meta.env.BASE_URL;
 </style>
 
 <style>
+  .noise {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+    pointer-events: none;
+  }
+
   .site-header {
     border-bottom: 1px solid var(--color-border);
     padding-block: var(--space-sm);
     position: sticky;
     top: env(safe-area-inset-top, 0px);
-    background: var(--color-bg);
+    background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 100;
   }
 
@@ -71,6 +99,7 @@ const base = import.meta.env.BASE_URL;
     font-weight: 500;
     color: var(--color-fg);
     text-decoration: none;
+    transition: color 0.15s;
   }
 
   .logo:hover {
@@ -84,25 +113,44 @@ const base = import.meta.env.BASE_URL;
 
   nav {
     display: flex;
-    gap: var(--space-md);
+    gap: var(--space-lg);
   }
 
   nav a {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     color: var(--color-fg-muted);
     text-decoration: none;
+    padding: var(--space-xs) 0;
+    position: relative;
+    transition: color 0.15s;
+  }
+
+  nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transition: transform 0.2s;
   }
 
   nav a:hover {
-    color: var(--color-accent);
+    color: var(--color-fg);
     text-decoration: none;
   }
 
+  nav a:hover::after {
+    transform: scaleX(1);
+  }
+
   main {
-    padding-block: var(--space-lg);
+    padding-block: var(--space-2xl);
     min-height: calc(100vh - 120px);
   }
 
@@ -111,12 +159,17 @@ const base = import.meta.env.BASE_URL;
     padding-block: var(--space-md);
   }
 
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
   .footer-text {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: var(--color-fg-muted);
-    opacity: 0.5;
+    color: var(--color-fg-subtle);
   }
 </style>

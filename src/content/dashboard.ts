@@ -24,6 +24,15 @@ export interface Task {
   completed: boolean;
 }
 
+export interface CalendarEvent {
+  title: string;
+  date: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  calendar: 'work' | 'personal';
+}
+
 export interface QuickLink {
   label: string;
   url: string;
@@ -192,6 +201,17 @@ export const log: LogEntry[] = [
     title: 'Project milestone update sent',
     source: 'email',
     content: 'Will submitted milestone updates: Zayed NYC (RDAD1048) at M11 complete, Prosperity Zone (2481) budget tracking at ~32% of ex spend target.',
+  },
+];
+
+export const calendarEvents: CalendarEvent[] = [
+  {
+    title: 'Weekly Production Scheduling Meeting',
+    date: '2026-11-12',
+    startTime: '10:30',
+    endTime: '11:30',
+    location: 'Meeting Room 2 / Google Meet',
+    calendar: 'work',
   },
 ];
 
