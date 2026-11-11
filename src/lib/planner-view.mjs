@@ -1,4 +1,4 @@
-import { addDays, londonClock, londonTime } from './time.mjs';
+import { addDays, londonClock, londonDay, londonHeading, londonTime } from './time.mjs';
 import { planDay, projectRisks } from './planning.mjs';
 import { mergedTasks, portfolioProjects, readLife, sampleTasks, today, updateLife } from './life.mjs';
 import { syncInfo } from './shared.mjs';
@@ -9,33 +9,64 @@ document.addEventListener('astro:page-load', () => {
   if (!root) return;
   const controller = new AbortController();
   const byId = id => document.getElementById(id);
-  const day = today();
+  let currentDay = today();
+  let day = currentDay;
+  let offset = 0;
+  const drafts = new Map();
+  const dayButtons = [...root.querySelectorAll('[data-plan-offset]')];
   const demo = root.dataset.demo === 'true';
   const tasks = JSON.parse(root.dataset.tasks);
   const projects = JSON.parse(root.dataset.projects);
   const snapshot = JSON.parse(root.dataset.events);
   const feedback = byId('plan-feedback');
   const editable = byId('plan-candidates');
-  const restored = readLife().dayPlans[day];
-  let order = restored?.order || [];
-  let pins = restored?.pins || {};
+  function savedDraft(date) {
+    const plan = readLife().dayPlans[date];
+    return { order: plan?.order || [], pins: plan?.pins || {} };
+  }
+
+  let { order, pins } = savedDraft(day);
   let result;
-  byId('plan-date').textContent = day;
+
+  function selectDay(nextOffset) {
+    drafts.set(day, { order, pins });
+    offset = nextOffset;
+    currentDay = today();
+    day = addDays(currentDay, offset);
+    ({ order, pins } = drafts.get(day) || savedDraft(day));
+    for (const button of dayButtons) {
+      button.setAttribute('aria-pressed', String(Number(button.dataset.planOffset) === offset));
+    }
+    feedback.textContent = '';
+    rerender();
+  }
 
   function calendar() {
     const live = syncInfo().calendar;
-    if (live.events) return { label: 'Google Calendar · ' + live.status, events: live.events };
-    const events = snapshot.map(event => {
+    const syncedAt = Date.parse(live.syncedAt);
+    if (live.events && Number.isFinite(syncedAt)) {
+      const fetchedDay = londonDay(syncedAt);
+      if (day >= fetchedDay && day < addDays(fetchedDay, 8)) {
+        const stale = Date.now() - syncedAt > 15 * 60000 || live.status.startsWith('Stale');
+        return {
+          label: stale ? 'Google Calendar · last refresh ' + londonClock(syncedAt) + ' · verify before saving'
+            : 'Google Calendar · updated ' + londonClock(syncedAt),
+          events: live.events,
+        };
+      }
+    }
+    const events = snapshot.flatMap(event => {
       const start = londonTime(event.date, event.startTime || '00:00');
       const end = event.endTime ? londonTime(event.date, event.endTime)
         : event.startTime ? start + 1800000 : londonTime(addDays(event.date, 1));
-      return { start, end, busy: true };
+      return Number.isFinite(start) && Number.isFinite(end) && end > start
+        ? [{ start, end, title: event.title, allDay: !event.startTime, busy: true }] : [];
     });
     if (demo && !Object.keys(readLife().portfolio).length && !events.length) for (const [start, end] of [['11:30','12:30'],['15:00','16:00']]) {
-      events.push({ start: londonTime(day, start), end: londonTime(day, end), busy: true });
+      events.push({ start: londonTime(day, start), end: londonTime(day, end), title: 'Sample commitment', busy: true });
     }
-    return { label: events.length ? demo ? 'Sample schedule' : 'Snapshot · verify before committing'
-      : 'Disconnected · assumes your workday is free', events };
+    return { label: events.length ? demo ? 'Sample schedule' : 'Calendar snapshot · verify before saving'
+      : 'Calendar disconnected · free time is unverified', events };
   }
 
   function blockRow(block, committed = false) {
@@ -51,24 +82,46 @@ document.addEventListener('astro:page-load', () => {
     const plan = readLife().dayPlans[day];
     const target = byId('plan-committed');
     target.replaceChildren(...(plan?.blocks || []).map(block => blockRow(block, true)));
-    if (!plan?.blocks?.length) target.append(make('li', 'No plan committed for today.', 'empty-state-sm'));
+    if (!plan?.blocks?.length) target.append(make('li', 'No saved plan for this day.', 'empty-state-sm'));
+  }
+
+  function renderEvents(events) {
+    const start = londonTime(day);
+    const end = londonTime(addDays(day, 1));
+    const rows = events.filter(event => event.start < end && event.end > start)
+      .sort((a, b) => a.start - b.start).map(event => {
+        const row = make('li', '', event.busy ? 'is-busy' : '');
+        const time = event.allDay ? 'All day'
+          : `${londonClock(Math.max(start, event.start))}–${event.end >= end ? '24:00' : londonClock(event.end)}`;
+        row.append(make('span', time, 'plan-time'), make('strong', event.title || 'Calendar event'));
+        if (!event.busy) row.append(make('small', 'Does not block planning time'));
+        return row;
+      });
+    byId('plan-events').replaceChildren(...(rows.length ? rows : [make('li', 'No commitments in this calendar data.', 'empty-state-sm')]));
   }
 
   function rerender() {
+    byId('plan-date').textContent = londonHeading(londonTime(day));
     const schedule = calendar();
     byId('plan-calendar').textContent = schedule.label;
+    renderEvents(schedule.events);
     const useSample = demo && !Object.keys(readLife().portfolio).length;
-    const all = mergedTasks(useSample ? [...tasks, ...sampleTasks(day)] : demo ? [] : tasks);
+    const all = mergedTasks(useSample ? [...tasks, ...sampleTasks(currentDay)] : demo ? [] : tasks);
     const portfolio = projectRisks(portfolioProjects(projects, demo), readLife().projectPlans, day);
     result = planDay({ tasks: all, events: schedule.events, projects: portfolio, day, now: Date.now(), order, pins });
     byId('plan-blocks').replaceChildren(...result.blocks.map(block => blockRow(block)));
-    if (!result.blocks.length) byId('plan-blocks').append(make('li', 'No work fits in the remaining windows.', 'empty-state-sm'));
+    if (!result.blocks.length) {
+      const message = day === currentDay && londonClock(Date.now()) >= '18:00'
+        ? 'Today’s planning window has ended. Switch to Tomorrow to plan ahead.'
+        : 'No work fits in the remaining windows.';
+      byId('plan-blocks').append(make('li', message, 'empty-state-sm'));
+    }
     byId('plan-overflow').replaceChildren(...result.unscheduled.map(({ task, reason }) => {
       const row = make('li', '', 'overflow-item');
       row.append(make('strong', task.title), make('small', [task.due && 'Due ' + task.due, reason].filter(Boolean).join(' · ')));
       return row;
     }));
-    if (!result.unscheduled.length) byId('plan-overflow').append(make('li', 'Every candidate fits.', 'empty-state-sm'));
+    if (!result.unscheduled.length) byId('plan-overflow').append(make('li', result.ranked.length ? 'Every candidate fits.' : 'No tasks considered for this day.', 'empty-state-sm'));
     byId('plan-save').disabled = !result.blocks.length;
     if (!editable.contains(document.activeElement)) renderCandidates(all, portfolio);
     renderCommitted();
@@ -143,16 +196,32 @@ document.addEventListener('astro:page-load', () => {
   }
 
   byId('plan-save').addEventListener('click', () => {
-    if (!result.blocks.length) return;
+    if (today() !== currentDay) { selectDay(offset); return; }
+    const blocksToSave = () => result.blocks.map(({ task, start, end }) => ({ id: task.id, title: task.title, start, end }));
+    const previous = blocksToSave();
+    rerender();
+    const blocks = blocksToSave();
+    if (JSON.stringify(previous) !== JSON.stringify(blocks)) {
+      feedback.textContent = 'The suggested blocks changed. Review the updated draft before saving.';
+      return;
+    }
+    if (!blocks.length) return;
     try {
-      const committed = { order: result.ranked.map(task => task.id), pins, blocks: result.blocks.map(({task,start,end}) => ({ id: task.id, title: task.title, start, end })), committedAt: new Date().toISOString() };
+      const committed = { order: result.ranked.map(task => task.id), pins, blocks, committedAt: new Date().toISOString() };
       updateLife(data => { data.dayPlans[day] = committed; });
-      feedback.textContent = 'Today’s plan committed.';
+      feedback.textContent = 'Plan saved for ' + londonHeading(londonTime(day)) + '.';
     } catch { feedback.textContent = 'Could not save the plan.'; }
   });
   byId('plan-reset').addEventListener('click', () => { order = []; pins = {}; rerender(); feedback.textContent = 'Draft reset.'; });
   document.addEventListener('workstation:change', rerender, { signal: controller.signal });
   document.addEventListener('workstation:sync', rerender, { signal: controller.signal });
-  document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
+  for (const button of dayButtons) button.addEventListener('click', () => selectDay(Number(button.dataset.planOffset)));
+  function checkDay() { if (today() !== currentDay) selectDay(offset); }
+  const timer = window.setInterval(checkDay, 60000);
+  document.addEventListener('visibilitychange', checkDay, { signal: controller.signal });
+  document.addEventListener('astro:before-swap', () => {
+    controller.abort();
+    window.clearInterval(timer);
+  }, { once: true });
   rerender();
 });

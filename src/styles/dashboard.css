@@ -1024,8 +1024,8 @@ body {
 .slate-action button { color: var(--area-accent); cursor: pointer; }
 .overdue-group { margin-top: .8rem; }
 .overdue-group h3 { color: var(--color-fg-muted); font: .75rem var(--font-mono); }
-/* Work and Exercise use the same navigation treatment. */
-:is(.work-nav, .training-nav) {
+/* Section navigation. */
+:is(.work-nav, .training-nav, .tasks-nav) {
   display: flex;
   gap: var(--space-xs);
   padding: var(--space-xs);
@@ -1036,7 +1036,7 @@ body {
   background: var(--color-bg-raised);
 }
 
-:is(.work-nav, .training-nav) a {
+:is(.work-nav, .training-nav, .tasks-nav) a {
   display: grid;
   place-items: center;
   min-height: 2.5rem;
@@ -1049,20 +1049,20 @@ body {
   transition: background-color var(--transition-ui), border-color var(--transition-ui), color var(--transition-ui);
 }
 
-:is(.work-nav, .training-nav) a:hover {
+:is(.work-nav, .training-nav, .tasks-nav) a:hover {
   color: var(--color-fg);
   background: var(--color-surface-hover);
 }
 
-:is(.work-nav, .training-nav) a[aria-current="page"] {
+:is(.work-nav, .training-nav, .tasks-nav) a[aria-current="page"] {
   color: var(--area-accent);
   background: var(--area-tint);
   border-color: color-mix(in srgb, var(--area-accent) 26%, transparent);
 }
 
 @media (max-width: 420px) {
-  :is(.work-nav, .training-nav) { width: 100%; }
-  :is(.work-nav, .training-nav) a { flex: 1; padding-inline: var(--space-xs); }
+  :is(.work-nav, .training-nav, .tasks-nav) { width: 100%; }
+  :is(.work-nav, .training-nav, .tasks-nav) a { flex: 1; padding-inline: var(--space-xs); }
 }
 .site-footer { padding-bottom: 4rem; }
 
@@ -1172,7 +1172,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is(.site-header a, .work-nav a, .training-nav a, .panel, .pcard, .slate-tile, .action-task, .clock-hand) {
+  :is(.site-header a, .work-nav a, .training-nav a, .tasks-nav a, .panel, .pcard, .slate-tile, .action-task, .clock-hand) {
     transition: none;
   }
 }
@@ -1218,3 +1218,12 @@ body {
   #blue-dashboard .analog-clock { display: none; }
   #blue-dashboard .overview-heading h1 { font-size: 1.55rem; }
 }
+
+
+.plan-today-link { margin-inline-start: auto; color: var(--color-fg); }
+.planner-day .task-tabs { margin-bottom: 0; }
+#plan-save:enabled { background: var(--area-accent); color: var(--color-bg); }
+#plan-feedback:not(:empty) { margin-top: var(--space-sm); }
+#plan-events li { border-color: var(--color-border-hover); }
+#plan-events li.is-busy { border-color: var(--color-accent); }
+#plan-candidates .plan-candidate:last-child { border-bottom: 0; }

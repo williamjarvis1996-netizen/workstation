@@ -1,0 +1,68 @@
+---
+import Base from '../../../layouts/Base.astro';
+import TasksNav from '../../../components/TasksNav.astro';
+import { dashboard, isDemo } from '../../../content/dashboard';
+
+const { tasks, calendarEvents } = dashboard;
+const projects = dashboard.projects.map(({ code, name, status, health, nextMilestone, nextMilestoneDate, deadline }) =>
+  ({ code, name, status, health, nextMilestone, nextMilestoneDate, deadline }));
+const settingsUrl = import.meta.env.BASE_URL + '#settings';
+---
+<Base title="Day planner | Workstation" active="tasks">
+  <div class="dashboard" id="planner" data-tasks={JSON.stringify(tasks)}
+    data-projects={JSON.stringify(projects)} data-events={JSON.stringify(calendarEvents)} data-demo={String(isDemo)}>
+    <header class="area-header"><h1>Day planner</h1></header>
+    <TasksNav active="plan" />
+
+    <section class="panel planner-day">
+      <div class="panel-head">
+        <div>
+          <h2 id="plan-date"></h2>
+          <p class="top-sync" id="plan-calendar"></p>
+        </div>
+        <a href={settingsUrl} class="panel-link">Calendar settings &rarr;</a>
+      </div>
+      <div class="task-tabs" role="group" aria-label="Planning day">
+        <button type="button" data-plan-offset="0" aria-pressed="true">Today</button>
+        <button type="button" data-plan-offset="1" aria-pressed="false">Tomorrow</button>
+      </div>
+      <noscript><p>Enable JavaScript to schedule tasks around your calendar.</p></noscript>
+    </section>
+
+    <div class="day-grid planner-grid">
+      <section class="panel">
+        <div class="panel-head"><h2>Suggested blocks</h2><span class="top-sync">09:00–18:00 London</span></div>
+        <ol class="plan-blocks" id="plan-blocks"></ol>
+        <div class="plan-controls">
+          <button type="button" class="action-button" id="plan-save" disabled>Save plan</button>
+          <button type="button" class="action-button" id="plan-reset">Reset draft order and pins</button>
+        </div>
+        <p class="top-sync" id="plan-feedback" role="status"></p>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Calendar commitments</h2></div>
+        <ul class="plan-blocks" id="plan-events"></ul>
+      </section>
+    </div>
+
+    <div class="day-grid planner-grid">
+      <section class="panel">
+        <div class="panel-head"><h2>Didn’t fit</h2></div>
+        <ul class="plan-blocks" id="plan-overflow"></ul>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Saved plan</h2></div>
+        <ol class="plan-blocks" id="plan-committed"></ol>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Adjust tasks</h2></div>
+      <p class="top-sync">Estimates apply to the task. Order and pinned times apply to the selected day.</p>
+      <div id="plan-candidates"></div>
+    </section>
+  </div>
+</Base>
+<script>
+  import '../../../lib/planner-view.mjs';
+</script>
