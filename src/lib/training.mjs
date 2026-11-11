@@ -16,7 +16,7 @@ document.addEventListener('astro:page-load', () => {
   const log = document.getElementById('workout-list');
 
   function render() {
-    const sessions = [...snapshot, ...readLife().workouts].sort((a, b) => b.date.localeCompare(a.date));
+    const sessions = [...readLife().workouts.slice().reverse(), ...snapshot].sort((a, b) => b.date.localeCompare(a.date));
     const measured = sessions.filter(session => session.type === 'run' && workoutDistance(session) > 0);
     const mostRecent = sessions[0];
     document.getElementById('workout-count').textContent = `${sessions.length} logged`;
