@@ -1,6 +1,13 @@
 # Changelog
 
-## Live dashboard rebuild
+## Blue dashboard revision
+
+- Restored the supplied navy layout, quick links, Today timeline, project health and milestones, marathon, exercise, creative projects, goals, Upcoming and Activity.
+- Moved date, overdue and upcoming calculations into the browser. Added London weather and forecast, marathon countdown, read-only Google Calendar, overlaps and the longest remaining focus window.
+- Restored the dedicated Log and Links views. Local development reads the supplied snapshot from an ignored file. Production and preview builds use labelled sample data.
+- Superseded the earlier green overview and its browser-local task editing and JSON import/export. The richer snapshot is maintained in the local data module.
+
+## Initial draft (superseded)
 
 - Replaced the static dashboard with a responsive overview, an agenda, task groups, active project deadlines and expandable activity. Preserved the dashboard, activity and links routes.
 - Recalculate the London date, overdue tasks and agenda in the browser. Account for British Summer Time and refresh the view after the tab becomes visible.

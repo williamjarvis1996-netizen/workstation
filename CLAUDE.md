@@ -1,7 +1,7 @@
 # Workstation
 
-See [README.md](README.md) for setup, OAuth and snapshot migration, and [CHANGELOG.md](CHANGELOG.md) for tracked changes.
+See [README.md](README.md) for local snapshot setup and OAuth, and [CHANGELOG.md](CHANGELOG.md) for tracked changes.
 
-The Astro site deploys to public GitHub Pages on pushes to `main`. Personal snapshots belong in the browser, and live service tokens and calendar responses belong in page memory. Keep them out of source files and build output.
+The Astro site deploys to public GitHub Pages on pushes to `main`. Only the local development server reads `src/content/dashboard.local.ts`. Keep personal data and service tokens out of source and production builds.
 
-Dashboard calculations live in `src/lib/time.mjs`. Browser storage and snapshot validation live in `src/lib/storage.mjs`. Check changes with `npm test` and `npm run build`.
+Use `npm test` and `npm run build` to verify changes.

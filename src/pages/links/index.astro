@@ -1,29 +1,98 @@
 ---
 import Base from '../../layouts/Base.astro';
+import { dashboard } from '../../content/dashboard';
+const { quickLinks } = dashboard;
+
+const categories = [...new Set(quickLinks.map(l => l.category))];
 ---
-<Base title="Links | Workstation" active="links">
-  <header class="hero"><div><h1>Links</h1></div></header>
-  <div id="links-grid" class="workspace-grid"></div>
+
+<Base title="Links | Workstation">
+  <div class="links-page">
+    <div class="page-header">
+      <p class="section-label">Quick access</p>
+      <h1>Links</h1>
+    </div>
+
+    {categories.map(cat => (
+      <section class="link-group">
+        <h2 class="group-label">{cat}</h2>
+        <div class="links-grid">
+          {quickLinks.filter(l => l.category === cat).map(link => (
+            <a href={link.url} target="_blank" rel="noopener" class="quick-link">
+              <span class="link-label">{link.label}</span>
+              <span class="link-arrow">&rarr;</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
 </Base>
-<script>
-  import { load, make, externalLink } from '../../lib/storage.mjs';
-  const links = load().quickLinks;
-  const list = document.querySelector('#links-grid')!;
-  const defaults = [
-    { label: 'Google Calendar', url: 'https://calendar.google.com/', category: 'Planning' },
-    { label: 'Todoist', url: 'https://app.todoist.com/', category: 'Planning' },
-    { label: 'Gmail', url: 'https://mail.google.com/', category: 'Communication' },
-    { label: 'Slack', url: 'https://app.slack.com/', category: 'Communication' },
-  ];
-  const entries = links.length ? links : defaults;
-  for (const category of new Set(entries.map(link => link.category))) {
-    const section = make('section', '', 'panel');
-    section.append(make('h2', category));
-    for (const link of entries.filter(item => item.category === category)) {
-      const a = externalLink(link.label, link.url);
-      a.className = 'link-row';
-      section.append(a);
-    }
-    list.append(section);
+
+<style>
+  .links-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
   }
-</script>
+
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .page-header h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 300;
+    letter-spacing: -0.03em;
+  }
+
+  .group-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-fg-subtle);
+    margin-bottom: var(--space-md);
+  }
+
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .quick-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-fg);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+
+  .quick-link:hover {
+    background: var(--color-accent-dim);
+    border-color: var(--color-accent);
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  .link-arrow {
+    color: var(--color-fg-subtle);
+    transition: color 0.15s, transform 0.15s;
+    font-size: 0.85rem;
+  }
+
+  .quick-link:hover .link-arrow {
+    color: var(--color-accent);
+    transform: translateX(2px);
+  }
+</style>

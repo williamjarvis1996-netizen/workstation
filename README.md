@@ -1,39 +1,26 @@
 # Workstation
 
-Personal dashboard built with Astro. It runs in the browser and uses deterministic rules for the London clock, task deadlines, meeting overlaps and focus time.
+Astro dashboard with a Today timeline, project cards, personal tracking, upcoming tasks and activity. The browser uses London time to update date-sensitive information and retrieves weather directly from Open-Meteo.
 
-## Run locally
+## Run with your personal snapshot
 
-Use Node 20 or later.
+1. Use Node 20 or later and run `npm ci`.
+2. Save your Workstation data module as `src/content/dashboard.local.ts`. Keep the named exports for projects, tasks, calendar events, activity, links and personal tracking. This file is ignored by Git.
+3. Run `npm run dev` and open the URL printed by Astro.
 
-```sh
-npm ci
-npm run dev
-npm test
-npm run build
-```
-
-The existing GitHub Pages workflow deploys pushes to `main`. The site is served under `/workstation/`.
+The local development server loads the personal snapshot. Production builds use labelled sample data and never include the local snapshot. The GitHub Pages workflow deploys pushes to `main` under `/workstation/`.
 
 ## Connect Google Calendar
 
-1. In a Google Cloud project, enable the Google Calendar API and configure the OAuth consent screen. Add your Google account as a test user if the app is in testing.
-2. Create a **Web application** OAuth client. Add `https://williamjarvis1996-netizen.github.io` to Authorized JavaScript origins for GitHub Pages. For Astro's local development server, also add `http://localhost:4321`. Origins exclude the route and trailing slash.
-3. Open Workstation Settings and enter the **client ID**. The ID is public configuration. Leave the calendar IDs as `primary`, or paste a comma-separated list from Google Calendar's settings. Save and click **Connect Google Calendar** to grant read-only access.
-4. If publishing with a preconfigured client ID, set `PUBLIC_GOOGLE_CALENDAR_CLIENT_ID` in the build environment. Never enter an OAuth client secret or a personal access token in Workstation.
+Enable the Google Calendar API in a Google Cloud project, configure the OAuth consent screen and create a **Web application** client. Add your exact Workstation origin to Authorized JavaScript origins. For local development, use the printed origin, for example `http://localhost:4321`. For GitHub Pages, use `https://williamjarvis1996-netizen.github.io`. For the private preview, add the preview origin.
 
-The calendar refreshes every five minutes while the tab is active. Google access tokens and live events stay in page memory. Reloading the page, expiration or disconnecting requires reconnecting. Workspace administrators may restrict OAuth access. The focus card uses the longest free block left between 09:00 and 18:00 London time.
+Open **Calendar settings** in the Today panel and enter your client ID. The primary calendar is selected by default. Use comma-separated calendar IDs for additional calendars, then save and connect. Google access is read-only. Live events and access tokens are held in page memory, so reloading requires reconnecting. The dashboard refreshes the calendar every five minutes while open and calculates the longest remaining free block between 09:00 and 18:00 London time.
 
-## Import the old dashboard
+Todoist, activity and personal tracking use snapshot data. Google Calendar and weather are live integrations. See [CHANGELOG.md](CHANGELOG.md) for tracked changes.
 
-The previous hard-coded snapshot is available in the repository's history. Export it with Node 22.13+ or Node 24 and a full clone, then use **Settings → Import JSON**.
+## Verification
 
 ```sh
-node scripts/export-legacy.mjs ~/Downloads/workstation-snapshot.json
+npm test
+npm run build
 ```
-
-The import replaces the browser snapshot. Export first to keep a backup. Tasks and imported entries are stored per browser and site origin. Avoid importing work data on shared browsers. Live Google Calendar data is excluded from snapshot exports. Historical commits and previously deployed copies are outside the scope of this migration. GitHub Pages access and repository visibility are separate settings.
-
-Todoist remains a quick link. A private service is needed for unattended Todoist sync and persistent cross-device access.
-
-See [CHANGELOG.md](CHANGELOG.md) for the rebuild details.

@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .astro/
+
+# Personal Workstation snapshot
+src/content/dashboard.local.ts

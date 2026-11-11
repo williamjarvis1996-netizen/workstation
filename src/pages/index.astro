@@ -1,77 +1,1084 @@
 ---
 import Base from '../layouts/Base.astro';
-const clientId = import.meta.env.PUBLIC_GOOGLE_CALENDAR_CLIENT_ID || '';
+import { dashboard, isDemo } from '../content/dashboard';
+const { projects, tasks, log, quickLinks, calendarEvents, lastUpdated,
+  exerciseSessions, marathonTraining, creativeProjects, personalGoals } = dashboard;
+const recentLog = log.slice(0, 8);
 const base = import.meta.env.BASE_URL;
+const clientId = import.meta.env.PUBLIC_GOOGLE_CALENDAR_CLIENT_ID || '';
+
+const activeProjects = projects.filter(p => p.status === 'active');
+
+const sourceColors: Record<string, string> = {
+  slack: '#e01e5a',
+  email: '#38bdf8',
+  todoist: '#f87171',
+  obsidian: '#a78bfa',
+  manual: '#64748b',
+};
+
+const healthColors: Record<string, string> = {
+  'on-track': 'var(--color-success)',
+  'at-risk': 'var(--color-warn)',
+  'blocked': 'var(--color-danger)',
+};
+
+const marathon = marathonTraining;
+const recentExercise = exerciseSessions.slice(0, 4);
 ---
-<Base>
-  <div id="workstation" data-client-id={clientId}>
-    <div class="hero">
-      <div><p class="eyebrow" id="day-label">London</p><h1>Your day</h1></div>
-      <div class="weather" aria-label="London weather">
-        <p class="eyebrow">London weather</p>
-        <p class="weather-main" id="weather-main">Loading weather…</p>
-        <p class="muted" id="weather-details"></p>
+
+<Base title="Workstation">
+  <div class="dashboard" id="blue-dashboard" data-client-id={clientId} data-demo={isDemo ? "true" : "false"}
+    data-tasks={JSON.stringify(tasks)} data-calendar={JSON.stringify(calendarEvents)}>
+    {isDemo && <p class="top-sync">Sample data</p>}
+
+    <!-- ===== DATE + WEATHER BAR ===== -->
+    <section class="top-bar">
+      <div class="top-date">
+        <span class="top-day-name" id="day-name"></span>
+        <span class="top-day-num" id="day-number"></span>
+        <span class="top-month" id="day-month"></span>
       </div>
-    </div>
-    <div class="summary-grid" aria-label="Day at a glance">
-      <a href="#agenda" class="metric"><span class="eyebrow">Next up</span><strong id="next-value">Connect calendar</strong><span id="next-detail">Live agenda</span></a>
-      <a href="#tasks" class="metric"><span class="eyebrow">Needs attention</span><strong id="task-value">0 due</strong><span id="task-detail">Open tasks</span></a>
-      <a href="#agenda" class="metric"><span class="eyebrow">Focus window</span><strong id="focus-value">—</strong><span id="focus-detail">Calculated from your calendar</span></a>
-    </div>
-    <div class="workspace-grid">
-      <section class="panel" id="agenda">
-        <header class="panel-header"><h2>Agenda</h2><button type="button" class="quiet" id="calendar-action">Connect Google Calendar</button></header>
-        <p id="calendar-status" class="muted status" role="status"></p>
-        <div id="agenda-list"></div>
-      </section>
-      <section class="panel" id="tasks">
-        <header class="panel-header"><h2>Tasks</h2><button type="button" class="quiet" id="task-toggle" aria-controls="task-form" aria-expanded="false">Add task</button></header>
-        <form id="task-form" class="task-form" hidden>
-          <label>Task <input name="title" maxlength="240" required /></label>
-          <div class="form-row"><label>Due <input type="date" name="due" /></label><label>Priority <select name="priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select></label></div>
-          <label>Project <input name="project" maxlength="120" /></label>
-          <div class="button-row"><button type="submit">Save task</button><button type="button" class="quiet" id="task-cancel">Cancel</button></div>
+      <div class="top-meta">
+        <span class="top-weather" id="weather-inline">Loading London weather…</span>
+        <span class="top-sync" id="weather-forecast"></span>
+        {lastUpdated && <span class="top-sync">Snapshot {lastUpdated}</span>}
+      </div>
+    </section>
+
+    <!-- ===== ALERT BANNER ===== -->
+    <section class="alert" id="dashboard-alert" hidden>
+      <div class="alert-items" id="alert-items"></div>
+    </section>
+
+    <!-- ===== QUICK LINKS BAR ===== -->
+    <nav class="links-bar">
+      {quickLinks.map(link => (
+        <a href={link.url} target="_blank" rel="noopener" class="qlink">
+          {link.label}
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4M9 3v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      ))}
+    </nav>
+
+    <!-- ===== ROW 1: TODAY PANEL ===== -->
+    <section class="panel panel--today">
+      <div class="panel-head">
+        <h2>Today</h2>
+        <span class="pill" id="timeline-count">0 items</span>
+      </div>
+      <div class="timeline" id="today-timeline"></div>
+      <details class="calendar-settings" id="calendar-settings">
+        <summary>Calendar settings</summary>
+        <form id="calendar-form">
+          <label>Google OAuth web client ID <input name="client" autocomplete="off" placeholder="…apps.googleusercontent.com" /></label>
+          <label>Calendar IDs <input name="ids" value="primary" /></label>
+          <button type="submit">Save settings</button>
+          <button type="button" id="calendar-connect">Connect Google Calendar</button>
+          <button type="button" id="calendar-disconnect" hidden>Disconnect</button>
         </form>
-        <div class="filters" aria-label="Task filter">
-          <button type="button" data-task-filter="open" aria-pressed="true">Open</button>
-          <button type="button" data-task-filter="completed" aria-pressed="false">Completed</button>
-        </div>
-        <p id="task-status" role="status" class="muted status"></p>
-        <div id="task-list"></div>
-      </section>
-      <section class="panel">
-        <header class="panel-header"><h2>Projects</h2><span id="project-count" class="muted"></span></header>
-        <div id="project-list"></div>
-      </section>
-      <section class="panel">
-        <header class="panel-header"><h2>Activity</h2><a href={base + 'log/'}>View log <span aria-hidden="true">↗</span></a></header>
-        <div id="activity-list"></div>
-      </section>
-    </div>
-    <details class="panel settings" id="settings">
-      <summary>Settings and data</summary>
-      <form id="calendar-settings">
-        <label for="oauth-client">Google OAuth web client ID</label>
-        <input id="oauth-client" placeholder="…apps.googleusercontent.com" autocomplete="off" />
-        <label for="calendar-ids">Calendar IDs</label>
-        <input id="calendar-ids" placeholder="primary" autocomplete="off" aria-describedby="calendar-help" />
-        <p id="calendar-help" class="muted">Use commas for multiple calendars. Your primary calendar is the default.</p>
-        <div class="button-row"><button type="submit">Save calendar settings</button><button class="quiet" type="button" id="calendar-disconnect" hidden>Disconnect</button></div>
-      </form>
-      <div class="data-settings">
-        <h2>Browser data</h2>
-        <p class="muted">Tasks and imported data are stored in this browser. Import replaces the current snapshot.</p>
-        <div class="button-row">
-          <button type="button" class="quiet" id="export-data">Export JSON</button>
-          <button type="button" class="quiet" id="import-data">Import JSON</button>
-          <input id="snapshot-file" type="file" accept=".json,application/json" hidden />
-        </div>
+        <p class="top-sync" id="calendar-status" role="status"></p>
+      </details>
+    </section>
+
+    <!-- ===== ROW 2: PROJECT CARDS ===== -->
+    <section class="section-wrap">
+      <div class="section-header">
+        <h2 class="section-title">Projects</h2>
+        <span class="pill">{activeProjects.length} active</span>
       </div>
-      <p id="settings-status" class="muted status" role="status"></p>
-    </details>
+      <div class="project-grid">
+        {activeProjects.map(project => (
+          <div class="pcard" style={`--health-color: ${healthColors[project.health]}`}>
+            <div class="pcard-top">
+              <span class="pcard-code">{project.code}</span>
+              <span class={`pcard-health pcard-health--${project.health}`}>{project.health.replace('-', ' ')}</span>
+            </div>
+            <div class="pcard-name">{project.name}</div>
+            <div class="pcard-client">{project.client}</div>
+            <div class="pcard-phase">{project.phase}</div>
+            <div class="pcard-status">{project.statusSummary}</div>
+            {project.nextMilestone && (
+              <div class="pcard-milestone">
+                <span class="pcard-milestone-label">Next:</span> {project.nextMilestone}
+                {project.nextMilestoneDate && <span class="pcard-milestone-date">{project.nextMilestoneDate}</span>}
+              </div>
+            )}
+            {project.links && project.links.length > 0 && (
+              <div class="pcard-links">
+                {project.links.map(link => (
+                  <a href={link.url} target="_blank" rel="noopener">{link.label}</a>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ===== ROW 3: PERSONAL SECTION ===== -->
+    <section class="section-wrap">
+      <div class="section-header">
+        <h2 class="section-title">Personal</h2>
+      </div>
+      <div class="personal-grid">
+
+        <!-- Marathon Training -->
+        <div class="personal-card personal-card--marathon">
+          <div class="pc-head">
+            <h3>Marathon Training</h3>
+            {marathon && <span class="pc-badge pc-badge--accent" id="weeks-to-race" data-race-date={marathon.raceDate}>{marathon.weeksToRace}w to race</span>}
+          </div>
+          {marathon ? <div><div class="marathon-stats">
+            <div class="mstat">
+              <span class="mstat-val">{marathon.raceName.split(' ').slice(-1)}</span>
+              <span class="mstat-label">Race</span>
+            </div>
+            <div class="mstat">
+              <span class="mstat-val">{marathon.targetTime.replace('Sub-', '<')}</span>
+              <span class="mstat-label">Target</span>
+            </div>
+            <div class="mstat">
+              <span class="mstat-val">Wk {marathon.weekNumber}</span>
+              <span class="mstat-label">{marathon.currentPhase}</span>
+            </div>
+          </div>
+          <div class="marathon-detail">
+            <div class="md-row">
+              <span class="md-label">Last long run</span>
+              <span class="md-val">{marathon.lastLongRun}</span>
+            </div>
+            <div class="md-row">
+              <span class="md-label">Next target</span>
+              <span class="md-val">{marathon.nextLongRunTarget}</span>
+            </div>
+            <div class="md-row">
+              <span class="md-label">Structure</span>
+              <span class="md-val">{marathon.weeklyStructure}</span>
+            </div>
+          </div></div> : <p class="empty-state-sm">Training snapshot unavailable in the demo.</p>}
+        </div>
+
+        <!-- Recent Exercise -->
+        <div class="personal-card personal-card--exercise">
+          <div class="pc-head">
+            <h3>Recent Exercise</h3>
+            <span class="pc-badge pc-badge--green">{exerciseSessions.length} sessions</span>
+          </div>
+          <div class="exercise-list">
+            {recentExercise.map(session => (
+              <div class={`ex-item ex-item--${session.type}`}>
+                <div class="ex-type">{session.type}</div>
+                <div class="ex-body">
+                  <span class="ex-title">{session.title}</span>
+                  <span class="ex-meta">
+                    {session.distance && `${session.distance} `}
+                    {session.duration && `${session.duration} `}
+                    {session.avgHR && `HR ${session.avgHR} `}
+                    {session.volume && `Vol ${session.volume}`}
+                  </span>
+                </div>
+                <div class="ex-date">{session.date.slice(5)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Creative Projects -->
+        <div class="personal-card personal-card--creative">
+          <div class="pc-head">
+            <h3>Creative</h3>
+            <span class="pc-badge pc-badge--purple">{creativeProjects.length} projects</span>
+          </div>
+          <div class="creative-list">
+            {creativeProjects.map(proj => (
+              <div class="cr-item">
+                <div class="cr-top">
+                  <span class="cr-name">{proj.name}</span>
+                  <span class="cr-type">{proj.type}</span>
+                </div>
+                <div class="cr-status">{proj.status}</div>
+                <div class="cr-summary">{proj.summary}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Goals -->
+        <div class="personal-card personal-card--goals">
+          <div class="pc-head">
+            <h3>Goals</h3>
+          </div>
+          <div class="goals-list">
+            {personalGoals.map(goal => (
+              <div class="goal-item">
+                <div class="goal-top">
+                  <span class="goal-name">{goal.name}</span>
+                  <span class="goal-cat">{goal.category}</span>
+                </div>
+                <div class="goal-detail">{goal.detail}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== ROW 4: UPCOMING + ACTIVITY ===== -->
+    <div class="grid-bottom">
+
+      <!-- UPCOMING -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Upcoming</h2>
+          <span class="pill">next 5 days</span>
+        </div>
+        <div id="upcoming-tasks"></div>
+      </section>
+
+      <!-- ACTIVITY FEED -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Activity</h2>
+          <a href={`${base}log/`} class="panel-link">Full log &rarr;</a>
+        </div>
+        <div class="feed-grid">
+          {recentLog.map(entry => (
+            <details class="feed-item">
+              <summary>
+                <span class="feed-dot" style={`background: ${sourceColors[entry.source]}`}></span>
+                <span class="feed-title">{entry.title}</span>
+                <span class="feed-source" style={`background: ${sourceColors[entry.source]}22; color: ${sourceColors[entry.source]}`}>{entry.source}</span>
+                <span class="feed-date">{entry.date}</span>
+              </summary>
+              <p class="feed-detail">{entry.content}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+    </div>
+
   </div>
 </Base>
 
 <script>
-  import '../lib/dashboard.mjs';
+  import '../lib/blue-dashboard.mjs';
 </script>
+
+<style is:global>
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  /* ===== TOP BAR ===== */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .top-date {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+  }
+
+  .top-day-name {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--color-fg-muted);
+  }
+
+  .top-day-num {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .top-month {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--color-fg-muted);
+  }
+
+  .top-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-fg-subtle);
+  }
+
+  /* ===== ALERT BANNER ===== */
+  .alert {
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-lg);
+    border: 1px solid;
+  }
+
+  .alert--danger {
+    background: linear-gradient(135deg, rgba(248, 113, 113, 0.12), rgba(248, 113, 113, 0.04));
+    border-color: rgba(248, 113, 113, 0.25);
+  }
+
+  .alert--info {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.03));
+    border-color: rgba(56, 189, 248, 0.2);
+  }
+
+  .alert-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-lg);
+  }
+
+  .alert-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .alert-item--danger { color: var(--color-danger); }
+  .alert-item--warn { color: var(--color-warn); }
+  .alert-item--info { color: var(--color-accent); }
+
+  .alert-pip {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ===== QUICK LINKS BAR ===== */
+  .links-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .qlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-fg);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    transition: all 0.15s;
+  }
+
+  .qlink svg {
+    opacity: 0.4;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+
+  .qlink:hover {
+    color: var(--color-accent);
+    background: var(--color-accent-dim);
+    border-color: rgba(56, 189, 248, 0.3);
+    text-decoration: none;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.1);
+  }
+
+  .qlink:hover svg {
+    opacity: 1;
+    transform: translate(1px, -1px);
+  }
+
+  /* ===== PANELS ===== */
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .panel--today {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.04), rgba(167, 139, 250, 0.03));
+    border-color: rgba(56, 189, 248, 0.12);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+  }
+
+  .panel-head h2 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-fg-muted);
+  }
+
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-accent);
+    background: var(--color-accent-dim);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .panel-link {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-fg-subtle);
+    transition: color 0.15s;
+  }
+
+  .panel-link:hover { color: var(--color-accent); }
+
+  /* ===== TODAY TIMELINE ===== */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+    padding-left: 4px;
+  }
+
+  .tl-item {
+    display: grid;
+    grid-template-columns: 60px 12px 1fr;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 10px 8px;
+    border-radius: var(--radius);
+    transition: background 0.12s;
+  }
+
+  .tl-item:hover { background: var(--color-surface-raised); }
+
+  .tl-time {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-fg-subtle);
+    text-align: right;
+  }
+
+  .tl-item--overdue .tl-time { color: var(--color-danger); font-size: 0.6rem; }
+
+  .tl-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    justify-self: center;
+  }
+
+  .tl-dot--event { background: var(--color-accent); box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+  .tl-dot--task { background: var(--color-warn); }
+  .tl-dot--overdue { background: var(--color-danger); animation: pulse 2s ease-in-out infinite; }
+
+  .tl-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .tl-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  .tl-item--overdue .tl-label { color: var(--color-danger); }
+
+  .tl-detail {
+    font-size: 0.75rem;
+    color: var(--color-fg-muted);
+  }
+
+  .empty-state {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    color: var(--color-fg-muted);
+    font-size: 0.9rem;
+  }
+
+  .empty-icon {
+    color: var(--color-success);
+    font-size: 1.2rem;
+  }
+
+  .empty-state-sm {
+    color: var(--color-fg-subtle);
+    font-size: 0.85rem;
+    padding: var(--space-sm) 0;
+  }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* ===== PROJECT CARDS ===== */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--space-md);
+  }
+
+  .pcard {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--health-color, var(--color-success));
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .pcard:hover {
+    border-color: var(--color-border-hover);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .pcard-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pcard-code {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-accent-dim);
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .pcard-health {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .pcard-health--on-track { background: rgba(74, 222, 128, 0.12); color: var(--color-success); }
+  .pcard-health--at-risk { background: rgba(251, 191, 36, 0.12); color: var(--color-warn); }
+  .pcard-health--blocked { background: rgba(248, 113, 113, 0.12); color: var(--color-danger); }
+
+  .pcard-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .pcard-client {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-fg-muted);
+  }
+
+  .pcard-phase {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-purple);
+  }
+
+  .pcard-status {
+    font-size: 0.85rem;
+    color: var(--color-fg-muted);
+    line-height: 1.5;
+  }
+
+  .pcard-milestone {
+    font-size: 0.8rem;
+    color: var(--color-fg);
+    padding-top: 4px;
+    border-top: 1px solid var(--color-border);
+    margin-top: 4px;
+  }
+
+  .pcard-milestone-label {
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .pcard-milestone-date {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-fg-subtle);
+    margin-left: 8px;
+  }
+
+  .pcard-links {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .pcard-links a {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-fg-muted);
+    border: 1px solid var(--color-border-hover);
+    padding: 4px 12px;
+    border-radius: 6px;
+    transition: all 0.12s;
+  }
+
+  .pcard-links a:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: var(--color-accent-dim);
+    text-decoration: none;
+  }
+
+  /* ===== PERSONAL GRID ===== */
+  .personal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  .personal-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .personal-card--marathon { border-top: 3px solid var(--color-accent); }
+  .personal-card--exercise { border-top: 3px solid var(--color-success); }
+  .personal-card--creative { border-top: 3px solid var(--color-purple); }
+  .personal-card--goals { border-top: 3px solid var(--color-orange); }
+
+  .pc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+  }
+
+  .pc-head h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-fg-muted);
+  }
+
+  .pc-badge {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .pc-badge--accent { background: var(--color-accent-dim); color: var(--color-accent); }
+  .pc-badge--green { background: rgba(74, 222, 128, 0.12); color: var(--color-success); }
+  .pc-badge--purple { background: rgba(167, 139, 250, 0.12); color: var(--color-purple); }
+
+  /* Marathon stats */
+  .marathon-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+
+  .mstat {
+    text-align: center;
+    padding: var(--space-sm);
+    background: var(--color-surface-raised);
+    border-radius: var(--radius);
+  }
+
+  .mstat-val {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .mstat-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-fg-subtle);
+  }
+
+  .marathon-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .md-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+
+  .md-label { color: var(--color-fg-muted); }
+  .md-val { font-weight: 500; }
+
+  /* Exercise list */
+  .exercise-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ex-item {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 8px;
+    border-radius: var(--radius);
+    transition: background 0.12s;
+  }
+
+  .ex-item:hover { background: var(--color-surface-raised); }
+
+  .ex-type {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 3px 6px;
+    border-radius: 4px;
+  }
+
+  .ex-item--run .ex-type { background: rgba(56, 189, 248, 0.12); color: var(--color-accent); }
+  .ex-item--gym .ex-type { background: rgba(251, 191, 36, 0.12); color: var(--color-warn); }
+  .ex-item--swim .ex-type { background: rgba(74, 222, 128, 0.12); color: var(--color-success); }
+
+  .ex-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .ex-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ex-meta {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-subtle);
+  }
+
+  .ex-date {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-subtle);
+  }
+
+  /* Creative list */
+  .creative-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cr-item {
+    padding: 10px;
+    border-radius: var(--radius);
+    border-left: 3px solid var(--color-purple);
+    background: rgba(167, 139, 250, 0.03);
+    transition: background 0.12s;
+  }
+
+  .cr-item:hover { background: rgba(167, 139, 250, 0.06); }
+
+  .cr-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  .cr-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .cr-type {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-fg-subtle);
+    white-space: nowrap;
+  }
+
+  .cr-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-purple);
+    margin: 2px 0;
+  }
+
+  .cr-summary {
+    font-size: 0.8rem;
+    color: var(--color-fg-muted);
+    line-height: 1.4;
+  }
+
+  /* Goals list */
+  .goals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .goal-item {
+    padding: 10px;
+    border-radius: var(--radius);
+    border-left: 3px solid var(--color-orange);
+    background: rgba(251, 146, 60, 0.03);
+    transition: background 0.12s;
+  }
+
+  .goal-item:hover { background: rgba(251, 146, 60, 0.06); }
+
+  .goal-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: 2px;
+  }
+
+  .goal-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .goal-cat {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-fg-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .goal-detail {
+    font-size: 0.8rem;
+    color: var(--color-fg-muted);
+    line-height: 1.4;
+  }
+
+  /* ===== BOTTOM GRID ===== */
+  .grid-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  /* UPCOMING */
+  .upcoming-day {
+    margin-bottom: var(--space-md);
+  }
+
+  .upcoming-day:last-child { margin-bottom: 0; }
+
+  .upcoming-day-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-fg-subtle);
+    padding: var(--space-xs) 0 var(--space-sm);
+  }
+
+  .upcoming-task {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 6px 8px;
+    border-radius: var(--radius);
+    transition: background 0.12s;
+  }
+
+  .upcoming-task:hover { background: var(--color-surface-raised); }
+
+  .upcoming-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-fg-subtle);
+    flex-shrink: 0;
+  }
+
+  .upcoming-dot--high { background: var(--color-danger); }
+  .upcoming-dot--medium { background: var(--color-warn); }
+  .upcoming-dot--low { background: var(--color-success); }
+
+  .upcoming-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .upcoming-project {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-subtle);
+    background: var(--color-surface-raised);
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ===== ACTIVITY FEED ===== */
+  .feed-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feed-item {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .feed-item:last-child { border-bottom: none; }
+
+  .feed-item summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 10px 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    list-style: none;
+    transition: background 0.1s;
+  }
+
+  .feed-item summary::-webkit-details-marker { display: none; }
+  .feed-item summary::marker { display: none; content: ''; }
+
+  .feed-item summary:hover { background: var(--color-surface-raised); }
+
+  .feed-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .feed-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .feed-source {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .feed-date {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-subtle);
+    flex-shrink: 0;
+  }
+
+  .feed-detail {
+    font-size: 0.85rem;
+    color: var(--color-fg-muted);
+    line-height: 1.65;
+    padding: 0 8px var(--space-md) 26px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .top-day-num { font-size: 2.4rem; }
+    .panel { padding: var(--space-lg); }
+    .personal-grid { grid-template-columns: 1fr; }
+    .project-grid { grid-template-columns: 1fr; }
+    .grid-bottom { grid-template-columns: 1fr; }
+    .tl-item { grid-template-columns: 50px 10px 1fr; }
+  }
+  [hidden] { display: none !important; }
+  .calendar-settings { border-top: 1px solid var(--color-border); margin-top: var(--space-md); padding-top: var(--space-sm); }
+  .calendar-settings summary { cursor: pointer; color: var(--color-fg-muted); font-size: .85rem; }
+  .calendar-settings form { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; padding: .75rem 0; }
+  .calendar-settings label { display: grid; gap: .25rem; color: var(--color-fg-muted); font-size: .78rem; }
+  .calendar-settings input, .calendar-settings button {
+    padding: .5rem; background: var(--color-surface); color: var(--color-fg);
+    border: 1px solid var(--color-border-hover); border-radius: var(--radius); font: inherit;
+  }
+  .calendar-settings button { cursor: pointer; font-size: .8rem; }
+</style>
