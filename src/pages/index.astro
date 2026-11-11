@@ -1,0 +1,330 @@
+---
+import Base from '../layouts/Base.astro';
+import { projects, tasks, log, quickLinks, lastUpdated } from '../content/dashboard';
+
+const activeTasks = tasks.filter(t => !t.completed);
+const recentLog = log.slice(0, 5);
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="Workstation">
+  <div class="dashboard">
+
+    <section class="hero">
+      <p class="section-label">last updated {lastUpdated}</p>
+      <h1>Workstation</h1>
+    </section>
+
+    <div class="grid-main">
+
+      <section class="card projects-card">
+        <p class="section-label">Active projects</p>
+        <ul class="project-list">
+          {projects.filter(p => p.status === 'active').map(project => (
+            <li class="project-item">
+              <div class="project-header">
+                <span class="project-code">{project.code}</span>
+                <h3 class="project-name">{project.name}</h3>
+                <span class={`badge badge--${project.priority}`}>{project.priority}</span>
+              </div>
+              <p class="project-client">{project.client}</p>
+              {project.notes && <p class="project-notes">{project.notes}</p>}
+              {project.links && project.links.length > 0 && (
+                <div class="project-links">
+                  {project.links.map(link => (
+                    <a href={link.url} target="_blank" rel="noopener">{link.label}</a>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="card tasks-card">
+        <p class="section-label">Open tasks ({activeTasks.length})</p>
+        <ul class="task-list">
+          {activeTasks.map(task => (
+            <li class="task-item">
+              <span class="task-check">&#9633;</span>
+              <div class="task-content">
+                <span class="task-title">{task.title}</span>
+                {task.project && <span class="task-project">{task.project}</span>}
+              </div>
+              <span class={`badge badge--${task.priority}`}>{task.priority}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="card log-card">
+        <p class="section-label">Recent log</p>
+        <ul class="log-list">
+          {recentLog.map(entry => (
+            <li class="log-item">
+              <div class="log-meta">
+                <span class="log-date">{entry.date}</span>
+                <span class={`log-source log-source--${entry.source}`}>{entry.source}</span>
+              </div>
+              <p class="log-title">{entry.title}</p>
+              <p class="log-content">{entry.content}</p>
+            </li>
+          ))}
+        </ul>
+        <a href={`${base}log/`} class="view-all">View full log</a>
+      </section>
+
+      <section class="card links-card">
+        <p class="section-label">Quick links</p>
+        <div class="links-grid">
+          {quickLinks.map(link => (
+            <a href={link.url} target="_blank" rel="noopener" class="quick-link">
+              <span class="link-label">{link.label}</span>
+              <span class="link-category">{link.category}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+    </div>
+  </div>
+</Base>
+
+<style>
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .hero h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-fg);
+  }
+
+  .grid-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+
+  @media (max-width: 720px) {
+    .grid-main {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .log-card {
+    grid-column: 1 / -1;
+  }
+
+  /* Projects */
+  .project-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .project-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .project-code {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-accent);
+    background: var(--color-accent-dim);
+    padding: 0.1em 0.5em;
+    border-radius: 3px;
+  }
+
+  .project-name {
+    font-size: 1rem;
+    font-weight: 600;
+    min-width: 0;
+  }
+
+  .project-client {
+    font-size: 0.8rem;
+    color: var(--color-fg-muted);
+    margin-top: 0.25rem;
+  }
+
+  .project-notes {
+    font-size: 0.85rem;
+    color: var(--color-fg-muted);
+    margin-top: var(--space-xs);
+    line-height: 1.5;
+  }
+
+  .project-links {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .project-links a {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-accent);
+    border: 1px solid var(--color-border);
+    padding: 0.2em 0.6em;
+    border-radius: var(--radius);
+  }
+
+  .project-links a:hover {
+    background: var(--color-accent-dim);
+    text-decoration: none;
+  }
+
+  /* Tasks */
+  .task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    border-radius: var(--radius);
+    background: var(--color-surface-raised);
+  }
+
+  .task-check {
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--color-fg-muted);
+    flex-shrink: 0;
+    margin-top: 0.1em;
+  }
+
+  .task-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .task-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .task-project {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--color-fg-muted);
+  }
+
+  /* Log */
+  .log-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .log-item {
+    border-left: 2px solid var(--color-border);
+    padding-left: var(--space-md);
+  }
+
+  .log-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: 0.25rem;
+  }
+
+  .log-date {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--color-fg-muted);
+  }
+
+  .log-source {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.1em 0.4em;
+    border-radius: 2px;
+    background: var(--color-surface-raised);
+    color: var(--color-fg-muted);
+  }
+
+  .log-source--slack { color: #4a154b; background: rgba(74, 21, 75, 0.15); }
+  .log-source--email { color: var(--color-accent); background: var(--color-accent-dim); }
+  .log-source--todoist { color: var(--color-danger); background: rgba(239, 83, 80, 0.1); }
+  .log-source--obsidian { color: #7c3aed; background: rgba(124, 58, 237, 0.1); }
+  .log-source--manual { color: var(--color-fg-muted); }
+
+  .log-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .log-content {
+    font-size: 0.8rem;
+    color: var(--color-fg-muted);
+    line-height: 1.5;
+  }
+
+  .view-all {
+    display: inline-block;
+    margin-top: var(--space-md);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-accent);
+  }
+
+  /* Quick links */
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .quick-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: var(--space-sm);
+    border-radius: var(--radius);
+    background: var(--color-surface-raised);
+    text-decoration: none;
+    color: var(--color-fg);
+    transition: background 0.15s;
+  }
+
+  .quick-link:hover {
+    background: var(--color-accent-dim);
+    text-decoration: none;
+  }
+
+  .link-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .link-category {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-fg-muted);
+  }
+</style>

@@ -1,0 +1,91 @@
+---
+import Base from '../../layouts/Base.astro';
+import { log } from '../../content/dashboard';
+---
+
+<Base title="Log | Workstation">
+  <div class="log-page">
+    <p class="section-label">Activity log</p>
+    <h1>Log</h1>
+
+    <ul class="log-list">
+      {log.map(entry => (
+        <li class="log-item">
+          <div class="log-meta">
+            <span class="log-date">{entry.date}</span>
+            <span class={`log-source log-source--${entry.source}`}>{entry.source}</span>
+          </div>
+          <p class="log-title">{entry.title}</p>
+          <p class="log-content">{entry.content}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</Base>
+
+<style>
+  .log-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .log-page h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 700;
+  }
+
+  .log-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .log-item {
+    border-left: 2px solid var(--color-border);
+    padding-left: var(--space-md);
+  }
+
+  .log-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: 0.25rem;
+  }
+
+  .log-date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-fg-muted);
+  }
+
+  .log-source {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.1em 0.4em;
+    border-radius: 2px;
+    background: var(--color-surface-raised);
+    color: var(--color-fg-muted);
+  }
+
+  .log-source--slack { color: #4a154b; background: rgba(74, 21, 75, 0.15); }
+  .log-source--email { color: var(--color-accent); background: var(--color-accent-dim); }
+  .log-source--todoist { color: var(--color-danger); background: rgba(239, 83, 80, 0.1); }
+  .log-source--obsidian { color: #7c3aed; background: rgba(124, 58, 237, 0.1); }
+  .log-source--manual { color: var(--color-fg-muted); }
+
+  .log-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .log-content {
+    font-size: 0.85rem;
+    color: var(--color-fg-muted);
+    line-height: 1.5;
+  }
+</style>

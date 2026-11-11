@@ -1,0 +1,74 @@
+---
+import Base from '../../layouts/Base.astro';
+import { quickLinks } from '../../content/dashboard';
+
+const categories = [...new Set(quickLinks.map(l => l.category))];
+---
+
+<Base title="Links | Workstation">
+  <div class="links-page">
+    <p class="section-label">Quick access</p>
+    <h1>Links</h1>
+
+    {categories.map(cat => (
+      <section class="link-group">
+        <h2 class="group-label">{cat}</h2>
+        <div class="links-grid">
+          {quickLinks.filter(l => l.category === cat).map(link => (
+            <a href={link.url} target="_blank" rel="noopener" class="quick-link">
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .links-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .links-page h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 700;
+  }
+
+  .group-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-fg-muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .quick-link {
+    display: block;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-fg);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .quick-link:hover {
+    background: var(--color-accent-dim);
+    text-decoration: none;
+    color: var(--color-accent);
+  }
+</style>
