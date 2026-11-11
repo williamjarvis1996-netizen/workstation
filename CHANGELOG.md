@@ -1,5 +1,10 @@
 # Changelog
 
+## Day planner in Tasks
+
+- Added Today and Tomorrow planning, calendar source labels, suggested blocks, unscheduled work and saved plans inside Tasks.
+- Linked the planner from Overview and kept saved plans separate by London date.
+
 ## Training navigation
 
 - Split Training into Overview, Running and Strength, with shared tabs and the old Full-year URL redirecting to Running.
