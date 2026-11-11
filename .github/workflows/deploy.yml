@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     env:
       PUBLIC_GOOGLE_CALENDAR_CLIENT_ID: ${{ vars.PUBLIC_GOOGLE_CALENDAR_CLIENT_ID }}
     steps:
@@ -27,10 +30,32 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Retain assets for cached pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          downloads="$(mktemp -d)"
+          trap 'rm -rf "$downloads"' EXIT
+          archives=()
+          runs="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/runs?branch=main&status=success&per_page=12" \
+            --jq '.workflow_runs[] | select(.event == "push" or .event == "workflow_dispatch") | .id')"
+          for run in $runs; do
+            if gh run download "$run" --repo "$GITHUB_REPOSITORY" --name github-pages --dir "$downloads/$run"; then
+              if [[ -f "$downloads/$run/artifact.tar" ]]; then
+                archives+=("$downloads/$run/artifact.tar")
+              fi
+            else
+              echo "::notice::Pages artifact for run $run is unavailable."
+            fi
+            if (( ${#archives[@]} >= 6 )); then break; fi
+          done
+          python3 scripts/retain-pages-assets.py dist "${archives[@]}"
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
           path: dist
+          retention-days: 7
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
