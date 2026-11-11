@@ -1,4 +1,4 @@
-.training-year-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.training-year-grid { display: grid; gap: var(--section-gap); grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
 .training-year h2 { font: 650 clamp(1rem, 2vw, 1.32rem)/1.2 var(--font-sans); text-transform: none; letter-spacing: -.025em; }
 .year-race { background: radial-gradient(ellipse at top right, #1e4932, transparent 75%), #111f19; border-color: #3b825b; }
 .year-race h2 { margin: .3rem 0; }
@@ -20,7 +20,7 @@
 .year-legend span:nth-child(3)::before { background: #b89efa; }
 .year-value { font: 700 clamp(1rem, 3vw, 1.65rem) var(--font-mono); color: var(--area-accent); }
 .year-ledger summary { margin-block: .65rem; cursor: pointer; }
-.year-ledger table { width: 100%; border-collapse: collapse; font-size: .79rem; }
+.year-ledger table { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; }
 .year-ledger td, .year-ledger th { padding: .45rem; text-align: left; border-bottom: 1px solid var(--color-border); }
 .year-ledger th, .year-ledger td:not(:nth-child(2)) { font-family: var(--font-mono); }
 .year-table-scroll { overflow-x: auto; }
@@ -34,11 +34,7 @@
   .year-week small { font-size: .51rem; }
 }
 
-.training-nav { display: flex; align-items: center; flex-wrap: wrap; gap: .2rem; padding: .25rem; width: fit-content; max-width: 100%; border: 1px solid var(--color-border-hover); border-radius: .65rem; background: var(--color-bg-raised); }
-.training-nav a { padding: .4rem .8rem; color: var(--color-fg-muted); font-weight: 650; font-size: .82rem; border-radius: .42rem; }
-.training-nav a:hover { color: var(--color-fg); background: var(--color-surface-hover); }
-.training-nav a[aria-current="page"] { color: #9df7bc; background: #173827; box-shadow: inset 0 -2px #4ade80; }
-.training-nav a:focus-visible, .training-controls select:focus-visible, .training-controls input:focus-visible, .year-table-scroll:focus-visible { outline: 2px solid #4ade80; outline-offset: 3px; }
+.training-controls select:focus-visible, .training-controls input:focus-visible, .year-table-scroll:focus-visible { outline: 2px solid var(--area-accent); outline-offset: 3px; }
 .training-year .year-race { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
 .training-year .year-race dl { display: grid; gap: .45rem; }
 .training-year .year-race dt { font: .72rem var(--font-mono); color: var(--color-fg-muted); }
@@ -54,10 +50,9 @@
 .training-progression li:only-child:not(:has(time)) { display: block; }
 .training-import summary { cursor: pointer; color: var(--area-accent); font-weight: 650; }
 .year-table-scroll { margin-top: .35rem; }
-.year-table-scroll th { white-space: nowrap; }
+.year-table-scroll th { white-space: nowrap; color: var(--color-fg-muted); background: var(--color-surface-raised); }
+.year-ledger tbody tr:hover { background: var(--color-surface-raised); }
 .year-table-scroll table { min-width: 37rem; }
 @media (max-width: 420px) {
-  .training-nav { width: 100%; }
-  .training-nav a { flex: 1; text-align: center; padding-inline: .35rem; }
   .year-week small { font-size: .47rem; }
 }

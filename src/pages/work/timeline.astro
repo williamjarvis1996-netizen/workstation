@@ -78,11 +78,10 @@ const healthColor: Record<string, string> = {
 </Base>
 
 <style>
-  .timeline-view { margin-top: var(--space-md); display: grid; gap: 0; }
-  .timeline-day { display: grid; grid-template-columns: 8rem 1fr; gap: var(--space-md); padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border); }
-  .timeline-day--past { opacity: .55; }
-  .timeline-day--today { opacity: 1; }
-  .timeline-day--today .timeline-date-label { color: var(--area-accent, #82b6ff); font-weight: 700; }
+  .timeline-view { display: grid; gap: var(--space-sm); }
+  .timeline-day { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: var(--space-md); padding: var(--panel-inset); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+  .timeline-day--today { border-color: var(--area-border); background: var(--area-tint); }
+  .timeline-day--today .timeline-date-label { color: var(--area-accent); font-weight: 700; }
   .timeline-date { display: flex; flex-direction: column; gap: .15rem; font: .78rem var(--font-mono); color: var(--color-fg-muted); padding-top: .15rem; }
   .timeline-overdue { color: var(--color-danger); font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; }
   .timeline-items { display: grid; gap: .5rem; }

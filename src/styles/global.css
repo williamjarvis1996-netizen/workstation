@@ -3,7 +3,7 @@
   --color-bg-raised: #121620;
   --color-fg: #d4dae5;
   --color-fg-muted: #8a94a4;
-  --color-fg-subtle: #556070;
+  --color-fg-subtle: #8591a4;
   --color-accent: #6ba3d4;
   --color-accent-hover: #8bbde8;
   --color-accent-dim: rgba(107, 163, 212, 0.1);
@@ -30,6 +30,12 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
+
+  --page-gutter: clamp(1rem, 3vw, 2rem);
+  --page-spacing: clamp(1.5rem, 4vw, 3rem);
+  --section-gap: clamp(1rem, 2.4vw, 1.75rem);
+  --panel-inset: clamp(1rem, 2.4vw, 1.5rem);
+  --transition-ui: 160ms ease-out;
 
   --radius: 8px;
   --radius-lg: 12px;
@@ -72,7 +78,7 @@
   --color-bg-raised: #121620;
   --color-fg: #d4dae5;
   --color-fg-muted: #8a94a4;
-  --color-fg-subtle: #556070;
+  --color-fg-subtle: #8591a4;
   --color-accent: #6ba3d4;
   --color-accent-hover: #8bbde8;
   --color-accent-dim: rgba(107, 163, 212, 0.1);
@@ -125,14 +131,14 @@ code, pre {
 .container {
   max-width: 1120px;
   margin: 0 auto;
-  padding-inline: var(--space-md);
+  padding-inline: var(--page-gutter);
 }
 
 .card {
   background: linear-gradient(135deg, rgba(180, 210, 255, 0.035), rgba(180, 210, 255, 0.015));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-xl);
+  padding: var(--panel-inset);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
