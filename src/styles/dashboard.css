@@ -1021,3 +1021,9 @@ body[data-area="goals"] { --area-accent: #e5ad3b; --area-tint: #2a2210; }
 .sync-cards p { color: var(--color-fg-muted); font-size: .8rem; }
 @media (max-width: 760px) { .planner-grid { grid-template-columns: 1fr; } }
 .snapshot-picker { display: grid; margin-block: .6rem; gap: .25rem; font-size: .8rem; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-xl); margin-top: var(--space-md); }
+.settings-section h3 { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--color-fg-muted); margin-bottom: var(--space-sm); }
+.sync-status-grid { display: grid; gap: .5rem; }
+.sync-row { display: flex; align-items: center; gap: .75rem; font-size: .82rem; }
+.sync-row span { color: var(--color-fg-muted); min-width: 5rem; }
+.sync-row strong { flex: 1; font-size: .78rem; }

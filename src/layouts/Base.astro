@@ -10,15 +10,10 @@ const { title = 'Workstation', active = '' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const navigation = [
   ['overview', '', 'Overview'],
-  ['plan', 'plan/', 'Day plan'],
   ['work', 'work/', 'Work'],
   ['tasks', 'tasks/', 'Tasks'],
   ['training', 'training/', 'Training'],
   ['creative', 'creative/', 'Creative'],
-  ['goals', 'goals/', 'Goals'],
-  ['log', 'log/', 'Activity'],
-  ['links', 'links/', 'Links'],
-  ['sync', 'sync/', 'Sync'],
 ];
 ---
 
@@ -47,7 +42,7 @@ const navigation = [
           {navigation.map(([key, path, label]) => (
             <a href={base + path} data-nav={key} aria-current={active === key ? 'page' : undefined}>{label}</a>
           ))}
-          <a href={base + '#settings'} id="settings-link">Settings</a>
+          <a href={base + '#settings'} data-nav="sync" id="settings-link">Settings</a>
         </nav>
       </div>
     </header>

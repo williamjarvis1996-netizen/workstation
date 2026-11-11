@@ -3,7 +3,7 @@ import { readLife, updateLife, today, weekStart } from './life.mjs';
 import { make } from './storage.mjs';
 
 document.addEventListener('astro:page-load', () => {
-  const root = document.getElementById('goals-page');
+  const root = document.getElementById('goals-page') || document.getElementById('training-page');
   if (!root) return;
   const goals = JSON.parse(root.dataset.goals);
   const board = document.getElementById('goal-board');

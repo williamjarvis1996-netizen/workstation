@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { dashboard, isDemo } from '../content/dashboard';
 const { tasks, log, quickLinks, calendarEvents, lastUpdated } = dashboard;
-const recentLog = log.slice(0, 8);
+const recentLog = log.slice(0, 12);
 const base = import.meta.env.BASE_URL;
 const clientId = import.meta.env.PUBLIC_GOOGLE_CALENDAR_CLIENT_ID || '';
 
@@ -102,7 +102,7 @@ const sourceColors: Record<string, string> = {
       ))}
     </nav>
 
-    <aside class="day-brief" aria-label="Current priority"><span id="day-brief-label">Your day</span><strong id="day-brief-text"></strong><a href={base + "plan/"}>Plan my day &rarr;</a></aside>
+    <aside class="day-brief" aria-label="Current priority"><span id="day-brief-label">Your day</span><strong id="day-brief-text"></strong></aside>
     <div class="day-grid">
       <section class="panel panel--today">
         <div class="panel-head">
@@ -124,7 +124,6 @@ const sourceColors: Record<string, string> = {
       <section class="panel">
         <div class="panel-head">
           <h2>Activity</h2>
-          <a href={`${base}log/`} class="panel-link">Full log &rarr;</a>
         </div>
         <div class="feed-grid">
           {recentLog.map(entry => (
@@ -143,19 +142,70 @@ const sourceColors: Record<string, string> = {
       </section>
 
       <details class="calendar-settings" id="settings">
-        <summary>Settings</summary>
-        <form id="calendar-form">
-          <label>Google OAuth web client ID <input name="client" autocomplete="off" placeholder="…apps.googleusercontent.com" /></label>
-          <label>Calendar IDs <input name="ids" value="primary" /></label>
-          <button type="submit">Save settings</button>
-          <button type="button" id="calendar-connect">Connect Google Calendar</button>
-          <button type="button" id="calendar-disconnect" hidden>Disconnect</button>
-        </form>
-        <p class="top-sync" id="calendar-status" role="status"></p>
+        <summary>Settings &amp; sync</summary>
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h3>Google Calendar</h3>
+            <form id="calendar-form">
+              <label>Google OAuth web client ID <input name="client" autocomplete="off" placeholder="…apps.googleusercontent.com" /></label>
+              <label>Calendar IDs <input name="ids" value="primary" /></label>
+              <button type="submit">Save settings</button>
+              <button type="button" id="calendar-connect">Connect Google Calendar</button>
+              <button type="button" id="calendar-disconnect" hidden>Disconnect</button>
+            </form>
+            <p class="top-sync" id="calendar-status" role="status"></p>
+          </div>
+          <div class="settings-section">
+            <h3>Sync status</h3>
+            <div class="sync-status-grid">
+              <div class="sync-row"><span>Workstation</span><strong data-status="shared"></strong><button class="action-button" type="button" id="refresh-shared">Sync</button></div>
+              <div class="sync-row"><span>Todoist</span><strong data-status="todoist"></strong><button class="action-button" type="button" id="refresh-todoist">Refresh</button></div>
+              <div class="sync-row"><span>Calendar</span><strong data-status="calendar"></strong></div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Import snapshot</h3>
+            <label class="snapshot-picker">Workstation JSON <input id="snapshot-file" type="file" accept=".json,application/json" /></label>
+            <button type="button" class="action-button" id="snapshot-import">Import records</button>
+            <p role="status" class="top-sync" id="snapshot-feedback"></p>
+          </div>
+        </div>
       </details>
   </div>
 </Base>
 
 <script>
   import '../lib/blue-dashboard.mjs';
+  import { importSnapshot } from '../lib/import-snapshot.mjs';
+  import { syncInfo, refreshShared, refreshTodoist } from '../lib/shared.mjs';
+  document.addEventListener('astro:page-load', () => {
+    const root = document.getElementById('blue-dashboard');
+    if (!root) return;
+    const controller = new AbortController();
+    const format = new Intl.DateTimeFormat('en-GB', {dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/London'});
+    function renderSync() {
+      const state = syncInfo();
+      for (const key of ['shared','todoist','calendar']) {
+        const el = root.querySelector(`[data-status="${key}"]`);
+        if (el) el.textContent = state[key].status;
+      }
+    }
+    root.querySelector('#snapshot-import')?.addEventListener('click', async () => {
+      const picker = root.querySelector<HTMLInputElement>('#snapshot-file');
+      const file = picker?.files?.[0];
+      const feedback = root.querySelector('#snapshot-feedback');
+      if (!file || file.size > 1000000) { if (feedback) feedback.textContent = 'Choose a JSON file under 1 MB.'; return; }
+      try {
+        if (feedback) feedback.textContent = importSnapshot(JSON.parse(await file.text()));
+        if (picker) picker.value = '';
+      } catch (error) {
+        if (feedback) feedback.textContent = error instanceof Error ? error.message : 'Import failed.';
+      }
+    });
+    root.querySelector('#refresh-shared')?.addEventListener('click', () => { void refreshShared(); });
+    root.querySelector('#refresh-todoist')?.addEventListener('click', () => { void refreshTodoist(); });
+    document.addEventListener('workstation:sync', renderSync, { signal: controller.signal });
+    document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
+    renderSync();
+  });
 </script>
