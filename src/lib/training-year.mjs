@@ -94,17 +94,60 @@ export function annualMileage(sessions, year) {
   const weeks = [];
   const byWeek = new Map();
   for (let day = firstWeek; day <= yearEnd; day = addDays(day, 7)) {
-    const week = { day, runs: 0, km: 0, flagged: 0 };
+    const week = { day, runs: 0, km: 0, flagged: 0, longest: 0 };
     weeks.push(week);
     byWeek.set(day, week);
   }
   const runs = sessions.filter(item => item.type === 'run' && item.date >= yearStart && item.date <= yearEnd && workoutDistance(item) > 0);
   for (const run of runs) {
     const week = byWeek.get(weekStart(run.date));
-    week.km += workoutDistance(run);
+    const distance = workoutDistance(run);
+    week.km += distance;
+    week.longest = Math.max(week.longest, distance);
     week.runs++;
     if (run.dataNote) week.flagged++;
   }
   const longest = runs.reduce((best, run) => workoutDistance(run) > workoutDistance(best || {}) ? run : best, null);
   return { weeks, runs, longest, total: runs.reduce((sum, run) => sum + workoutDistance(run), 0) };
+}
+
+export function runningMilestones(runs) {
+  let best = 0;
+  return [...runs].sort((a, b) => a.date.localeCompare(b.date)).filter(run => {
+    const distance = workoutDistance(run);
+    if (distance <= best) return false;
+    best = distance;
+    return true;
+  });
+}
+
+export function strengthSplit(title) {
+  if (/^push\b/i.test(title)) return 'Push';
+  if (/^pull\b/i.test(title)) return 'Pull';
+  if (/^mixed\b/i.test(title)) return 'Mixed';
+  return 'Other / unclassified';
+}
+
+export function annualStrength(sessions, year, gym = '') {
+  const visits = sessions.filter(item => item.type === 'gym' && item.date.startsWith(year + '-')
+    && (!gym || (item.gym || 'Unspecified') === gym));
+  const splits = new Map(['Push', 'Pull', 'Mixed', 'Other / unclassified'].map(label => [label, 0]));
+  const weeks = annualMileage([], year).weeks.map(({day}) => ({ day, visits: 0, sets: 0, measured: 0, splits: new Map() }));
+  const byWeek = new Map(weeks.map(week => [week.day, week]));
+  let sets = 0;
+  let measured = 0;
+  for (const visit of visits) {
+    const split = strengthSplit(visit.title);
+    splits.set(split, splits.get(split) + 1);
+    const week = byWeek.get(weekStart(visit.date));
+    week.visits++;
+    week.splits.set(split, (week.splits.get(split) || 0) + 1);
+    if (Number.isInteger(visit.sets) && visit.sets > 0) {
+      week.sets += visit.sets;
+      week.measured++;
+      sets += visit.sets;
+      measured++;
+    }
+  }
+  return { visits, weeks, sets, measured, splits };
 }
