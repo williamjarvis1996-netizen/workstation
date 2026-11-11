@@ -12,7 +12,7 @@ const navigation = [
   ['overview', '', 'Overview'],
   ['work', 'work/', 'Work'],
   ['tasks', 'tasks/', 'Tasks'],
-  ['training', 'training/', 'Training'],
+  ['training', 'training/', 'Exercise'],
   ['creative', 'creative/', 'Creative'],
 ];
 ---
@@ -61,7 +61,7 @@ const navigation = [
     <dialog class="capture-dialog" id="capture-dialog" aria-labelledby="capture-title">
       <form>
         <h2 id="capture-title">Quick capture</h2>
-        <label>Save to <select name="kind"><option value="task">Tasks</option><option value="workout">Training</option><option value="idea">Creative ideas</option></select></label>
+        <label>Save to <select name="kind"><option value="task">Tasks</option><option value="workout">Exercise</option><option value="idea">Creative ideas</option></select></label>
         <label>Title <input name="title" maxlength="140" required /></label>
         <fieldset data-kind="task">
           <label>Due <input type="date" name="due" /></label>
