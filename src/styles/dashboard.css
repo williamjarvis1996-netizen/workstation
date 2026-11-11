@@ -977,3 +977,27 @@ body[data-area="goals"] { --area-accent: #f6c470; --area-tint: #372d24; }
 .overdue-group { margin-top: .8rem; }
 .overdue-group h3 { color: var(--color-fg-muted); font: .75rem var(--font-mono); }
 .site-footer { padding-bottom: 4rem; }
+
+.action-button { align-self: start; border: 1px solid var(--color-border-hover); border-radius: .45rem; padding: .35rem .6rem; background: var(--area-tint); color: var(--area-accent); font: 600 .77rem var(--font-sans); cursor: pointer; }
+.action-button:disabled { opacity: .5; cursor: default; }
+.planner-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+.plan-blocks, #portfolio-risks { list-style: none; margin-block: .6rem; }
+.plan-blocks li, #portfolio-risks li { display: grid; gap: .15rem; padding: .45rem .55rem; margin-bottom: .35rem; border-left: 2px solid var(--area-accent); background: var(--color-surface); }
+.plan-blocks .overflow-item, #portfolio-risks li { border-color: var(--color-warn); }
+.plan-blocks small, #portfolio-risks small { color: var(--color-fg-muted); }
+.plan-time { color: var(--area-accent); font: .74rem var(--font-mono); }
+.plan-candidate { border-bottom: 1px solid var(--color-border); padding-block: .55rem; }
+.plan-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .4rem; margin-block: .35rem; }
+.plan-controls label, .project-handover label { display: grid; gap: .2rem; font-size: .74rem; color: var(--color-fg-muted); min-width: 0; }
+.plan-controls input, .plan-controls select, .project-handover input, .project-handover select { min-width: 0; max-width: 100%; background: var(--color-bg); color: var(--color-fg); padding: .3rem; border: 1px solid var(--color-border-hover); border-radius: .35rem; font: inherit; }
+.plan-controls input[type="number"] { width: 5rem; }
+.plan-controls select { max-width: 12rem; }
+.project-handover form { display: grid; gap: .45rem; margin-top: .4rem; }
+.project-handover summary { color: var(--area-accent); cursor: pointer; font-size: .78rem; }
+.production-next [data-project-facts] { display: grid; }
+.risk-impact { color: var(--color-warn); font-size: .75rem; }
+.sync-cards .day-stat { gap: .55rem; }
+.sync-cards h2 { font-size: 1rem; }
+.sync-cards p { color: var(--color-fg-muted); font-size: .8rem; }
+@media (max-width: 760px) { .planner-grid { grid-template-columns: 1fr; } }
+.snapshot-picker { display: grid; margin-block: .6rem; gap: .25rem; font-size: .8rem; }

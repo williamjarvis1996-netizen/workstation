@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import { dashboard, isDemo } from '../../content/dashboard';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Day plan | Workstation" active="plan">
+  <div class="dashboard" id="planner" data-tasks={JSON.stringify(dashboard.tasks)} data-projects={JSON.stringify(dashboard.projects)}
+    data-events={JSON.stringify(dashboard.calendarEvents)} data-demo={String(isDemo)}>
+    <header class="area-header"><h1>Day plan</h1><span class="top-sync" id="plan-date"></span>{isDemo && <span class="top-sync">Sample snapshot</span>}</header>
+    <div class="day-brief"><span>Calendar</span><strong id="plan-calendar"></strong><a href={base + '#settings'}>Calendar settings</a></div>
+    <div class="day-grid planner-grid">
+      <section class="panel">
+        <div class="panel-head"><h2>Proposed schedule</h2><button type="button" class="action-button" id="plan-save">Commit plan</button></div>
+        <p class="top-sync">Workday 09:00–18:00 London time</p>
+        <ol id="plan-blocks" class="plan-blocks"></ol>
+        <h3>Unscheduled</h3><ul id="plan-overflow" class="plan-blocks"></ul>
+        <p id="plan-feedback" role="status" class="top-sync"></p>
+      </section>
+      <section class="panel"><div class="panel-head"><h2>Task order</h2><button type="button" class="action-button" id="plan-reset">Reset draft</button></div>
+        <p class="top-sync">Set estimates, link milestones, reorder or pin tasks before committing.</p>
+        <div id="plan-candidates"></div>
+      </section>
+    </div>
+    <section class="panel"><h2>Committed plan</h2><ol id="plan-committed" class="plan-blocks"></ol></section>
+  </div>
+</Base>
+<script>
+  import '../../lib/planner-view.mjs';
+</script>

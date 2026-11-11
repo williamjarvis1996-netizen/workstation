@@ -16,7 +16,7 @@ import { dashboard, isDemo } from '../../content/dashboard';
 </Base>
 <script>
   import { groupTasks } from '../../lib/time.mjs';
-  import { mergedTasks, sampleTasks, taskRow, today } from '../../lib/life.mjs';
+  import { mergedTasks, readLife, sampleTasks, taskRow, today } from '../../lib/life.mjs';
   import { make } from '../../lib/storage.mjs';
   document.addEventListener('astro:page-load', () => {
     const root = document.querySelector<HTMLElement>('#task-page');
@@ -28,7 +28,7 @@ import { dashboard, isDemo } from '../../content/dashboard';
     let filter = 'Today';
     function render() {
       const day = today();
-      const all = mergedTasks(root?.dataset.demo === 'true' ? [...tasks, ...sampleTasks(day)] : tasks);
+      const all = mergedTasks(root?.dataset.demo === 'true' ? Object.keys(readLife().portfolio).length ? [] : [...tasks, ...sampleTasks(day)] : tasks);
       const groups = groupTasks(all, day);
       const selected = groups[filter];
       target.replaceChildren();

@@ -1,7 +1,8 @@
 import { addDays, agenda, groupTasks, londonClock, londonDay, londonTime, minutes } from './time.mjs';
 import { authorize, fetchCalendar, prepareIdentity } from './google-calendar.mjs';
 import { make } from './storage.mjs';
-import { mergedTasks, priorityToday, sampleTasks, taskRow } from './life.mjs';
+import { mergedTasks, readLife, priorityToday, sampleTasks, taskRow } from './life.mjs';
+import { setCalendarStatus } from './shared.mjs';
 import { renderAgenda } from './agenda-view.mjs';
 import { londonWeather } from './weather.mjs';
 
@@ -75,15 +76,16 @@ function mountOverview() {
   function render(now) {
     const day = londonDay(now);
     byId('overview-clock').textContent = londonClock(now);
-    const groups = groupTasks(mergedTasks(demo ? [...tasks, ...sampleTasks(day)] : tasks), day);
-    const demoEvents = demo && !liveEvents ? [
+    const groups = groupTasks(mergedTasks(demo ? Object.keys(readLife().portfolio).length ? [] : [...tasks, ...sampleTasks(day)] : tasks), day);
+    const showDemo = demo && !Object.keys(readLife().portfolio).length;
+    const demoEvents = showDemo && !liveEvents ? [
       ['Project check-in', '09:30', '10:15'], ['Edit review', '11:30', '12:30'], ['Production planning', '15:00', '16:00'],
     ].map(([title, start, end], index) => ({
       id: `sample:${index}`, title, start: londonTime(day, start), end: londonTime(day, end), busy: true,
     })) : [];
-    const model = agenda(liveEvents ?? (demo ? demoEvents : snapshot), now);
+    const model = agenda(liveEvents ?? (showDemo ? demoEvents : snapshot), now);
     const active = Boolean(token && liveEvents);
-    const usableSchedule = active || demo;
+    const usableSchedule = active || showDemo;
     if (londonDate !== day) {
       londonDate = day;
       const parts = Object.fromEntries(dayFormat.formatToParts(now).map(({type, value}) => [type, value]));
@@ -128,7 +130,7 @@ function mountOverview() {
     connect.textContent = token ? 'Refresh Google Calendar' : 'Connect Google Calendar';
     disconnect.hidden = !token;
     byId('calendar-connection').textContent = request ? 'Refreshing calendar…'
-      : liveEvents ? `Calendar updated ${londonClock(synced)}` : token ? 'Calendar refresh needed' : demo ? 'Sample schedule' : snapshot.length ? 'Calendar snapshot' : 'Calendar disconnected';
+      : liveEvents ? `Calendar updated ${londonClock(synced)}` : token ? 'Calendar refresh needed' : demo && !Object.keys(readLife().portfolio).length ? 'Sample schedule' : snapshot.length ? 'Calendar snapshot' : 'Calendar disconnected';
   }
 
   function clearCalendar(message) {
@@ -137,6 +139,7 @@ function mountOverview() {
     token = undefined;
     liveEvents = undefined;
     synced = 0;
+    setCalendarStatus({ status: message || 'Disconnected', syncedAt: '', events: null });
     status.textContent = message;
     renderConnection();
     render(Date.now());
@@ -152,6 +155,7 @@ function mountOverview() {
     const controller = new AbortController();
     request = controller;
     status.textContent = 'Refreshing Google Calendar…';
+    setCalendarStatus({ status: 'Refreshing' });
     renderConnection();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
@@ -159,12 +163,16 @@ function mountOverview() {
       if (request !== controller) return;
       liveEvents = events;
       synced = Date.now();
+      setCalendarStatus({ status: 'Synced', syncedAt: new Date(synced).toISOString(), events: liveEvents });
       status.textContent = `Google Calendar updated at ${londonClock(synced)} London.`;
     } catch (error) {
       if (request !== controller) return;
       if (error.status === 401) clearCalendar('Google access expired. Reconnect to refresh.');
-      else status.textContent = (error.name === 'AbortError' ? 'Calendar refresh timed out.' : error.message)
+      else {
+        setCalendarStatus({ status: synced ? 'Stale · refresh failed' : 'Refresh failed' });
+        status.textContent = (error.name === 'AbortError' ? 'Calendar refresh timed out.' : error.message)
         + (synced ? ` Showing the ${londonClock(synced)} update.` : ' Showing the snapshot.');
+      }
     } finally {
       clearTimeout(timeout);
       if (request === controller) request = undefined;

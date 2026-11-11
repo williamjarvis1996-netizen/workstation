@@ -1,8 +1,9 @@
 import { addDays, londonDay } from './time.mjs';
+import { queueChanges, syncInfo, completeTodoist } from './shared.mjs';
 import { make } from './storage.mjs';
 
 const key = 'workstation-life-v1';
-const empty = () => ({ tasks: [], workouts: [], ideas: [], completed: {}, goals: {}, habits: {}, creativeActions: {} });
+const empty = () => ({ tasks: [], workouts: [], ideas: [], completed: {}, goals: {}, habits: {}, creativeActions: {}, taskPlans: {}, projectPlans: {}, dayPlans: {}, portfolio: {} });
 
 export function readLife() {
   try {
@@ -14,8 +15,10 @@ export function readLife() {
 
 export function updateLife(change) {
   const data = readLife();
+  const before = structuredClone(data);
   change(data);
   localStorage.setItem(key, JSON.stringify(data));
+  queueChanges(before, data);
   document.dispatchEvent(new Event('workstation:change'));
 }
 
@@ -28,8 +31,19 @@ export function mergedTasks(tasks) {
     duplicates.set(signature, occurrence + 1);
     return { ...task, id: task.id || `snapshot:${signature}:${occurrence}` };
   });
-  return [...snapshot, ...data.tasks].map(task => ({
-    ...task, completed: Object.hasOwn(data.completed, task.id) ? data.completed[task.id] : task.completed,
+  const { todoist } = syncInfo();
+  const providerKeys = new Set(todoist.tasks.map(task => JSON.stringify([task.title, task.due])));
+  const importedKeys = new Set(data.tasks.filter(task => task.imported).map(task => JSON.stringify([task.title, task.due || ''])));
+  const unique = snapshot.filter(task => {
+    const signature = JSON.stringify([task.title, task.due || '']);
+    return !providerKeys.has(signature) && !importedKeys.has(signature) && !data.completed['todoist-closed:' + signature];
+  });
+  const local = data.tasks.filter(task => {
+    const signature = JSON.stringify([task.title, task.due || '']);
+    return !task.imported || (!providerKeys.has(signature) && !data.completed['todoist-closed:' + signature]);
+  });
+  return [...unique, ...local, ...todoist.tasks].map(task => ({
+    ...task, ...data.taskPlans[task.id], completed: Object.hasOwn(data.completed, task.id) ? data.completed[task.id] : task.completed,
   }));
 }
 
@@ -38,18 +52,26 @@ export function taskRow(task, detail) {
   const check = make('input');
   check.type = 'checkbox';
   check.checked = Boolean(task.completed);
-  check.addEventListener('change', () => {
+  check.addEventListener('change', async () => {
     try {
-      updateLife(data => { data.completed[task.id] = check.checked; });
-      document.getElementById('task-feedback').textContent = check.checked ? 'Task completed.' : 'Task reopened.';
+      if (task.sourceId) {
+        check.disabled = true;
+        await completeTodoist(task.sourceId);
+        try {
+          updateLife(data => { data.completed['todoist-closed:' + JSON.stringify([task.title, task.due || ''])] = true; });
+        } catch { /* The upstream completion succeeded. */ }
+      } else updateLife(data => { data.completed[task.id] = check.checked; });
+      (document.getElementById('task-feedback') || row).textContent = check.checked ? 'Task completed.' : 'Task reopened.';
       document.querySelector('.task-tabs [aria-pressed="true"]')?.focus();
-    } catch {
+    } catch (error) {
       check.checked = !check.checked;
-      document.getElementById('task-feedback').textContent = 'Browser storage is unavailable.';
+      check.disabled = false;
+      (document.getElementById('task-feedback') || row).textContent = task.sourceId ? error.message : 'Browser storage is unavailable.';
     }
   });
   const text = make('span', '', 'action-task-copy');
   text.append(make('strong', task.title));
+  if (task.sourceId) detail = [detail, 'Todoist'].filter(Boolean).join(' · ');
   if (detail) text.append(make('small', detail));
   row.append(check, text);
   return row;
@@ -93,3 +115,8 @@ export function workoutPace(session) {
 }
 
 export function today() { return londonDay(Date.now()); }
+
+export function portfolioProjects(snapshot, demo) {
+  const imported = Object.values(readLife().portfolio);
+  return imported.length ? [...new Map([...(demo ? [] : snapshot), ...imported].map(project => [project.code, project])).values()] : snapshot;
+}

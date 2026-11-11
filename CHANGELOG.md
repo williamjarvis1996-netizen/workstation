@@ -1,5 +1,11 @@
 # Changelog
 
+## Planning, project dependencies and shared data
+
+- Added an explainable Day plan with task estimates, milestone links, reorder/pin controls, calendar-aware time blocks and committed plans.
+- Added project handovers, milestone deadlines and dependency risk that traces downstream impacts.
+- Added signed-in private record sync, an offline queue, snapshot import and visible source status. Added optional Todoist reads and explicit task completion write-back.
+
 ## Dashboard redesign and quick capture
 
 - Rebuilt Today as a time-based agenda with overlapping lanes, a live now marker and a highlighted focus block. Added a daily brief that changes with calendar and task state.

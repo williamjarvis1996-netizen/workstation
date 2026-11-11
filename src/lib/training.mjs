@@ -16,7 +16,10 @@ document.addEventListener('astro:page-load', () => {
   const log = document.getElementById('workout-list');
 
   function render() {
-    const sessions = [...readLife().workouts.slice().reverse(), ...snapshot].sort((a, b) => b.date.localeCompare(a.date));
+    const workouts = readLife().workouts;
+    const importedKeys = new Set(workouts.filter(item => item.imported).map(item => JSON.stringify([item.title,item.date])));
+    const base = root.dataset.demo === 'true' && importedKeys.size ? [] : snapshot.filter(item => !importedKeys.has(JSON.stringify([item.title,item.date])));
+    const sessions = [...workouts.slice().reverse(), ...base].sort((a, b) => b.date.localeCompare(a.date));
     const measured = sessions.filter(session => session.type === 'run' && workoutDistance(session) > 0);
     const mostRecent = sessions[0];
     document.getElementById('workout-count').textContent = `${sessions.length} logged`;
