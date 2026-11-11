@@ -4,10 +4,10 @@ import { dashboard, isDemo } from '../../content/dashboard';
 ---
 <Base title="Tasks | Workstation" active="tasks">
   <div class="dashboard" id="task-page" data-tasks={JSON.stringify(dashboard.tasks)} data-demo={String(isDemo)}>
-    <header class="area-header"><h1>Tasks</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
+    <header class="area-header"><h1>Tasks</h1><span class="top-sync" id="open-task-count"></span>{isDemo && <span class="top-sync">Sample data</span>}</header>
     <div class="task-stats" id="task-stats"></div>
     <div class="task-tabs" aria-label="Filter tasks">
-      {['Today', 'Overdue', 'Upcoming', 'No date', 'Completed'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
+      {['Triage', 'Today', 'Overdue', 'Upcoming', 'No date', 'Completed'].map((label, i) => <button type="button" data-filter={label} aria-pressed={i === 0 ? 'true' : 'false'}>{label}</button>)}
     </div>
     <section class="panel" id="task-panel">
       <div id="full-tasks"></div>
@@ -27,52 +27,90 @@ import { dashboard, isDemo } from '../../content/dashboard';
     const filters = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
     const target = root.querySelector('#full-tasks')!;
     const stats = root.querySelector('#task-stats')!;
-    let filter = 'Today';
+    const filterKey = label => label.toLowerCase().replace(' ', '-');
+    const readFilter = () => {
+      const key = new URLSearchParams(location.search).get('view');
+      return filters.find(button => filterKey(button.dataset.filter) === key)?.dataset.filter || 'Triage';
+    };
+    let filter = readFilter();
+
+    function selectFilter(label) {
+      const url = new URL(location.href);
+      if (label === 'Triage') url.searchParams.delete('view');
+      else url.searchParams.set('view', filterKey(label));
+      // Keep Astro's history state so in-site back and forward keep working.
+      history.replaceState(history.state, '', url);
+      filter = label;
+      render();
+    }
     function render() {
       const day = today();
       const all = mergedTasks(root?.dataset.demo === 'true' ? Object.keys(readLife().portfolio).length ? [] : [...tasks, ...sampleTasks(day)] : tasks);
       const groups = groupTasks(all, day);
       const total = all.filter(t => !t.completed).length;
       const statCards = [
-        { label: 'Due today', value: groups.Today.length, accent: 'var(--color-accent)' },
-        { label: 'Overdue', value: groups.Overdue.length, accent: 'var(--color-danger)' },
-        { label: 'Upcoming', value: groups.Upcoming.length, accent: 'var(--color-fg-muted)' },
-        { label: 'Total open', value: total, accent: 'var(--color-fg)' },
+        { label: 'Overdue', value: groups.Overdue.length, accent: 'var(--color-danger)', view: 'Overdue' },
+        { label: 'Due today', value: groups.Today.length, accent: 'var(--area-accent)', view: 'Today' },
+        { label: 'Upcoming', value: groups.Upcoming.length, accent: 'var(--color-fg-muted)', view: 'Upcoming' },
+        { label: 'No date', value: groups['No date'].length, accent: 'var(--color-fg)', view: 'No date' },
       ];
-      stats.replaceChildren(...statCards.map(s => {
-        const card = make('div', '', 'task-stat-card');
-        const val = make('span', String(s.value), 'task-stat-value');
-        val.style.color = s.accent;
-        card.append(val, make('span', s.label, 'task-stat-label'));
-        return card;
-      }));
-      const selected = groups[filter];
-      target.replaceChildren();
-      const sections = new Map();
-      for (const task of selected) {
-        let section = target;
-        const groupKey = task.project || 'Other';
-        if (!sections.has(groupKey)) {
-          const group = make('section', '', 'task-group');
-          group.append(make('h3', groupKey, 'task-group-label'));
-          sections.set(groupKey, group);
-          target.append(group);
+      filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.filter === filter)));
+      statCards.forEach((stat, index) => {
+        let card = stats.children[index];
+        if (!card) {
+          card = make('button', '', 'task-stat-card');
+          card.setAttribute('type', 'button');
+          card.append(make('span', '', 'task-stat-value'), make('span', stat.label, 'task-stat-label'));
+          card.addEventListener('click', () => selectFilter(stat.view));
+          stats.append(card);
         }
-        section = sections.get(groupKey);
-        section.append(taskRow(task, [task.due].filter(Boolean).join(' · ')));
+        card.firstElementChild.textContent = String(stat.value);
+        card.firstElementChild.style.color = stat.accent;
+        card.setAttribute('aria-pressed', String(filter === stat.view));
+      });
+
+      target.replaceChildren();
+      const sections = filter === 'Triage'
+        ? [
+            ['Overdue', groups.Overdue],
+            ['Due today', groups.Today],
+            ['Next up', groups.Upcoming.slice(0, 5), 'Upcoming', groups.Upcoming.length],
+            ['No date', groups['No date'].slice(0, 3), 'No date', groups['No date'].length],
+          ]
+        : [[filter, groups[filter] || []]];
+      for (const [label, rows, moreView, count] of sections) {
+        if (!rows.length) continue;
+        const section = make('section', '', 'task-triage-group');
+        const heading = make('div', '', 'panel-head');
+        heading.append(make('h2', label));
+        if (moreView && count > rows.length) {
+          const more = make('button', `View all ${count}`, 'action-button');
+          more.type = 'button';
+          more.addEventListener('click', () => {
+            selectFilter(moreView);
+            filters.find(button => button.dataset.filter === moreView)?.focus();
+          });
+          heading.append(more);
+        }
+        section.append(heading);
+        for (const task of rows) {
+          section.append(taskRow(task, [task.project, task.due].filter(Boolean).join(' · ')));
+        }
+        target.append(section);
       }
-      if (!selected.length) {
+      if (!target.childElementCount) {
         const empty = make('div', '', 'task-empty');
-        empty.append(make('span', filter === 'Completed' ? 'No completed tasks yet' : filter === 'Overdue' ? 'Nothing overdue' : 'All clear', 'task-empty-text'));
+        const messages = { Triage: 'No open tasks', Today: 'Nothing due today', Overdue: 'Nothing overdue',
+          Upcoming: 'No upcoming tasks', 'No date': 'No undated tasks', Completed: 'No completed tasks yet' };
+        empty.append(make('span', messages[filter], 'task-empty-text'));
         target.append(empty);
       }
+      root.querySelector('#open-task-count').textContent = `${total} open`;
     }
-    for (const button of filters) button.addEventListener('click', () => {
-      filter = button.dataset.filter || 'Today';
-      filters.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-      render();
-    });
+    for (const button of filters) button.addEventListener('click', () => selectFilter(button.dataset.filter));
+    window.addEventListener('popstate', () => { filter = readFilter(); render(); }, { signal: controller.signal });
     document.addEventListener('workstation:change', render, { signal: controller.signal });
+    document.addEventListener('workstation:sync', render, { signal: controller.signal });
     document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
     render();
   });

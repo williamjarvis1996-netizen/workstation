@@ -1176,3 +1176,45 @@ body {
     transition: none;
   }
 }
+
+#blue-dashboard .hero-bar { padding-block: 0; gap: var(--space-md); }
+#blue-dashboard .analog-clock { width: clamp(3rem, 6vw, 5rem); height: auto; aspect-ratio: 1; }
+#blue-dashboard .hero-center { flex-direction: row; }
+#blue-dashboard .overview-clock { text-align: start; }
+.agenda-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-sm); }
+.task-summary-link:hover { border-color: var(--color-accent); color: var(--color-fg); }
+#blue-dashboard .compact-tasks { padding: var(--panel-inset); }
+#blue-dashboard .links-bar { margin: 0; }
+#blue-dashboard .day-brief { font-size: .88rem; }
+
+.task-stat-card:where(button) { color: var(--color-fg); cursor: pointer; font-family: inherit; }
+.task-stat-card:where(button):hover,
+.task-stat-card[aria-pressed="true"] { border-color: var(--area-accent); background: var(--area-tint); }
+.task-triage-group + .task-triage-group { margin-top: var(--space-lg); }
+.task-triage-group .panel-head { margin-bottom: var(--space-xs); }
+
+@media (max-width: 640px) {
+  #blue-dashboard .hero-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    text-align: start;
+    justify-items: start;
+    gap: var(--space-sm);
+  }
+  #blue-dashboard .hero-left { justify-items: start; }
+  #blue-dashboard .top-date { justify-content: start; }
+  #blue-dashboard .hero-right { grid-column: 1 / -1; width: 100%; }
+  #blue-dashboard .weather-card {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem .75rem;
+    padding: .45rem .7rem;
+  }
+  #blue-dashboard .weather-emoji { font-size: 1.3rem; }
+  #blue-dashboard .weather-degrees { font-size: 1.15rem; }
+}
+@media (max-width: 420px) {
+  #blue-dashboard .analog-clock { display: none; }
+  #blue-dashboard .overview-heading h1 { font-size: 1.55rem; }
+}
