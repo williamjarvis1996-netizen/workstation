@@ -884,8 +884,6 @@ body {
 }
 .area-header h1, .overview-heading h1 { color: var(--area-accent); }
 .overview-clock time { color: #e0e6f0; text-shadow: 0 0 30px rgba(107, 163, 212, 0.35), 0 0 80px rgba(107, 163, 212, 0.12); }
-.day-brief { display: flex; gap: .65rem 1rem; flex-wrap: wrap; align-items: center; padding: .75rem 1rem; border-left: 3px solid var(--area-accent); background: linear-gradient(90deg, var(--area-tint), transparent); border-radius: .3rem; }
-.day-brief span { color: var(--area-accent); font: .72rem var(--font-mono); }
 
 /* Agenda */
 .agenda-axis { --gutter: 3.2rem; --lanes: 1; position: relative; min-height: calc(var(--hours) * 3rem); margin: 1rem 0 .5rem; border-right: 1px solid var(--color-border); }
@@ -1072,7 +1070,6 @@ body {
 .plan-blocks .overflow-item, #portfolio-risks li { border-color: var(--color-warn); }
 .plan-blocks small, #portfolio-risks small { color: var(--color-fg-muted); }
 .plan-time { color: var(--area-accent); font: .74rem var(--font-mono); }
-.plan-today-link { margin-inline-start: auto; color: var(--color-fg); }
 .planner-day .task-tabs { margin-bottom: 0; }
 #plan-save:enabled { background: var(--area-accent); color: var(--color-bg); }
 #plan-feedback:not(:empty) { margin-top: var(--space-sm); }
@@ -1184,7 +1181,6 @@ body {
 .task-summary-link:hover { border-color: var(--color-accent); color: var(--color-fg); }
 #blue-dashboard .compact-tasks { padding: var(--panel-inset); }
 #blue-dashboard .links-bar { margin: 0; }
-#blue-dashboard .day-brief { font-size: .88rem; }
 
 .task-stat-card:where(button) { color: var(--color-fg); cursor: pointer; font-family: inherit; }
 .task-stat-card:where(button):hover,
@@ -1215,3 +1211,51 @@ body {
 .slate-next strong { display: block; margin-top: var(--space-xs); overflow-wrap: anywhere; }
 .creative-project-action input, .creative-project-action button { min-height: 2.5rem; }
 #captured-ideas { scroll-margin-top: 7rem; }
+
+#work-attention-detail { color: var(--color-fg-muted); overflow-wrap: anywhere; }
+#portfolio-risks { scroll-margin-top: 7rem; }
+
+@media (max-width: 640px) {
+  #blue-dashboard .daily-summary {
+    gap: var(--space-xs);
+  }
+
+  #blue-dashboard .daily-summary .day-stat {
+    grid-template-columns: minmax(5.1rem, 29%) minmax(0, 1fr);
+    align-items: baseline;
+    gap: .2rem .6rem;
+    padding: .6rem .75rem;
+    min-height: 44px;
+  }
+
+  #blue-dashboard .daily-summary strong { font-size: .86rem; }
+  #work-attention-detail { grid-column: 2; }
+  #blue-dashboard .panel--today .panel-head { align-items: start; }
+  #blue-dashboard .agenda-meta {
+    width: 100%;
+    gap: 0 var(--space-md);
+  }
+
+  #blue-dashboard #calendar-connection {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  #blue-dashboard :is(.agenda-meta, .compact-tasks .panel-head) .panel-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  #blue-dashboard .compact-tasks .task-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  #blue-dashboard .compact-tasks .task-tabs button {
+    min-height: 44px;
+    padding-inline: .2rem;
+  }
+
+  #blue-dashboard #today-tasks { max-height: none; }
+}

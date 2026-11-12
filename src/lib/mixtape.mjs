@@ -1,5 +1,4 @@
 const storageKey = 'workstation-after-hours-v1';
-const slots = ['watching', 'reading', 'playing'];
 const tapeLimit = 4 * 60 * 60;
 let state;
 
@@ -34,27 +33,12 @@ function timecode(seconds) {
 }
 
 if (typeof document !== 'undefined') document.addEventListener('astro:page-load', () => {
-  const root = document.querySelector('.after-hours');
+  const root = document.getElementById('marathon-mixtape');
   if (!root) return;
   state ??= load();
   const find = selector => root.querySelector(selector);
-  const shelf = find('#culture-shelf');
   const tape = find('#mixtape-queue');
   const playerForm = find('#mixtape-player');
-  const projects = JSON.parse(root.dataset.projects);
-  let pair = null;
-
-  function deal() {
-    const references = [...new Set(slots.map(slot => state.shelf?.[slot]).filter(Boolean))];
-    const pairs = references.flatMap(reference => projects.map(project => ({ reference, project })));
-    const otherPairs = pairs.filter(item => item.reference !== pair?.reference || item.project !== pair?.project);
-    const choices = otherPairs.length ? otherPairs : pairs;
-    pair = choices[Math.floor(Math.random() * choices.length)] || null;
-    find('[data-reference]').textContent = pair?.reference || 'Add a title to your shelf';
-    find('[data-project]').textContent = pair?.project || projects[0] || 'No projects on the slate';
-    find('[data-deal]').disabled = pairs.length < 2;
-  }
-
   function renderTape() {
     const items = state.tape || [];
     const total = items.reduce((sum, item) => sum + item.seconds, 0);
@@ -75,21 +59,13 @@ if (typeof document !== 'undefined') document.addEventListener('astro:page-load'
         items.splice(index, 1);
         find('[data-tape-status]').textContent = save() ? 'Removed from the tape.' : 'Removed for this visit only.';
         renderTape();
-        (find('[data-tape-items] button') || find('summary')).focus();
+        (find('[data-tape-items] button') || find('.widget details summary')).focus();
       });
       row.append(remove);
       return row;
     }));
   }
 
-  for (const slot of slots) shelf.elements.namedItem(slot).value = state.shelf?.[slot] || '';
-  shelf.addEventListener('submit', event => {
-    event.preventDefault();
-    state.shelf = Object.fromEntries(slots.map(slot => [slot, shelf.elements.namedItem(slot).value.trim()]));
-    find('[data-shelf-status]').textContent = save() ? 'Shelf saved.' : 'Shelf updated for this visit only.';
-    deal();
-  });
-  find('[data-deal]').addEventListener('click', deal);
   tape.addEventListener('submit', event => {
     event.preventDefault();
     const title = tape.elements.namedItem('title').value.trim();
@@ -121,6 +97,5 @@ if (typeof document !== 'undefined') document.addEventListener('astro:page-load'
     find('[data-player]').replaceChildren(player);
     find('[data-tape-status]').textContent = save() ? 'Spotify player loaded.' : 'Spotify player loaded for this visit.';
   });
-  deal();
   renderTape();
 });

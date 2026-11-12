@@ -1,8 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
-import OverviewWidgets from '../components/OverviewWidgets.astro';
 import { dashboard, isDemo } from '../content/dashboard';
 const { tasks, log, quickLinks, calendarEvents, lastUpdated } = dashboard;
+const workProjects = dashboard.projects.map(({ code, name, status, health, nextMilestoneDate, deadline }) =>
+  ({ code, name, status, health, nextMilestoneDate, deadline }));
 const recentLog = log.slice(0, 12);
 const base = import.meta.env.BASE_URL;
 const clientId = import.meta.env.PUBLIC_GOOGLE_CALENDAR_CLIENT_ID || '';
@@ -19,7 +20,7 @@ const sourceColors: Record<string, string> = {
 
 <Base title="Workstation" active="overview">
   <div class="dashboard" id="blue-dashboard" data-client-id={clientId} data-demo={isDemo ? "true" : "false"}
-    data-tasks={JSON.stringify(tasks)} data-calendar={JSON.stringify(calendarEvents)}>
+    data-tasks={JSON.stringify(tasks)} data-calendar={JSON.stringify(calendarEvents)} data-work-projects={JSON.stringify(workProjects)}>
 
     <!-- ===== HERO BAR ===== -->
     <section class="hero-bar">
@@ -82,17 +83,16 @@ const sourceColors: Record<string, string> = {
     </section>
 
     <section class="daily-summary" aria-label="Day at a glance">
-      <div class="day-stat"><span>Next up</span><strong id="next-meeting">Calendar disconnected</strong></div>
-      <a class="day-stat task-summary-link" href={base + 'tasks/'}><span>Needs attention</span><strong id="due-today">Checking tasks…</strong></a>
-      <div class="day-stat"><span>Best focus window</span><strong id="focus-window">Calendar disconnected</strong></div>
+      <div class="day-stat"><span id="calendar-summary-label">Next up</span><strong id="next-meeting">Calendar disconnected</strong></div>
+      <a class="day-stat task-summary-link" href={base + 'tasks/'}><span>Task triage</span><strong id="due-today">Checking tasks…</strong></a>
+      <a class="day-stat task-summary-link" href={base + 'work/#portfolio-risks'}><span>Work risks</span><strong id="work-attention">Checking projects…</strong><small id="work-attention-detail" hidden></small></a>
     </section>
 
-    <aside class="day-brief" aria-label="Current priority"><span id="day-brief-label">Your day</span><strong id="day-brief-text"></strong><a class="panel-link plan-today-link" href={base + 'tasks/plan/'}>Plan today &rarr;</a></aside>
     <div class="day-grid">
       <section class="panel panel--today">
         <div class="panel-head">
           <h2>Agenda</h2>
-          <div class="agenda-meta"><span class="top-sync" id="calendar-connection">Calendar disconnected</span><a class="panel-link" id="settings-link" href="#settings">Settings &amp; sync</a></div>
+          <div class="agenda-meta"><a class="panel-link" href={base + 'tasks/plan/'}>Plan today &rarr;</a><span class="top-sync" id="calendar-connection">Calendar disconnected</span><a class="panel-link" id="settings-link" href="#settings">Settings &amp; sync</a></div>
         </div>
         <div class="timeline" id="today-timeline"></div>
       </section>
@@ -105,8 +105,6 @@ const sourceColors: Record<string, string> = {
         <p role="status" class="top-sync" id="task-feedback"></p>
       </section>
     </div>
-
-    <OverviewWidgets />
 
     <!-- ===== QUICK LINKS BAR ===== -->
     <nav class="links-bar">

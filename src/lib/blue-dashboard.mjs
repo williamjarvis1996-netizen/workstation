@@ -1,8 +1,9 @@
 import { addDays, agenda, groupTasks, londonClock, londonDay, londonTime, minutes } from './time.mjs';
 import { authorize, fetchCalendar, prepareIdentity } from './google-calendar.mjs';
 import { make } from './storage.mjs';
-import { mergedTasks, readLife, priorityToday, sampleTasks, taskRow } from './life.mjs';
+import { mergedTasks, portfolioProjects, readLife, priorityToday, sampleTasks, taskRow } from './life.mjs';
 import { setCalendarStatus } from './shared.mjs';
+import { projectRisks } from './planning.mjs';
 import { renderAgenda } from './agenda-view.mjs';
 import { londonWeather } from './weather.mjs';
 
@@ -17,6 +18,7 @@ function mountOverview() {
   if (!root) return;
   const lifecycle = new AbortController();
   const tasks = JSON.parse(root.dataset.tasks);
+  const workProjects = JSON.parse(root.dataset.workProjects);
   const demo = root.dataset.demo === 'true';
   const snapshot = JSON.parse(root.dataset.calendar).map((event, index) => {
     const start = londonTime(event.date, event.startTime || '00:00');
@@ -32,6 +34,7 @@ function mountOverview() {
   const taskFilters = [...root.querySelectorAll('[data-filter]')];
   let taskFilter = 'Priority';
   let dirtyTasks = true;
+  let dirtyWork = true;
   const form = byId('calendar-form');
   const connect = byId('calendar-connect');
   const disconnect = byId('calendar-disconnect');
@@ -44,6 +47,7 @@ function mountOverview() {
   let connecting = false;
   let londonDate;
   let lastTimeline = '';
+  let lastTaskPreview = '';
 
   try {
     const saved = JSON.parse(localStorage.getItem(key));
@@ -63,8 +67,25 @@ function mountOverview() {
     const target = byId('today-tasks');
     const count = groups.Today.length;
     const selected = taskFilter === 'Priority' ? nextActions(groups) : groups[taskFilter];
-    target.replaceChildren(...selected.slice(0, 3).map(task => taskRow(task, [task.project, task.due].filter(Boolean).join(' · '))));
-    if (!selected.length) target.append(make('p', 'No tasks in this view.', 'empty-state-sm'));
+    const visible = selected.slice(0, 3);
+    const signature = JSON.stringify(visible.map(({ id, title, project, due, sourceId, completed }) =>
+      [id, title, project, due, sourceId, completed]));
+    if (signature !== lastTaskPreview) {
+      const focusedRow = target.contains(document.activeElement)
+        ? document.activeElement.closest('[data-preview-task]') : null;
+      const rows = visible.map(task => {
+        const row = taskRow(task, [task.project, task.due].filter(Boolean).join(' · '));
+        row.dataset.previewTask = task.id;
+        return row;
+      });
+      target.replaceChildren(...rows);
+      if (!rows.length) target.append(make('p', 'No tasks in this view.', 'empty-state-sm'));
+      lastTaskPreview = signature;
+      if (focusedRow) {
+        const sameTask = rows.find(row => row.dataset.previewTask === focusedRow.dataset.previewTask);
+        (sameTask?.querySelector('input') || taskFilters.find(button => button.dataset.filter === taskFilter))?.focus();
+      }
+    }
     const overdue = groups.Overdue.length;
     byId('due-today').textContent = overdue || count ? `${overdue} overdue · ${count} today`
       : groups.Upcoming.length ? `${groups.Upcoming.length} upcoming · none due today`
@@ -77,15 +98,30 @@ function mountOverview() {
     dirtyTasks = true;
     render(Date.now());
   });
-  document.addEventListener('workstation:change', () => {
+  function refreshSummary() {
     dirtyTasks = true;
+    dirtyWork = true;
     render(Date.now());
-  }, { signal: lifecycle.signal });
+  }
+  document.addEventListener('workstation:change', refreshSummary, { signal: lifecycle.signal });
+  document.addEventListener('workstation:sync', refreshSummary, { signal: lifecycle.signal });
+
+  function renderWork(day) {
+    const flagged = projectRisks(portfolioProjects(workProjects, demo), readLife().projectPlans, day)
+      .filter(project => project.status === 'active' && project.risk)
+      .sort((a, b) => Number(b.blocked) - Number(a.blocked));
+    const first = flagged[0];
+    const detail = byId('work-attention-detail');
+    byId('work-attention').textContent = flagged.length
+      ? `${flagged.length} ${flagged.length === 1 ? 'project needs' : 'projects need'} attention`
+      : 'No active projects flagged';
+    detail.textContent = first ? [first.name, first.reasons[0]].filter(Boolean).join(' · ') : '';
+    detail.hidden = !first;
+  }
 
   function render(now) {
     const day = londonDay(now);
     byId('overview-clock').textContent = londonClock(now);
-    const groups = groupTasks(mergedTasks(demo ? Object.keys(readLife().portfolio).length ? [] : [...tasks, ...sampleTasks(day)] : tasks), day);
     const showDemo = demo && !Object.keys(readLife().portfolio).length;
     const demoEvents = showDemo && !liveEvents ? [
       ['Project check-in', '09:30', '10:15'], ['Edit review', '11:30', '12:30'], ['Production planning', '15:00', '16:00'],
@@ -102,6 +138,7 @@ function mountOverview() {
       byId('day-number').textContent = parts.day;
       byId('day-month').textContent = `${parts.month} ${parts.year}`;
       dirtyTasks = true;
+      dirtyWork = true;
     }
     const timeParts = Object.fromEntries(timePartsFormat.formatToParts(now).map(({type, value}) => [type, value]));
     const h = +timeParts.hour, m = +timeParts.minute, s = +timeParts.second;
@@ -122,29 +159,21 @@ function mountOverview() {
       greeting.textContent = g;
     }
 
-    if (dirtyTasks) { renderTasks(groups); dirtyTasks = false; }
-
-    const next = model.next;
-    byId('next-meeting').textContent = !usableSchedule ? 'Calendar disconnected' : next
-      ? `${londonDay(next.start) === day ? `In ${minutes(now, next.start)} min` : upcomingFormat.format(next.start) + " at " + londonClock(next.start)} · ${next.title}`
-      : 'Nothing scheduled';
-    const focus = model.longest;
-    byId('focus-window').textContent = !usableSchedule ? 'Calendar disconnected' : focus
-      ? `${londonClock(focus.start)}–${londonClock(focus.end)}` : 'No free time before 18:00';
+    if (dirtyTasks) {
+      renderTasks(groupTasks(mergedTasks(showDemo ? [...tasks, ...sampleTasks(day)] : demo ? [] : tasks), day));
+      dirtyTasks = false;
+    }
+    if (dirtyWork) { renderWork(day); dirtyWork = false; }
 
     const current = model.current[0];
-    const nextTask = priorityToday(groups)[0];
+    const next = model.next;
+    byId('calendar-summary-label').textContent = current ? 'In progress' : 'Next up';
+    byId('next-meeting').textContent = !usableSchedule ? 'Calendar disconnected'
+      : current ? `${current.title} · ends ${londonClock(current.end)}`
+        : next ? `${londonDay(next.start) === day ? `In ${minutes(now, next.start)} min` : upcomingFormat.format(next.start) + ' at ' + londonClock(next.start)} · ${next.title}`
+          : 'Nothing scheduled';
+    const focus = model.longest;
     const clock = londonClock(now);
-    const focusNow = usableSchedule && focus && focus.start <= now + 60000 && focus.end > now;
-    const brief = current ? ['In progress', `${current.title} · ends ${londonClock(current.end)}`]
-      : usableSchedule && next && (clock < '10:00' || next.start - now <= 30 * 60000)
-        ? ['Coming up', `${londonClock(next.start)} · ${next.title}`]
-        : focusNow && nextTask ? ['Focus now', `${nextTask.title} · free until ${londonClock(focus.end)}`]
-        : nextTask ? ['Next task', nextTask.title]
-        : usableSchedule && focus ? ['Focus window', `${londonClock(focus.start)}–${londonClock(focus.end)}`]
-        : ['Your day', groups.Upcoming.length ? 'No tasks due today · upcoming work below' : 'No dated tasks due today'];
-    byId('day-brief-label').textContent = brief[0];
-    byId('day-brief-text').textContent = brief[1];
     const signature = JSON.stringify([model.today, model.current, focus, clock, active]);
     if (lastTimeline !== signature && !timeline.contains(document.activeElement)) {
       lastTimeline = signature;

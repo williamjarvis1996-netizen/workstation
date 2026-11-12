@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import TrainingNav from '../../components/TrainingNav.astro';
+import MarathonMixtape from '../../components/MarathonMixtape.astro';
 import '../../styles/training-year.css';
 import { dashboard, isDemo } from '../../content/dashboard';
 const { marathonTraining: marathon, exerciseSessions } = dashboard;
@@ -17,6 +18,7 @@ const { marathonTraining: marathon, exerciseSessions } = dashboard;
         <div><dt>Target time</dt><dd>{marathon.targetTime}</dd></div><div><dt>Weekly structure</dt><dd>{marathon.weeklyStructure}</dd></div>
         <div><dt>Training phase</dt><dd>{marathon.currentPhase} · Week {marathon.weekNumber}</dd></div></dl>
     </section>}
+    <MarathonMixtape />
     <div class="task-stats" id="training-stats"></div>
     <div class="training-grid">
       <section class="panel run-chart"><h2>Weekly running distance</h2><div id="weekly-distance"></div></section>
