@@ -1,10 +1,10 @@
 ---
 import Base from '../../layouts/Base.astro';
 import WorkNav from '../../components/WorkNav.astro';
-import { dashboard } from '../../content/dashboard';
-import { productionDates } from '../../lib/work-timeline.mjs';
+import { dashboard, isDemo } from '../../content/dashboard';
 
-const dates = productionDates(dashboard.projects);
+const projects = dashboard.projects.map(({ code, name, status, nextMilestone, nextMilestoneDate, deadline }) =>
+  ({ code, name, status, nextMilestone, nextMilestoneDate, deadline }));
 const projectRoot = import.meta.env.BASE_URL + 'work/';
 ---
 <Base title="Timeline | Work" active="work">
@@ -12,7 +12,7 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
     <header class="area-header"><h1>Timeline</h1></header>
     <WorkNav active="timeline" />
 
-    <section class="panel production-timeline" id="production-timeline" data-dates={JSON.stringify(dates)} data-project-root={projectRoot}>
+    <section class="panel production-timeline" id="production-timeline" data-projects={JSON.stringify(projects)} data-demo={String(isDemo)} data-project-root={projectRoot}>
       <div class="panel-head">
         <div>
           <h2>Next 14 days</h2>
@@ -30,7 +30,8 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
 <script>
   import { make } from '../../lib/storage.mjs';
   import { londonDay } from '../../lib/time.mjs';
-  import { timelineWindow } from '../../lib/work-timeline.mjs';
+  import { portfolioProjects, readLife } from '../../lib/life.mjs';
+  import { productionDates, timelineWindow } from '../../lib/work-timeline.mjs';
 
   const shortDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
   const weekday = new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'UTC' });
@@ -43,15 +44,19 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
     const clashes = document.getElementById('timeline-clashes')!;
     const weeks = document.getElementById('timeline-weeks')!;
     const otherDates = document.getElementById('timeline-other-dates')!;
-    const dates = JSON.parse(root.dataset.dates!);
-    let lastDay = '';
+    const snapshot = JSON.parse(root.dataset.projects!);
+    const snapshotCodes = new Set(snapshot.map(project => project.code));
+    const demo = root.dataset.demo === 'true';
+    let lastRender = '';
 
     function projectList(items, showDate = false) {
       const list = make('ul', '', 'timeline-projects');
       for (const item of items) {
         const row = make('li', '', 'timeline-project-date');
         const link = make('a', item.project);
-        link.href = root!.dataset.projectRoot + encodeURIComponent(item.code.toLowerCase()) + '/';
+        link.href = root!.dataset.projectRoot + (snapshotCodes.has(item.code)
+          ? encodeURIComponent(item.code.toLowerCase()) + '/'
+          : '#project-' + encodeURIComponent(item.code));
         const label = make('span', item.label, item.kind === 'deadline' ? 'timeline-deadline' : 'timeline-milestone');
         if (showDate) {
           const time = make('time', format(shortDate, item.date));
@@ -66,8 +71,10 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
 
     function refresh() {
       const today = londonDay(Date.now());
-      if (today === lastDay) return;
-      lastDay = today;
+      const dates = productionDates(portfolioProjects(snapshot, demo), readLife().projectPlans);
+      const signature = JSON.stringify([today, dates]);
+      if (signature === lastRender) return;
+      lastRender = signature;
       const { days, clashes: count, earlier, later } = timelineWindow(dates, today);
       range.textContent = `${format(shortDate, today)} – ${format(shortDate, days[13].date)} · London`;
       clashes.textContent = count ? `${count} ${count === 1 ? 'day' : 'days'} with overlapping projects` : 'No overlapping project dates';
@@ -107,7 +114,9 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
     const controller = new AbortController();
     refresh();
     const timer = window.setInterval(refresh, 60000);
-    document.addEventListener('visibilitychange', refresh, { signal: controller.signal });
+    for (const event of ['visibilitychange', 'workstation:change', 'workstation:sync']) {
+      document.addEventListener(event, refresh, { signal: controller.signal });
+    }
     document.addEventListener('astro:before-swap', () => {
       controller.abort();
       window.clearInterval(timer);
