@@ -53,9 +53,12 @@ function mountCapture() {
           distance: value('distance') ? value('distance') + ' km' : '', duration: value('duration') ? value('duration') + ' min' : '' });
         if (type.value === 'idea') data.ideas.push({ id, title, summary: value('notes'), date: today() });
       });
-      feedback.textContent = { task: 'Task saved to Tasks.', workout: 'Workout saved to Exercise.', idea: 'Idea saved to Creative.' }[type.value];
+      feedback.textContent = '✓ ' + { task: 'Task saved to Tasks.', workout: 'Workout saved to Exercise.', idea: 'Idea saved to Creative.' }[type.value];
       dialog.close();
       trigger.focus();
+      feedback.classList.remove('is-saved');
+      void feedback.offsetWidth;
+      feedback.classList.add('is-saved');
       if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
         feedback.animate([{ opacity: .4, transform: 'translateY(3px)' }, { opacity: 1, transform: 'translateY(0)' }], 200);
       }

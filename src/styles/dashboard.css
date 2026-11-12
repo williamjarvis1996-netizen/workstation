@@ -110,7 +110,7 @@
 
 .qlink:hover svg {
   opacity: 1;
-  transform: translate(1px, -1px);
+  transform: translate(2px, -2px);
 }
 
 /* ===== PANELS ===== */
@@ -920,7 +920,7 @@ body {
 .task-stat-value { font-family: var(--font-display); font-size: 2rem; font-weight: 400; line-height: 1.1; }
 .task-stat-label { font: .68rem var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--color-fg-subtle); }
 .task-group { margin-top: .75rem; }
-.task-group-label { font: .68rem var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--color-fg-subtle); padding-bottom: .35rem; border-bottom: 1px solid var(--color-border); margin-bottom: .25rem; }
+.task-group-label { font: 700 .68rem var(--font-mono); text-transform: uppercase; letter-spacing: .14em; color: var(--color-fg-muted); padding-bottom: .35rem; border-bottom: 1px solid var(--color-border); margin-bottom: .25rem; }
 @media (max-width: 640px) { .task-stats { grid-template-columns: repeat(2, 1fr); } }
 
 .task-tabs { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .55rem; }
@@ -1423,3 +1423,118 @@ body :where(main, dialog, .site-header, .year-table-scroll, .timeline-week, .fee
 }
 .skip-link:focus { clip-path: none; }
 #main-content { scroll-margin-top: 6rem; }
+
+/* === Polish: #18 Hero bar mobile rhythm === */
+@media (max-width: 380px) {
+  .hero-bar { flex-direction: column; align-items: stretch; gap: .5rem; }
+  .hero-local { flex-direction: column; gap: .5rem; }
+  .hero-clock { gap: .5rem; }
+  .analog-clock { width: 3.5rem; }
+  .overview-heading h1 { font-size: clamp(1.8rem, 8vw, 2.5rem); }
+  .top-day-num { font-size: clamp(1.4rem, 6vw, 2rem); }
+  .daily-summary { flex-direction: column; gap: .35rem; }
+  .daily-summary .day-stat { padding: .6rem; }
+}
+
+/* === Polish: #19 Quick link hover slide-in === */
+@media (prefers-reduced-motion: no-preference) {
+  .qlink { overflow: hidden; position: relative; }
+  .qlink::before {
+    content: "";
+    position: absolute;
+    inset: 0 100% 0 0;
+    background: var(--link-accent, var(--color-accent));
+    opacity: .06;
+    transition: inset .2s ease-out;
+    pointer-events: none;
+  }
+  .qlink:hover::before { inset: 0; }
+}
+
+/* === Polish: #19 Feed dot pulse for most recent entry === */
+.feed-grid .feed-item:first-child .feed-dot {
+  animation: feed-pulse 2.2s ease-in-out infinite;
+}
+@keyframes feed-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}
+
+/* === Polish: #19 Agenda hour markers === */
+.agenda-axis .axis-hour::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto calc(var(--gutter, 3.2rem) - .5rem);
+  height: 1px;
+  background: var(--color-border);
+  pointer-events: none;
+}
+
+/* === Polish: #20 Production card hover glow === */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .production-lane .pcard:hover {
+    border-color: color-mix(in srgb, var(--health-color, var(--color-success)) 40%, transparent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--health-color, var(--color-success)) 12%, transparent);
+  }
+}
+
+/* === Polish: #20 Overdue milestone dates === */
+.timeline-deadline.is-overdue,
+.production-next time.is-overdue { color: var(--color-danger); font-weight: 700; }
+
+/* === Polish: #22 Chart horizontal grid lines === */
+.run-chart-track {
+  position: relative;
+}
+.run-chart-axis {
+  position: relative;
+}
+.run-chart li {
+  position: relative;
+}
+.run-chart-axis::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  pointer-events: none;
+}
+.run-chart-axis span:nth-child(2)::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--color-border);
+  pointer-events: none;
+}
+
+/* === Polish: #22 Chart bar hover tooltip === */
+.run-chart-track:hover {
+  cursor: help;
+}
+.run-chart-track[title]:hover span {
+  filter: brightness(1.15);
+}
+
+/* === Polish: #25 Save confirmation flash === */
+@keyframes capture-saved {
+  0% { background-color: color-mix(in srgb, var(--color-success) 25%, transparent); }
+  100% { background-color: transparent; }
+}
+.capture-feedback.is-saved {
+  animation: capture-saved .6s ease-out;
+}
+
+/* === Polish: #25 Stat counter animation === */
+@media (prefers-reduced-motion: no-preference) {
+  .task-stat-value.is-counting {
+    animation: stat-pop .3s ease-out;
+  }
+  @keyframes stat-pop {
+    0% { transform: scale(.85); opacity: .6; }
+    60% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+}

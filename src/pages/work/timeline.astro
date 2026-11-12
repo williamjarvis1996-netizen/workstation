@@ -46,16 +46,18 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
     const dates = JSON.parse(root.dataset.dates!);
     let lastDay = '';
 
-    function projectList(items, showDate = false) {
+    function projectList(items, today: string, showDate = false) {
       const list = make('ul', '', 'timeline-projects');
       for (const item of items) {
         const row = make('li', '', 'timeline-project-date');
         const link = make('a', item.project);
         link.href = root!.dataset.projectRoot + encodeURIComponent(item.code.toLowerCase()) + '/';
         const label = make('span', item.label, item.kind === 'deadline' ? 'timeline-deadline' : 'timeline-milestone');
+        if (item.date < today) label.classList.add('is-overdue');
         if (showDate) {
           const time = make('time', format(shortDate, item.date));
           time.dateTime = item.date;
+          if (item.date < today) time.classList.add('is-overdue');
           row.append(time);
         }
         row.append(link, label);
@@ -89,7 +91,7 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
             title.append(date);
             cell.append(title);
             if (day.projectCount > 1) cell.append(make('p', `${day.projectCount} projects`, 'timeline-day-clash'));
-            if (day.items.length) cell.append(projectList(day.items));
+            if (day.items.length) cell.append(projectList(day.items, today));
             week.append(cell);
           }
           weeks.append(week);
@@ -99,7 +101,7 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
       for (const [label, entries] of [['Earlier project dates', earlier], ['Later project dates', later]]) {
         if (!entries.length) continue;
         const details = make('details');
-        details.append(make('summary', `${label} (${entries.length})`), projectList(entries, true));
+        details.append(make('summary', `${label} (${entries.length})`), projectList(entries, today, true));
         otherDates.append(details);
       }
     }

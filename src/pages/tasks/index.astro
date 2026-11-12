@@ -67,8 +67,16 @@ import { dashboard, isDemo } from '../../content/dashboard';
           card.addEventListener('click', () => selectFilter(stat.view));
           stats.append(card);
         }
-        card.firstElementChild.textContent = String(stat.value);
-        card.firstElementChild.style.color = stat.accent;
+        const valueEl = card.firstElementChild;
+        const prev = valueEl.textContent;
+        const next = String(stat.value);
+        if (prev !== next) {
+          valueEl.textContent = next;
+          valueEl.classList.remove('is-counting');
+          void valueEl.offsetWidth;
+          valueEl.classList.add('is-counting');
+        }
+        valueEl.style.color = stat.accent;
         card.setAttribute('aria-pressed', String(filter === stat.view));
       });
 

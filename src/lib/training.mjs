@@ -35,13 +35,23 @@ document.addEventListener('astro:page-load', () => {
       { label: 'Running distance this week', value: kmLabel(distance), accent: 'var(--color-fg)' },
     ];
     if (stats) {
-      stats.replaceChildren(...statCards.map(s => {
-        const card = make('div', '', 'task-stat-card');
-        const val = make('span', s.value, 'task-stat-value');
+      statCards.forEach((s, i) => {
+        let card = stats.children[i];
+        if (!card) {
+          card = make('div', '', 'task-stat-card');
+          card.append(make('span', '', 'task-stat-value'), make('span', s.label, 'task-stat-label'));
+          stats.append(card);
+        }
+        const val = card.firstElementChild;
+        const prev = val.textContent;
         val.style.color = s.accent;
-        card.append(val, make('span', s.label, 'task-stat-label'));
-        return card;
-      }));
+        if (prev !== s.value) {
+          val.textContent = s.value;
+          val.classList.remove('is-counting');
+          void val.offsetWidth;
+          val.classList.add('is-counting');
+        }
+      });
     }
     workout.replaceChildren();
     workout.closest('.workout-spotlight').dataset.workout = mostRecent?.type || '';
