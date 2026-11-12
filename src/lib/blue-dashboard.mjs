@@ -47,6 +47,7 @@ function mountOverview() {
   let connecting = false;
   let londonDate;
   let lastTimeline = '';
+  let lastTaskPreview = '';
 
   try {
     const saved = JSON.parse(localStorage.getItem(key));
@@ -66,8 +67,25 @@ function mountOverview() {
     const target = byId('today-tasks');
     const count = groups.Today.length;
     const selected = taskFilter === 'Priority' ? nextActions(groups) : groups[taskFilter];
-    target.replaceChildren(...selected.slice(0, 3).map(task => taskRow(task, [task.project, task.due].filter(Boolean).join(' · '))));
-    if (!selected.length) target.append(make('p', 'No tasks in this view.', 'empty-state-sm'));
+    const visible = selected.slice(0, 3);
+    const signature = JSON.stringify(visible.map(({ id, title, project, due, sourceId, completed }) =>
+      [id, title, project, due, sourceId, completed]));
+    if (signature !== lastTaskPreview) {
+      const focusedRow = target.contains(document.activeElement)
+        ? document.activeElement.closest('[data-preview-task]') : null;
+      const rows = visible.map(task => {
+        const row = taskRow(task, [task.project, task.due].filter(Boolean).join(' · '));
+        row.dataset.previewTask = task.id;
+        return row;
+      });
+      target.replaceChildren(...rows);
+      if (!rows.length) target.append(make('p', 'No tasks in this view.', 'empty-state-sm'));
+      lastTaskPreview = signature;
+      if (focusedRow) {
+        const sameTask = rows.find(row => row.dataset.previewTask === focusedRow.dataset.previewTask);
+        (sameTask?.querySelector('input') || taskFilters.find(button => button.dataset.filter === taskFilter))?.focus();
+      }
+    }
     const overdue = groups.Overdue.length;
     byId('due-today').textContent = overdue || count ? `${overdue} overdue · ${count} today`
       : groups.Upcoming.length ? `${groups.Upcoming.length} upcoming · none due today`
