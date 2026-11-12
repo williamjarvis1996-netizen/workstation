@@ -56,3 +56,9 @@
 @media (max-width: 420px) {
   .year-week small { font-size: .47rem; }
 }
+
+.workout-breakdown summary { cursor: pointer; }
+.workout-breakdown dl { display: grid; grid-template-columns: auto 1fr; gap: .25rem .75rem; margin-block: .6rem; }
+.workout-breakdown dt { color: var(--color-fg-muted); }
+.workout-breakdown p { margin-block: .6rem; }
+.workout-source-detail { white-space: pre-wrap; overflow-wrap: anywhere; width: min(28rem, 62vw); }

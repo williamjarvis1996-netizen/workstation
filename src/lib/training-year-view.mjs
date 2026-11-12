@@ -121,7 +121,30 @@ document.addEventListener('astro:page-load', () => {
       const fields = running ? [date, [item.title, item.dataNote].filter(Boolean).join(' · '), item.distance, item.duration || '—',
         item.recordedPace || workoutPace(item) || '—', item.avgHR ? String(item.avgHR) : '—', item.ascent || '—']
         : [date, item.title, item.gym || 'Unspecified', item.duration || '—', item.sets ? String(item.sets) : '—', item.volume || '—'];
-      row(history, fields);
+      const tr = make('tr');
+      fields.forEach((field, index) => {
+        const cell = make('td', index === 1 ? '' : field);
+        if (index === 1) {
+          const details = make('details', '', 'workout-breakdown');
+          details.append(make('summary', item.title));
+          const metrics = make('dl');
+          const labels = running ? ['Date', 'Run', 'Distance', 'Duration', 'Pace', 'Avg HR', 'Ascent']
+            : ['Date', 'Workout', 'Gym', 'Duration', 'Sets', 'Volume'];
+          fields.forEach((value, fieldIndex) => {
+            if (fieldIndex === 1 || value === '—' || !value) return;
+            metrics.append(make('dt', labels[fieldIndex]), make('dd', value));
+          });
+          details.append(metrics);
+          for (const note of [item.dataNote, item.notes]) {
+            if (note) details.append(make('p', note));
+          }
+          if (item.breakdown) details.append(make('div', item.breakdown, 'workout-source-detail'));
+          else details.append(make('p', 'Import the original log to see any recorded lap or exercise details.'));
+          cell.append(details);
+        }
+        tr.append(cell);
+      });
+      history.append(tr);
     }
     if (!matches.length) {
       const tr = make('tr');
