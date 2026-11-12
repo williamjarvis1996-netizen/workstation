@@ -184,7 +184,11 @@ const sourceColors: Record<string, string> = {
       const state = syncInfo();
       for (const key of ['shared','todoist','calendar']) {
         const el = root.querySelector('[data-status="' + key + '"]');
-        if (el) el.textContent = state[key].status;
+        if (!el) continue;
+        const status = state[key].status;
+        el.textContent = status;
+        el.setAttribute('data-sync-state', /^Synced/.test(status) ? 'ready'
+          : /^(Stale|Offline|Changes queued|Connecting|Checking|Refreshing)/.test(status) ? 'pending' : 'idle');
       }
     }
     document.getElementById('snapshot-import')?.addEventListener('click', async () => {

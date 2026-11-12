@@ -1354,3 +1354,51 @@ body :where(main, dialog, .site-header, .year-table-scroll) { scrollbar-color: v
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .pcard:hover, .slate-tile:hover { transform: translateY(-1px); }
 }
+
+.action-task[data-priority="high"] { --priority-color: var(--color-danger); }
+.action-task[data-priority="medium"] { --priority-color: var(--color-warn); }
+.action-task[data-priority="low"] { --priority-color: var(--color-success); }
+.action-task[data-priority] { box-shadow: inset 2px 0 var(--priority-color); }
+.action-task:has(input:checked) { box-shadow: none; }
+
+.portfolio-risk { background: linear-gradient(130deg, color-mix(in srgb, var(--color-warn) 8%, transparent), transparent 72%); }
+.project-section .project-status-summary { font-size: .96rem; }
+.project-notes { background: var(--color-surface-raised); border-radius: var(--radius); padding: var(--space-md); }
+.project-notes h3 { margin-top: 0; }
+
+.race-hero dl { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 28rem; }
+.race-hero dl > div, .workout-metrics > div { padding: .5rem .65rem; background: var(--color-surface-raised); border: 1px solid var(--color-border-hover); border-radius: var(--radius); }
+.workout-metrics { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-sm); }
+.workout-metrics dt { font: .65rem var(--font-mono); color: var(--color-fg-muted); }
+.workout-metrics dd { margin: .2rem 0 0; font: 700 .87rem var(--font-mono); }
+.run-chart li:not(.run-chart-current) .run-chart-track span { background: color-mix(in srgb, var(--area-accent) 45%, var(--color-bg-raised)); }
+.goal-milestones { list-style: none; }
+.goal-milestones li { position: relative; }
+.goal-milestones li:not(.empty-state-sm)::before { content: ""; position: absolute; inset: .55rem auto auto -.22rem; width: .4rem; aspect-ratio: 1; border-radius: 50%; background: var(--area-accent); }
+.goal-plan .goal-check-ins { margin: var(--space-sm) 0 0; font: .7rem var(--font-mono); }
+
+#ideas-list .capture-entry { padding: .7rem; margin-bottom: var(--space-xs); border: 1px solid var(--color-border); border-inline-start: 2px solid var(--area-border); border-radius: var(--radius); background: var(--color-surface); }
+.creative-slate.is-list .slate-copy { display: grid; grid-template-columns: minmax(0, .6fr) minmax(0, 1fr); align-items: center; }
+.creative-slate.is-list .slate-copy > p { display: none; }
+.creative-slate.is-list .slate-next { margin: 0; padding: 0; }
+.creative-slate.is-list .slate-next span { border: 0; padding: 0; }
+
+.calendar-settings.panel > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.calendar-settings.panel > summary::-webkit-details-marker { display: none; }
+.calendar-settings.panel > summary::after { content: ""; width: .5rem; height: .5rem; border: solid currentColor; border-width: 0 1px 1px 0; transform: rotate(45deg); }
+.calendar-settings.panel[open] > summary::after { transform: rotate(225deg); }
+.sync-row [data-sync-state]::before { content: ""; display: inline-block; width: .48rem; aspect-ratio: 1; border-radius: 50%; margin-inline-end: .45rem; background: var(--color-fg-subtle); }
+.sync-row [data-sync-state="ready"]::before { background: var(--color-success); }
+.sync-row [data-sync-state="pending"]::before { background: var(--color-warn); }
+@media (prefers-reduced-motion: no-preference) {
+  .calendar-settings.panel > summary::after { transition: transform var(--transition-ui); }
+}
+
+
+.capture-kind legend { color: var(--color-fg-muted); font-size: .76rem; margin-bottom: .25rem; }
+.capture-kind-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .25rem; }
+.capture-kind-options label { position: relative; cursor: pointer; }
+.capture-kind-options input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.capture-kind-options span { display: grid; place-items: center; min-height: 44px; padding-inline: .25rem; border: 1px solid var(--color-border-hover); border-radius: var(--radius); background: var(--color-surface); color: var(--color-fg); }
+.capture-kind-options input:checked + span { background: var(--area-tint); border-color: var(--area-border); color: var(--area-accent); }
+.capture-kind-options input:focus-visible + span { outline: 2px solid var(--area-accent); outline-offset: 3px; }

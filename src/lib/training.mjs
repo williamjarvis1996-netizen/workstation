@@ -46,8 +46,16 @@ document.addEventListener('astro:page-load', () => {
     workout.replaceChildren();
     workout.closest('.workout-spotlight').dataset.workout = mostRecent?.type || '';
     if (mostRecent) {
-      const details = [mostRecent.distance, mostRecent.duration, mostRecent.type === 'run' && workoutPace(mostRecent)].filter(Boolean);
-      workout.append(make('span', `${mostRecent.type} · ${dayLabel(mostRecent.date)}`, 'top-sync'), make('h3', mostRecent.title), make('strong', details.join(' · ')));
+      const metrics = make('dl', '', 'workout-metrics');
+      for (const [label, value] of [['Distance', mostRecent.distance], ['Duration', mostRecent.duration],
+        ['Pace', mostRecent.type === 'run' && workoutPace(mostRecent)], ['Avg HR', mostRecent.avgHR && `${mostRecent.avgHR} bpm`]]) {
+        if (!value) continue;
+        const stat = make('div');
+        stat.append(make('dt', label), make('dd', value));
+        metrics.append(stat);
+      }
+      workout.append(make('span', `${mostRecent.type} · ${dayLabel(mostRecent.date)}`, 'top-sync'), make('h3', mostRecent.title));
+      if (metrics.children.length) workout.append(metrics);
     } else workout.append(make('p', 'No workouts logged.', 'empty-state-sm'));
 
     chart.replaceChildren();
@@ -68,6 +76,7 @@ document.addEventListener('astro:page-load', () => {
       for (const week of weeks) {
         const total = totals.get(week) || 0;
         const row = make('li');
+        if (week === monday) row.classList.add('run-chart-current');
         const date = make('time', dayLabel(week));
         date.dateTime = week;
         const track = make('span', '', 'run-chart-track');

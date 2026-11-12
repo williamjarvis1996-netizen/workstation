@@ -61,7 +61,14 @@ const navigation = [
     <dialog class="capture-dialog" id="capture-dialog" aria-labelledby="capture-title">
       <form>
         <h2 id="capture-title">Quick capture</h2>
-        <label>Save to <select name="kind"><option value="task">Tasks</option><option value="workout">Exercise</option><option value="idea">Creative ideas</option></select></label>
+        <fieldset class="capture-kind">
+          <legend>Save to</legend>
+          <div class="capture-kind-options">
+            <label><input type="radio" name="kind" value="task" checked /><span>Task</span></label>
+            <label><input type="radio" name="kind" value="workout" /><span>Exercise</span></label>
+            <label><input type="radio" name="kind" value="idea" /><span>Idea</span></label>
+          </div>
+        </fieldset>
         <label>Title <input name="title" maxlength="140" required /></label>
         <fieldset data-kind="task">
           <label>Due <input type="date" name="due" /></label>
