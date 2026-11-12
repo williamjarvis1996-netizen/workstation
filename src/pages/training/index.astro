@@ -7,7 +7,7 @@ import { dashboard, isDemo } from '../../content/dashboard';
 const { marathonTraining: marathon, exerciseSessions } = dashboard;
 ---
 <Base title="Exercise | Workstation" active="training">
-  <div class="dashboard" id="training-page" data-sessions={JSON.stringify(exerciseSessions)} data-goals={JSON.stringify(dashboard.personalGoals)} data-demo={String(isDemo)}>
+  <div class="dashboard" id="training-page" data-sessions={JSON.stringify(exerciseSessions)} data-demo={String(isDemo)}>
     <header class="area-header"><h1>Exercise</h1>{isDemo && <span class="top-sync">Sample data</span>}</header>
     <TrainingNav active="overview" />
     {marathon && <section class="race-hero">
@@ -25,16 +25,8 @@ const { marathonTraining: marathon, exerciseSessions } = dashboard;
       <section class="panel workout-spotlight"><h2>Last workout</h2><div id="last-workout"></div></section>
     </div>
     <section class="panel"><div class="panel-head"><h2>Recent workouts</h2><span class="pill" id="workout-count"></span></div><div id="workout-list"></div></section>
-    <section class="panel" id="goals-section">
-      <div class="panel-head"><h2>Goals &amp; habits</h2><span id="habit-week" class="pill"></span></div>
-      <div class="goal-board" id="goal-board"></div>
-      <div id="habit-grid"></div>
-    </section>
-    <section class="panel"><h2>Milestones</h2><ol id="goal-milestones" class="goal-milestones"></ol></section>
-    <p id="goal-feedback" class="top-sync" role="status"></p>
   </div>
 </Base>
 <script>
   import '../../lib/training.mjs';
-  import '../../lib/goals.mjs';
 </script>

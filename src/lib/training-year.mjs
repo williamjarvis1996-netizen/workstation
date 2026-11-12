@@ -25,8 +25,24 @@ function tableRows(text, heading, year) {
   });
 }
 
+function sessionDetails(text, section, year) {
+  const content = text.split(new RegExp('^## ' + section + '\\s*$', 'm'))[1]?.split(/^## /m)[0] || '';
+  const entries = new Map();
+  for (const block of content.split(/^### /m).slice(1)) {
+    const [heading, ...lines] = block.split(/\r?\n/);
+    const match = /^(\d{1,2} [a-z]{3})[a-z]*(?:\s+(\d{4}))?\b/i.exec(heading);
+    const date = match && (!match[2] || Number(match[2]) === year) && logDate(match[1], year);
+    if (!date) continue;
+    const detail = lines.join('\n').replace(/\n---\s*$/, '').trim();
+    if (entries.has(date)) entries.set(date, '');
+    else entries.set(date, detail);
+  }
+  return entries;
+}
+
 export function parseRunningLog(text, year) {
   const workouts = [];
+  const details = sessionDetails(text, 'Lap Detail', year);
   let excludedHikes = 0;
   const ids = new Set();
   for (const [date, location, distanceCell, time, pace, hr, ascent] of tableRows(text, 'Log', year)) {
@@ -48,12 +64,16 @@ export function parseRunningLog(text, year) {
     });
   }
   if (!workouts.length) throw new Error('No running rows with a date, distance and time were found.');
+  for (const workout of workouts) {
+    if (details.get(workout.date) && workouts.filter(item => item.date === workout.date).length === 1) workout.breakdown = details.get(workout.date);
+  }
   return { workouts, excludedHikes };
 }
 
 export function parseStrengthLog(text, year) {
   const workouts = [];
   const dates = new Set();
+  const details = sessionDetails(text, 'Session Detail', year);
   let excludedArtefacts = 0;
   for (const [date, split, duration, rawSets, rawVolume, detail] of tableRows(text, 'Quick Reference', year)) {
     if (/watch artefact|false start|accidental record/i.test(detail || '') || /^[—–-]$/.test(split)) {
@@ -66,7 +86,7 @@ export function parseStrengthLog(text, year) {
     const weight = /^([\d,]+(?:\.\d+)?)\s*kg\b/i.exec(rawVolume || '');
     const gym = /new gym/i.test(split) ? 'New gym' : /old gym/i.test(split) ? 'Old gym' : /hotel/i.test(split) ? 'Hotel gym' : '';
     workouts.push({ id: 'obsidian-strength:' + date, date, title: split, type: 'gym', source: 'obsidian-strength',
-      imported: true, sets, ...(duration ? { duration } : {}), ...(gym ? { gym } : {}),
+      imported: true, sets, ...(details.get(date) ? { breakdown: details.get(date) } : {}), ...(duration ? { duration } : {}), ...(gym ? { gym } : {}),
       ...(weight ? { volume: weight[1] + ' kg', volumeKg: Number(weight[1].replaceAll(',', '')) } : {}) });
   }
   if (!workouts.length) throw new Error('No strength visits with a date and set count were found.');
