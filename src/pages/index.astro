@@ -84,7 +84,7 @@ const sourceColors: Record<string, string> = {
 
     <section class="daily-summary" aria-label="Day at a glance">
       <div class="day-stat"><span id="calendar-summary-label">Next up</span><strong id="next-meeting">Calendar disconnected</strong></div>
-      <a class="day-stat task-summary-link" href={base + 'tasks/'}><span>Task triage</span><strong id="due-today" aria-busy="true"><span class="loading-skeleton"><span class="loading-label">Checking tasks</span></span></strong></a>
+      <a id="task-triage-link" class="day-stat task-summary-link" href={base + 'tasks/'}><span>Task triage</span><strong id="due-today" aria-busy="true"><span class="loading-skeleton"><span class="loading-label">Checking tasks</span></span></strong></a>
       <a class="day-stat task-summary-link" href={base + 'work/#portfolio-risks'}><span>Work risks</span><strong id="work-attention">Checking projects…</strong><small id="work-attention-detail" hidden></small></a>
     </section>
 
