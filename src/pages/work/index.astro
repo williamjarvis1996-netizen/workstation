@@ -1,10 +1,12 @@
 ---
 import Base from '../../layouts/Base.astro';
+import WorkNav from '../../components/WorkNav.astro';
 import { dashboard, isDemo } from '../../content/dashboard';
 ---
 <Base title="Work | Workstation" active="work">
   <div class="dashboard" id="portfolio" data-projects={JSON.stringify(dashboard.projects)} data-demo={String(isDemo)}>
     <header class="area-header"><h1>Production board</h1><span class="top-sync" id="portfolio-source"></span></header>
+    <WorkNav active="board" />
     <section class="panel portfolio-risk"><h2>Needs attention</h2><ul id="portfolio-risks"></ul></section>
     <p role="status" class="top-sync" id="portfolio-feedback"></p>
     <div class="production-board" id="portfolio-board"></div>

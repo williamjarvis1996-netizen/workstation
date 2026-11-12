@@ -1,0 +1,100 @@
+---
+import Base from '../../layouts/Base.astro';
+import WorkNav from '../../components/WorkNav.astro';
+import { dashboard } from '../../content/dashboard';
+
+const projects = dashboard.projects.filter(p => p.status === 'active');
+const tasks = dashboard.tasks.filter(t => t.due && !t.completed);
+
+type TimelineItem = { date: string; label: string; project: string; type: 'milestone' | 'task'; health?: string };
+const items: TimelineItem[] = [];
+
+for (const p of projects) {
+  if (p.nextMilestone && p.nextMilestoneDate) {
+    items.push({ date: p.nextMilestoneDate, label: p.nextMilestone, project: `${p.name} (${p.code})`, type: 'milestone', health: p.health });
+  }
+  if (p.deadline) {
+    items.push({ date: p.deadline, label: 'Deadline', project: `${p.name} (${p.code})`, type: 'milestone', health: p.health });
+  }
+}
+for (const t of tasks) {
+  if (t.due) {
+    items.push({ date: t.due, label: t.title, project: t.project || '', type: 'task' });
+  }
+}
+items.sort((a, b) => a.date.localeCompare(b.date));
+
+const grouped = new Map<string, TimelineItem[]>();
+for (const item of items) {
+  const list = grouped.get(item.date) || [];
+  list.push(item);
+  grouped.set(item.date, list);
+}
+
+const today = new Date().toISOString().slice(0, 10);
+
+const healthColor: Record<string, string> = {
+  'on-track': 'var(--color-success)',
+  'at-risk': 'var(--color-warn)',
+  blocked: 'var(--color-danger)',
+};
+---
+<Base title="Timeline | Work" active="work">
+  <div class="dashboard">
+    <header class="area-header"><h1>Timeline</h1></header>
+    <WorkNav active="timeline" />
+
+    <div class="timeline-view">
+      {[...grouped.entries()].map(([date, dayItems]) => {
+        const isPast = date < today;
+        const isToday = date === today;
+        return (
+          <div class={`timeline-day ${isPast ? 'timeline-day--past' : ''} ${isToday ? 'timeline-day--today' : ''}`}>
+            <div class="timeline-date">
+              <span class="timeline-date-label">{isToday ? 'Today' : new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+              {isPast && <span class="timeline-overdue">overdue</span>}
+            </div>
+            <div class="timeline-items">
+              {dayItems.map(item => (
+                <div class={`timeline-entry timeline-entry--${item.type}`}>
+                  {item.type === 'milestone' && (
+                    <span class="timeline-dot" style={`background: ${healthColor[item.health || 'on-track']}`}></span>
+                  )}
+                  {item.type === 'task' && (
+                    <span class="timeline-dot timeline-dot--task"></span>
+                  )}
+                  <div class="timeline-content">
+                    <span class="timeline-label">{item.label}</span>
+                    {item.project && <span class="timeline-project">{item.project}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</Base>
+
+<style>
+  .timeline-view { margin-top: var(--space-md); display: grid; gap: 0; }
+  .timeline-day { display: grid; grid-template-columns: 8rem 1fr; gap: var(--space-md); padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border); }
+  .timeline-day--past { opacity: .55; }
+  .timeline-day--today { opacity: 1; }
+  .timeline-day--today .timeline-date-label { color: var(--area-accent, #82b6ff); font-weight: 700; }
+  .timeline-date { display: flex; flex-direction: column; gap: .15rem; font: .78rem var(--font-mono); color: var(--color-fg-muted); padding-top: .15rem; }
+  .timeline-overdue { color: var(--color-danger); font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; }
+  .timeline-items { display: grid; gap: .5rem; }
+  .timeline-entry { display: flex; align-items: start; gap: .55rem; }
+  .timeline-dot { flex: none; width: .5rem; height: .5rem; border-radius: 50%; margin-top: .35rem; background: var(--area-accent, #82b6ff); }
+  .timeline-dot--task { background: var(--color-fg-subtle); }
+  .timeline-content { display: grid; gap: .1rem; min-width: 0; }
+  .timeline-label { font-size: .85rem; font-weight: 600; overflow-wrap: anywhere; }
+  .timeline-entry--milestone .timeline-label { color: var(--color-fg); }
+  .timeline-entry--task .timeline-label { color: var(--color-fg-muted); font-weight: 500; }
+  .timeline-project { font: .7rem var(--font-mono); color: var(--color-fg-subtle); }
+  @media (max-width: 500px) {
+    .timeline-day { grid-template-columns: 1fr; gap: .35rem; }
+  }
+</style>
