@@ -54,7 +54,7 @@ const race = sessions.find(item => item.date === '2026-05-17' && item.title === 
     <section class="panel year-ledger">
       <div class="panel-head">
         <h2>{running ? 'Run ledger' : 'Strength ledger'}</h2>
-        <div class="training-controls"><label>Search <input id="training-ledger-search" type="search" placeholder={running ? 'Route or run' : 'Split or gym'} /></label></div>
+        <div class="training-controls"><label>Search <input id="training-ledger-search" type="search" placeholder={running ? 'Route or run' : 'Exercise, split or gym'} /></label></div>
       </div>
       <p id="training-ledger-count" class="top-sync" role="status"></p>
       <div class="year-table-scroll" tabindex="0" aria-label={running ? 'Run ledger table' : 'Strength ledger table'}>

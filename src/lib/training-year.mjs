@@ -70,6 +70,25 @@ export function parseRunningLog(text, year) {
   return { workouts, excludedHikes };
 }
 
+export function strengthExercises(breakdown = '') {
+  const exercises = [];
+  let columns;
+  for (const line of breakdown.split(/\r?\n/)) {
+    if (!line.startsWith('|')) {
+      columns = undefined;
+      continue;
+    }
+    const cells = line.split('|').slice(1, -1).map(cell => cell.replaceAll('**', '').trim());
+    const name = cells.findIndex(cell => /^exercise\b/i.test(cell));
+    if (name !== -1 && cells.some(cell => /sets|reps/i.test(cell))) {
+      columns = { name, reps: cells.findIndex(cell => /sets|reps/i.test(cell)), weight: cells.findIndex(cell => /^weight|^load/i.test(cell)) };
+    } else if (columns && cells[columns.name] && !/^[-: ]+$/.test(cells[columns.name])) {
+      exercises.push({ name: cells[columns.name], reps: cells[columns.reps], weight: cells[columns.weight] });
+    }
+  }
+  return exercises;
+}
+
 export function parseStrengthLog(text, year) {
   const workouts = [];
   const dates = new Set();
