@@ -1410,3 +1410,16 @@ body :where(main, dialog, .site-header, .year-table-scroll, .timeline-week, .fee
 .capture-kind-options span { display: grid; place-items: center; min-height: 44px; padding-inline: .25rem; border: 1px solid var(--color-border-hover); border-radius: var(--radius); background: var(--color-surface); color: var(--color-fg); }
 .capture-kind-options input:checked + span { background: var(--area-tint); border-color: var(--area-border); color: var(--area-accent); }
 .capture-kind-options input:focus-visible + span { outline: 2px solid var(--area-accent); outline-offset: 3px; }
+
+.skip-link {
+  position: fixed;
+  inset: 1rem auto auto 1rem;
+  z-index: 100;
+  padding: .65rem .9rem;
+  border-radius: var(--radius);
+  background: var(--color-bg-raised);
+  color: var(--color-fg);
+  clip-path: inset(50%);
+}
+.skip-link:focus { clip-path: none; }
+#main-content { scroll-margin-top: 6rem; }

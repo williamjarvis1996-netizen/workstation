@@ -32,6 +32,7 @@ const navigation = [
     />
   </head>
   <body data-area={active}>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="noise"></div>
     <header class="site-header">
       <div class="container header-inner">
@@ -45,7 +46,7 @@ const navigation = [
         </nav>
       </div>
     </header>
-    <main class="container" transition:name="workstation-main">
+    <main id="main-content" tabindex="-1" class="container" transition:name="workstation-main">
       <slot />
     </main>
     <footer class="site-footer">
