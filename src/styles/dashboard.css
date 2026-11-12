@@ -1214,3 +1214,48 @@ body {
 
 #work-attention-detail { color: var(--color-fg-muted); overflow-wrap: anywhere; }
 #portfolio-risks { scroll-margin-top: 7rem; }
+
+@media (max-width: 640px) {
+  #blue-dashboard .daily-summary {
+    gap: var(--space-xs);
+  }
+
+  #blue-dashboard .daily-summary .day-stat {
+    grid-template-columns: minmax(5.1rem, 29%) minmax(0, 1fr);
+    align-items: baseline;
+    gap: .2rem .6rem;
+    padding: .6rem .75rem;
+    min-height: 44px;
+  }
+
+  #blue-dashboard .daily-summary strong { font-size: .86rem; }
+  #work-attention-detail { grid-column: 2; }
+  #blue-dashboard .panel--today .panel-head { align-items: start; }
+  #blue-dashboard .agenda-meta {
+    width: 100%;
+    gap: 0 var(--space-md);
+  }
+
+  #blue-dashboard #calendar-connection {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  #blue-dashboard :is(.agenda-meta, .compact-tasks .panel-head) .panel-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  #blue-dashboard .compact-tasks .task-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  #blue-dashboard .compact-tasks .task-tabs button {
+    min-height: 44px;
+    padding-inline: .2rem;
+  }
+
+  #blue-dashboard #today-tasks { max-height: none; }
+}

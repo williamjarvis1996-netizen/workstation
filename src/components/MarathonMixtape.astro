@@ -47,4 +47,11 @@
   .widget ol { padding-inline-start: 1.25rem; overflow-wrap: anywhere; }
   .widget :global(iframe) { width: 100%; border: 0; border-radius: var(--radius); }
   .widget-status:empty, [data-player]:empty { display: none; }
+  @media (max-width: 640px) {
+    .mixtape > summary { padding-block: .65rem; margin-block: -.65rem; }
+    .widget { margin-top: var(--space-md); }
+    .widget input { min-height: 44px; font-size: 1rem; }
+    .widget button, .widget :global(li button) { min-height: 44px; }
+    .widget summary { padding-block: .65rem; }
+  }
 </style>
