@@ -875,7 +875,7 @@ body, .site-header [data-nav="overview"] { --section-color: #f3f5f9; --section-t
 body[data-area="work"], .site-header [data-nav="work"] { --section-color: #82b6ff; --section-tint: #172a47; }
 body[data-area="tasks"], .site-header [data-nav="tasks"] { --section-color: #f5d466; --section-tint: #2c2819; }
 body[data-area="training"], .site-header [data-nav="training"] { --section-color: #4ade80; --section-tint: #142a21; }
-body[data-area="creative"], .site-header [data-nav="creative"] { --section-color: #b89efa; --section-tint: #2a2340; }
+body[data-area="creative"], .site-header [data-nav="creative"] { --section-color: #ff7885; --section-tint: #38242c; }
 body {
   --area-accent: var(--section-color);
   --area-tint: var(--section-tint);
