@@ -1,5 +1,5 @@
 import { readLife, updateLife, today, weekStart, workoutDistance, workoutPace } from './life.mjs';
-import { annualMileage, annualStrength, mergeTrainingSessions, parseRunningLog, parseStrengthLog, runningMilestones } from './training-year.mjs';
+import { annualMileage, annualStrength, mergeTrainingSessions, parseRunningLog, parseStrengthLog, runningMilestones, strengthExercises } from './training-year.mjs';
 import { make } from './storage.mjs';
 
 const dateLabel = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
@@ -115,8 +115,14 @@ document.addEventListener('astro:page-load', () => {
     }
     renderChart(byId('year-chart'), weeks, year, running);
     byId('year-stats').replaceChildren(...statCards(stats));
-    const matches = records.filter(item => [item.title, !running ? item.gym || 'Unspecified' : '', item.date].some(value => value?.toLowerCase().includes(query)));
-    for (const item of matches) {
+    const matches = records.map(item => {
+      const lifts = running || !query ? [] : strengthExercises(item.breakdown)
+        .filter(lift => lift.name.toLowerCase().includes(query));
+      return { item, lifts };
+    }).filter(({ item, lifts }) => lifts.length ||
+      [item.title, !running ? item.gym || 'Unspecified' : '', item.date]
+        .some(value => value?.toLowerCase().includes(query)));
+    for (const { item, lifts } of matches) {
       const date = dateLabel.format(dateOf(item.date));
       const fields = running ? [date, [item.title, item.dataNote].filter(Boolean).join(' · '), item.distance, item.duration || '—',
         item.recordedPace || workoutPace(item) || '—', item.avgHR ? String(item.avgHR) : '—', item.ascent || '—']
@@ -141,6 +147,13 @@ document.addEventListener('astro:page-load', () => {
           if (item.breakdown) details.append(make('div', item.breakdown, 'workout-source-detail'));
           else details.append(make('p', 'Import the original log to see any recorded lap or exercise details.'));
           cell.append(details);
+          if (lifts.length) {
+            const summary = make('ul');
+            for (const lift of lifts) {
+              summary.append(make('li', [lift.name, lift.reps, lift.weight].filter(Boolean).join(' · ')));
+            }
+            cell.append(summary);
+          }
         }
         tr.append(cell);
       });
