@@ -18,7 +18,7 @@ function artwork(value?: string) {
     <section class="creative-slate" id="slate" aria-label="Projects">
       {creativeProjects.map((project, index) => <article class="slate-tile" data-tone={index % 4}>
         <div class="slate-cover">
-          {artwork(project.artwork) && <img src={artwork(project.artwork)} alt="" loading="lazy" />}
+          {artwork(project.artwork) ? <img src={artwork(project.artwork)} alt="" loading="lazy" /> : <span class="slate-watermark" aria-hidden="true">{project.type.split(' (')[0]}</span>}
           <div><span>{project.type}</span><h2><a href={base + 'creative/' + project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '') + '/'}>{project.name}</a></h2></div>
         </div>
         <div class="slate-copy">
@@ -60,7 +60,7 @@ function artwork(value?: string) {
         item.append(make('h3', idea.title), make('small', idea.date), make('p', idea.summary));
         return item;
       }));
-      if (!entries.length) ideas.append(make('p', 'Use + Capture and choose Creative ideas to add a note.', 'empty-state-sm'));
+      if (!entries.length) ideas.append(make('p', 'Use + Capture and choose Creative ideas to add a note.', 'ideas-empty'));
     }
     document.addEventListener('workstation:change', render, { signal: controller.signal });
     document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });

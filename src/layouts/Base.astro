@@ -94,7 +94,16 @@ const navigation = [
         if (!race?.dataset.raceDate) return;
         const days = (Date.parse(race.dataset.raceDate) - Date.parse(londonDay(Date.now()))) / 86400000;
         if (!Number.isFinite(days)) return;
-        race.textContent = days > 0 ? `${days} days` : days === 0 ? 'Race day' : 'Race date passed';
+        const number = race.querySelector('[data-race-number]');
+        const unit = race.querySelector('[data-race-unit]');
+        const message = days === 0 ? 'Race day' : 'Race date passed';
+        if (number && unit) {
+          number.textContent = days > 0 ? String(days) : message;
+          unit.textContent = days === 1 ? 'day' : days > 1 ? 'days' : '';
+          race.toggleAttribute('data-race-message', days <= 0);
+        } else {
+          race.textContent = days > 0 ? `${days} ${days === 1 ? 'day' : 'days'}` : message;
+        }
       }
       document.addEventListener('astro:page-load', updateDateLabels);
       document.addEventListener('visibilitychange', updateDateLabels);
@@ -200,7 +209,7 @@ const navigation = [
 
   nav a:focus-visible {
     outline: 2px solid var(--section-color);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
 
   @media (max-width: 620px) {

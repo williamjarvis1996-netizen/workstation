@@ -89,6 +89,13 @@ document.addEventListener('astro:page-load', () => {
     }
     habits.append(row);
   }
+  if (goals.length) {
+    const legend = make('p', '', 'habit-legend');
+    for (const [label, state] of [['Checked in', 'checked'], ['No check-in', 'empty'], ['Future', 'future']]) {
+      legend.append(make('span', label, 'habit-key habit-key--' + state));
+    }
+    habits.append(legend);
+  }
   if (!goals.length) board.append(make('p', 'No goals in this snapshot.', 'empty-state-sm'));
   renderMilestones();
 });

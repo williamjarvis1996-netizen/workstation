@@ -62,6 +62,7 @@ import { dashboard, isDemo } from '../../content/dashboard';
         if (!card) {
           card = make('button', '', 'task-stat-card');
           card.setAttribute('type', 'button');
+          card.style.setProperty('--stat-accent', stat.accent);
           card.append(make('span', '', 'task-stat-value'), make('span', stat.label, 'task-stat-label'));
           card.addEventListener('click', () => selectFilter(stat.view));
           stats.append(card);
@@ -104,7 +105,9 @@ import { dashboard, isDemo } from '../../content/dashboard';
         const empty = make('div', '', 'task-empty');
         const messages = { Triage: 'No open tasks', Today: 'Nothing due today', Overdue: 'Nothing overdue',
           Upcoming: 'No upcoming tasks', 'No date': 'No undated tasks', Completed: 'No completed tasks yet' };
-        empty.append(make('span', messages[filter], 'task-empty-text'));
+        const icon = make('span', filter === 'Completed' ? '–' : '✓', 'empty-state-icon');
+        icon.setAttribute('aria-hidden', 'true');
+        empty.append(icon, make('span', messages[filter], 'task-empty-text'));
         target.append(empty);
       }
       root.querySelector('#open-task-count').textContent = `${total} open`;
