@@ -29,3 +29,14 @@ test('the rolling window counts only dates shared by distinct projects as clashe
   assert.deepEqual(result.later.map(item => item.date), ['2027-01-14']);
   assert.equal(timelineWindow(dates.filter(item => item.code === 'A'), '2026-12-31').clashes, 0);
 });
+
+test('a saved handover replaces the snapshot milestone and updates the date clash', () => {
+  const projects = [
+    { code: 'A', name: 'Film', status: 'active', nextMilestone: 'Old edit', nextMilestoneDate: '2026-11-12' },
+    { code: 'B', name: 'Series', status: 'active', deadline: '2026-11-14' },
+  ];
+  const entries = productionDates(projects, { A: { milestone: 'New edit', milestoneDate: '2026-11-14' } });
+  assert.equal(entries.find(item => item.code === 'A').label, 'New edit');
+  assert.equal(timelineWindow(entries, '2026-11-12').clashes, 1);
+  assert.equal(timelineWindow(entries, '2026-11-12').days[0].items.length, 0);
+});

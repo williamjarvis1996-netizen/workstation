@@ -1,12 +1,15 @@
 import { addDays } from './time.mjs';
 
-export function productionDates(projects) {
+export function productionDates(projects, plans = {}) {
   const entries = [];
   for (const project of projects) {
     if (project.status !== 'active') continue;
     const identity = { code: project.code, project: project.name };
-    if (project.nextMilestone && project.nextMilestoneDate) {
-      entries.push({ ...identity, date: project.nextMilestoneDate, label: project.nextMilestone, kind: 'milestone' });
+    const plan = plans[project.code];
+    const label = plan?.milestone || project.nextMilestone;
+    const date = plan?.milestoneDate || project.nextMilestoneDate;
+    if (label && date) {
+      entries.push({ ...identity, date, label, kind: 'milestone' });
     }
     if (project.deadline) {
       entries.push({ ...identity, date: project.deadline, label: 'Delivery deadline', kind: 'deadline' });
