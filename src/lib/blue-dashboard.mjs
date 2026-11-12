@@ -48,6 +48,7 @@ function mountOverview() {
   let londonDate;
   let lastTimeline = '';
   let lastTaskPreview = '';
+  let clockStarted = false;
 
   try {
     const saved = JSON.parse(localStorage.getItem(key));
@@ -86,6 +87,7 @@ function mountOverview() {
         (sameTask?.querySelector('input') || taskFilters.find(button => button.dataset.filter === taskFilter))?.focus();
       }
     }
+    byId('due-today').removeAttribute('aria-busy');
     const overdue = groups.Overdue.length;
     byId('due-today').textContent = overdue || count ? `${overdue} overdue · ${count} today`
       : groups.Upcoming.length ? `${groups.Upcoming.length} upcoming · none due today`
@@ -152,6 +154,10 @@ function mountOverview() {
       hourHand.setAttribute('transform', `rotate(${hourAngle} 100 100)`);
       minuteHand.setAttribute('transform', `rotate(${minuteAngle} 100 100)`);
       secondHand.setAttribute('transform', `rotate(${secondAngle} 100 100)`);
+      if (!clockStarted) {
+        secondHand.style.setProperty('--clock-offset', `-${s + (now % 1000) / 1000}s`);
+        clockStarted = true;
+      }
     }
     const greeting = byId('hero-greeting');
     if (greeting) {
@@ -185,7 +191,10 @@ function mountOverview() {
     connect.disabled = Boolean(request || connecting);
     connect.textContent = token ? 'Refresh Google Calendar' : 'Connect Google Calendar';
     disconnect.hidden = !token;
-    byId('calendar-connection').textContent = request ? 'Refreshing calendar…'
+    const connection = byId('calendar-connection');
+    connection.toggleAttribute('data-refreshing', Boolean(request));
+    connection.setAttribute('aria-busy', String(Boolean(request)));
+    connection.textContent = request ? 'Refreshing calendar…'
       : liveEvents ? `Calendar updated ${londonClock(synced)}` : token ? 'Calendar refresh needed' : demo && !Object.keys(readLife().portfolio).length ? 'Sample schedule' : snapshot.length ? 'Calendar snapshot' : 'Calendar disconnected';
   }
 
@@ -304,7 +313,10 @@ function mountOverview() {
       const icon = byId('weather-icon');
       const condition = byId('weather-condition');
       if (icon) icon.textContent = result.icon || '';
-      if (condition) condition.textContent = result.condition || '';
+      if (condition) {
+        condition.removeAttribute('aria-busy');
+        condition.textContent = result.condition || '';
+      }
       byId('weather-forecast').textContent = result.details;
     } catch {
       if (lifecycle.signal.aborted) return;
@@ -312,7 +324,10 @@ function mountOverview() {
       const icon = byId('weather-icon');
       const condition = byId('weather-condition');
       if (icon) icon.textContent = '';
-      if (condition) condition.textContent = 'Unavailable';
+      if (condition) {
+        condition.removeAttribute('aria-busy');
+        condition.textContent = 'Unavailable';
+      }
       byId('weather-forecast').textContent = '';
     }
   }

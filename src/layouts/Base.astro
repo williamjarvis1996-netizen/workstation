@@ -32,6 +32,7 @@ const navigation = [
     />
   </head>
   <body data-area={active}>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="noise"></div>
     <header class="site-header">
       <div class="container header-inner">
@@ -45,7 +46,7 @@ const navigation = [
         </nav>
       </div>
     </header>
-    <main class="container" transition:name="workstation-main">
+    <main id="main-content" tabindex="-1" class="container" transition:name="workstation-main">
       <slot />
     </main>
     <footer class="site-footer">
@@ -61,7 +62,14 @@ const navigation = [
     <dialog class="capture-dialog" id="capture-dialog" aria-labelledby="capture-title">
       <form>
         <h2 id="capture-title">Quick capture</h2>
-        <label>Save to <select name="kind"><option value="task">Tasks</option><option value="workout">Exercise</option><option value="idea">Creative ideas</option></select></label>
+        <fieldset class="capture-kind">
+          <legend>Save to</legend>
+          <div class="capture-kind-options">
+            <label><input type="radio" name="kind" value="task" checked /><span>Task</span></label>
+            <label><input type="radio" name="kind" value="workout" /><span>Exercise</span></label>
+            <label><input type="radio" name="kind" value="idea" /><span>Idea</span></label>
+          </div>
+        </fieldset>
         <label>Title <input name="title" maxlength="140" required /></label>
         <fieldset data-kind="task">
           <label>Due <input type="date" name="due" /></label>
@@ -94,7 +102,16 @@ const navigation = [
         if (!race?.dataset.raceDate) return;
         const days = (Date.parse(race.dataset.raceDate) - Date.parse(londonDay(Date.now()))) / 86400000;
         if (!Number.isFinite(days)) return;
-        race.textContent = days > 0 ? `${days} days` : days === 0 ? 'Race day' : 'Race date passed';
+        const number = race.querySelector('[data-race-number]');
+        const unit = race.querySelector('[data-race-unit]');
+        const message = days === 0 ? 'Race day' : 'Race date passed';
+        if (number && unit) {
+          number.textContent = days > 0 ? String(days) : message;
+          unit.textContent = days === 1 ? 'day' : days > 1 ? 'days' : '';
+          race.toggleAttribute('data-race-message', days <= 0);
+        } else {
+          race.textContent = days > 0 ? `${days} ${days === 1 ? 'day' : 'days'}` : message;
+        }
       }
       document.addEventListener('astro:page-load', updateDateLabels);
       document.addEventListener('visibilitychange', updateDateLabels);
@@ -193,6 +210,17 @@ const navigation = [
     text-decoration: none;
   }
 
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    nav a:not([aria-current]) {
+      background: linear-gradient(var(--section-tint), var(--section-tint)) left center / 0% 100% no-repeat;
+      transition: background-size var(--transition-ui), border-color var(--transition-ui);
+    }
+
+    nav a:not([aria-current]):is(:hover, :focus-visible) {
+      background-size: 100% 100%;
+    }
+  }
+
   nav a[aria-current="page"] {
     background: var(--section-tint);
     border-color: color-mix(in srgb, var(--section-color) 28%, transparent);
@@ -200,7 +228,7 @@ const navigation = [
 
   nav a:focus-visible {
     outline: 2px solid var(--section-color);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
 
   @media (max-width: 620px) {

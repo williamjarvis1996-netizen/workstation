@@ -20,7 +20,7 @@ import { dashboard, isDemo } from '../../content/dashboard';
 <script>
   import { groupTasks } from '../../lib/time.mjs';
   import { mergedTasks, readLife, sampleTasks, taskRow, today } from '../../lib/life.mjs';
-  import { make } from '../../lib/storage.mjs';
+  import { emptyState, make } from '../../lib/storage.mjs';
   document.addEventListener('astro:page-load', () => {
     const root = document.querySelector<HTMLElement>('#task-page');
     if (!root) return;
@@ -62,6 +62,7 @@ import { dashboard, isDemo } from '../../content/dashboard';
         if (!card) {
           card = make('button', '', 'task-stat-card');
           card.setAttribute('type', 'button');
+          card.style.setProperty('--stat-accent', stat.accent);
           card.append(make('span', '', 'task-stat-value'), make('span', stat.label, 'task-stat-label'));
           card.addEventListener('click', () => selectFilter(stat.view));
           stats.append(card);
@@ -101,11 +102,9 @@ import { dashboard, isDemo } from '../../content/dashboard';
         target.append(section);
       }
       if (!target.childElementCount) {
-        const empty = make('div', '', 'task-empty');
         const messages = { Triage: 'No open tasks', Today: 'Nothing due today', Overdue: 'Nothing overdue',
           Upcoming: 'No upcoming tasks', 'No date': 'No undated tasks', Completed: 'No completed tasks yet' };
-        empty.append(make('span', messages[filter], 'task-empty-text'));
-        target.append(empty);
+        target.append(emptyState(messages[filter], filter === 'Completed' ? '–' : '✓', 'task-empty'));
       }
       root.querySelector('#open-task-count').textContent = `${total} open`;
     }

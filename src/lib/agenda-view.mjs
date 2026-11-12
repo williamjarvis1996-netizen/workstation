@@ -21,7 +21,13 @@ export function renderAgenda(target, model, day, now, available) {
       row.append(event.url ? externalLink(event.title, event.url) : make('strong', event.title));
       list.append(row);
     }
+    let markedNow = false;
+    const nowMarker = () => make('div', `Now · ${londonClock(now)}`, 'agenda-now-marker');
     for (const event of timed) {
+      if (!markedNow && event.start > now) {
+        list.append(nowMarker());
+        markedNow = true;
+      }
       const row = make('div', '', 'agenda-row');
       row.append(make('span', `${londonClock(event.start)}–${londonClock(event.end)}`, 'agenda-row-time'));
       const body = make('div', '', 'agenda-row-body');
@@ -30,6 +36,7 @@ export function renderAgenda(target, model, day, now, available) {
       row.append(body);
       list.append(row);
     }
+    if (!markedNow && timed.length) list.append(nowMarker());
     if (model.longest) {
       const row = make('div', '', 'agenda-row agenda-row--focus');
       row.append(make('span', `${londonClock(model.longest.start)}–${londonClock(model.longest.end)}`, 'agenda-row-time'));

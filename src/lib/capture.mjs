@@ -32,7 +32,9 @@ function mountCapture() {
     }
   }, { signal: controller.signal });
   document.addEventListener('astro:before-swap', () => controller.abort(), { once: true });
-  type.addEventListener('change', showFields);
+  form.addEventListener('change', event => {
+    if (event.target.name === 'kind') showFields();
+  });
   dialog.querySelector('[data-close]').addEventListener('click', () => dialog.close());
   form.addEventListener('submit', event => {
     event.preventDefault();
@@ -54,6 +56,9 @@ function mountCapture() {
       feedback.textContent = { task: 'Task saved to Tasks.', workout: 'Workout saved to Exercise.', idea: 'Idea saved to Creative.' }[type.value];
       dialog.close();
       trigger.focus();
+      if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+        feedback.animate([{ opacity: .4, transform: 'translateY(3px)' }, { opacity: 1, transform: 'translateY(0)' }], 200);
+      }
     } catch {
       dialog.querySelector('[role="status"]').textContent = 'Browser storage is unavailable. Your entry was not saved.';
     }

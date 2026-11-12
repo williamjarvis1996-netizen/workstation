@@ -125,8 +125,9 @@ const projectRoot = import.meta.env.BASE_URL + 'work/';
   .production-timeline .timeline-date-cell.has-clash { background: var(--area-tint); border-color: var(--area-border); }
   .production-timeline .timeline-clash-summary, .production-timeline .timeline-day-clash { color: var(--color-fg-muted); font: .72rem/1.5 var(--font-mono); }
   .production-timeline .timeline-clash-summary.has-clash, .production-timeline .timeline-day-clash { color: var(--area-accent); }
-  .production-timeline .timeline-projects { list-style: none; display: grid; gap: .55rem; margin-top: .5rem; }
-  .production-timeline .timeline-project-date { display: grid; gap: .15rem; padding-inline-start: .4rem; border-inline-start: 2px solid var(--area-border); font-size: .79rem; overflow-wrap: anywhere; line-height: 1.4; }
+  .production-timeline .timeline-projects { list-style: none; display: grid; gap: .55rem; margin-top: .5rem; margin-inline-start: .23rem; border-inline-start: 1px solid var(--area-border); }
+  .production-timeline .timeline-project-date { display: grid; gap: .15rem; position: relative; padding-inline-start: .65rem; font-size: .79rem; overflow-wrap: anywhere; line-height: 1.4; }
+  .production-timeline .timeline-project-date::before { content: ""; position: absolute; inset: .4em auto auto -.24rem; width: .42rem; aspect-ratio: 1; border-radius: 50%; background: var(--area-accent); }
   .production-timeline .timeline-project-date a { color: var(--color-fg); font-weight: 650; }
   .production-timeline .timeline-project-date a:hover { color: var(--area-accent); text-decoration: underline; }
   .production-timeline .timeline-milestone, .production-timeline .timeline-project-date time { color: var(--color-fg-muted); }

@@ -44,9 +44,18 @@ document.addEventListener('astro:page-load', () => {
       }));
     }
     workout.replaceChildren();
+    workout.closest('.workout-spotlight').dataset.workout = mostRecent?.type || '';
     if (mostRecent) {
-      const details = [mostRecent.distance, mostRecent.duration, mostRecent.type === 'run' && workoutPace(mostRecent)].filter(Boolean);
-      workout.append(make('span', `${mostRecent.type} · ${dayLabel(mostRecent.date)}`, 'top-sync'), make('h3', mostRecent.title), make('strong', details.join(' · ')));
+      const metrics = make('dl', '', 'workout-metrics');
+      for (const [label, value] of [['Distance', mostRecent.distance], ['Duration', mostRecent.duration],
+        ['Pace', mostRecent.type === 'run' && workoutPace(mostRecent)], ['Avg HR', mostRecent.avgHR && `${mostRecent.avgHR} bpm`]]) {
+        if (!value) continue;
+        const stat = make('div');
+        stat.append(make('dt', label), make('dd', value));
+        metrics.append(stat);
+      }
+      workout.append(make('span', `${mostRecent.type} · ${dayLabel(mostRecent.date)}`, 'top-sync'), make('h3', mostRecent.title));
+      if (metrics.children.length) workout.append(metrics);
     } else workout.append(make('p', 'No workouts logged.', 'empty-state-sm'));
 
     chart.replaceChildren();
@@ -59,22 +68,27 @@ document.addEventListener('astro:page-load', () => {
         result.set(week, (result.get(week) || 0) + workoutDistance(session));
         return result;
       }, new Map());
-      const peak = Math.max(1, ...weeks.map(week => totals.get(week) || 0));
+      const peak = Math.max(2, Math.ceil(Math.max(...weeks.map(week => totals.get(week) || 0)) / 2) * 2);
+      const axis = make('div', '', 'run-chart-axis');
+      axis.setAttribute('aria-hidden', 'true');
+      axis.append(make('span', '0'), make('span', String(peak / 2)), make('span', kmLabel(peak)));
       const list = make('ul');
       for (const week of weeks) {
         const total = totals.get(week) || 0;
         const row = make('li');
+        if (week === monday) row.classList.add('run-chart-current');
         const date = make('time', dayLabel(week));
         date.dateTime = week;
         const track = make('span', '', 'run-chart-track');
         track.setAttribute('aria-hidden', 'true');
+        track.title = total ? kmLabel(total) : 'No recorded distance';
         const bar = make('span');
         bar.style.setProperty('--run-width', `${total / peak * 100}%`);
         track.append(bar);
         row.append(date, track, make('strong', total ? kmLabel(total) : 'No data'));
         list.append(row);
       }
-      chart.append(list);
+      chart.append(axis, list);
     } else chart.append(make('p', 'No runs with a recorded distance yet.', 'empty-state-sm'));
 
     const recent = sessions.slice(0, 5);

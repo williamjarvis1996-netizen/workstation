@@ -12,7 +12,7 @@ const { marathonTraining: marathon, exerciseSessions } = dashboard;
     <TrainingNav active="overview" />
     {marathon && <section class="race-hero">
       <div><span class="top-sync">Race countdown</span><h2>{marathon.raceName}</h2>
-        <strong id="weeks-to-race" data-race-date={marathon.raceDate}>{marathon.weeksToRace} weeks</strong>
+        <strong id="weeks-to-race" data-race-date={marathon.raceDate}><span data-race-number>{marathon.weeksToRace}</span> <span data-race-unit>weeks</span></strong>
       </div>
       <dl><div><dt>Next long run</dt><dd>{marathon.nextLongRunTarget}</dd></div>
         <div><dt>Target time</dt><dd>{marathon.targetTime}</dd></div><div><dt>Weekly structure</dt><dd>{marathon.weeklyStructure}</dd></div>

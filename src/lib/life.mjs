@@ -51,6 +51,9 @@ export function taskRow(task, detail) {
   const row = make('label', '', 'action-task');
   const check = make('input');
   check.type = 'checkbox';
+  if (['high', 'medium', 'low'].includes(task.priority)) {
+    row.dataset.priority = task.priority;
+  }
   check.checked = Boolean(task.completed);
   check.addEventListener('change', async () => {
     try {
@@ -71,6 +74,7 @@ export function taskRow(task, detail) {
   });
   const text = make('span', '', 'action-task-copy');
   text.append(make('strong', task.title));
+  if (row.dataset.priority) text.append(make('span', task.priority + ' priority', 'loading-label'));
   if (task.sourceId) detail = [detail, 'Todoist'].filter(Boolean).join(' · ');
   if (detail) text.append(make('small', detail));
   row.append(check, text);

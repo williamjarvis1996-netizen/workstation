@@ -71,6 +71,15 @@ document.addEventListener('astro:page-load', () => {
     card.append(form);
     board.append(card);
 
+    const checkInStatus = make('p', '', 'goal-check-ins');
+    function renderCheckIns() {
+      const { habits: checks } = readLife();
+      const elapsed = weekdays.map((_, offset) => addDays(week, offset)).filter(date => date <= day);
+      const count = elapsed.filter(date => checks[JSON.stringify([id, date])]).length;
+      checkInStatus.textContent = `Check-ins this week · ${count} of ${elapsed.length}`;
+    }
+    renderCheckIns();
+    card.append(checkInStatus);
     const row = make('div', '', 'habit-row');
     row.append(make('strong', goal.name));
     for (const [offset, weekday] of weekdays.entries()) {
@@ -83,11 +92,21 @@ document.addEventListener('astro:page-load', () => {
       button.setAttribute('aria-pressed', String(Boolean(state.habits[key])));
       button.addEventListener('click', () => {
         const checked = button.getAttribute('aria-pressed') !== 'true';
-        if (saved(data => { data.habits[key] = checked; }, 'Check-in saved.')) button.setAttribute('aria-pressed', String(checked));
+        if (saved(data => { data.habits[key] = checked; }, 'Check-in saved.')) {
+          button.setAttribute('aria-pressed', String(checked));
+          renderCheckIns();
+        }
       });
       row.append(button);
     }
     habits.append(row);
+  }
+  if (goals.length) {
+    const legend = make('p', '', 'habit-legend');
+    for (const [label, state] of [['Checked in', 'checked'], ['No check-in', 'empty'], ['Future', 'future']]) {
+      legend.append(make('span', label, 'habit-key habit-key--' + state));
+    }
+    habits.append(legend);
   }
   if (!goals.length) board.append(make('p', 'No goals in this snapshot.', 'empty-state-sm'));
   renderMilestones();
