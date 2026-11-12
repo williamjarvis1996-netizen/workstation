@@ -209,6 +209,17 @@ const navigation = [
     text-decoration: none;
   }
 
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    nav a:not([aria-current]) {
+      background: linear-gradient(var(--section-tint), var(--section-tint)) left center / 0% 100% no-repeat;
+      transition: background-size var(--transition-ui), border-color var(--transition-ui);
+    }
+
+    nav a:not([aria-current]):is(:hover, :focus-visible) {
+      background-size: 100% 100%;
+    }
+  }
+
   nav a[aria-current="page"] {
     background: var(--section-tint);
     border-color: color-mix(in srgb, var(--section-color) 28%, transparent);

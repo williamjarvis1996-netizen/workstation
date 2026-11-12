@@ -98,6 +98,14 @@ export function make(tag, value, className) {
   return element;
 }
 
+export function emptyState(message, symbol, variant) {
+  const state = make('div', '', `dashboard-empty ${variant}`);
+  const icon = make('span', symbol, 'empty-state-icon');
+  icon.setAttribute('aria-hidden', 'true');
+  state.append(icon, make('p', message));
+  return state;
+}
+
 export function externalLink(label, url) {
   const a = make('a', label);
   a.href = url;
