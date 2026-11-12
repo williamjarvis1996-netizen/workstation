@@ -89,6 +89,12 @@ function mountOverview() {
     }
     byId('due-today').removeAttribute('aria-busy');
     const overdue = groups.Overdue.length;
+    const triageLink = byId('task-triage-link');
+    const destination = new URL(triageLink.href);
+    const view = overdue ? 'overdue' : count ? 'today' : groups.Upcoming.length ? 'upcoming' : null;
+    if (view) destination.searchParams.set('view', view);
+    else destination.searchParams.delete('view');
+    triageLink.href = destination.href;
     byId('due-today').textContent = overdue || count ? `${overdue} overdue · ${count} today`
       : groups.Upcoming.length ? `${groups.Upcoming.length} upcoming · none due today`
         : groups['No date'].length ? `${groups['No date'].length} undated` : 'No open tasks';
