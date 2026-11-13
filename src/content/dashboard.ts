@@ -168,6 +168,7 @@ const snapshot: Dashboard = {
     { label: 'RD Slack', url: 'https://wearerd.slack.com', category: 'Work' },
     { label: 'Gmail', url: 'https://mail.google.com', category: 'Work' },
     { label: 'Todoist', url: 'https://todoist.com', category: 'Tools' },
+    { label: 'Obsidian Vault', url: 'obsidian://open?vault=Master%20Vault', category: 'Tools' },
     { label: 'IKTVA Site', url: 'https://rd-code-storage.github.io/iktva/', category: 'Projects' },
   ],
   exerciseSessions: training2026 as ExerciseSession[],
