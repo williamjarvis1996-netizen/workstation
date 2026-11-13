@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "title": "Office",
+    "date": "2026-11-13",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-16",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-17",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-18",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-19",
+    "calendar": "work"
+  },
+  {
+    "title": "Weekly Production Scheduling Meeting 2026",
+    "date": "2026-11-19",
+    "startTime": "10:30",
+    "endTime": "11:30",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-20",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-23",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-24",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-25",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-26",
+    "calendar": "work"
+  },
+  {
+    "title": "Weekly Production Scheduling Meeting 2026",
+    "date": "2026-11-26",
+    "startTime": "10:30",
+    "endTime": "11:30",
+    "calendar": "work"
+  }
+]
