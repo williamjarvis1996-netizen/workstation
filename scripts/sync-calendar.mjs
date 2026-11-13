@@ -10,7 +10,7 @@
 // GOOGLE_CALENDAR_MAP — JSON mapping calendar ID → category (work/personal/fitness/create).
 // GOOGLE_CALENDAR_ACCOUNT_MAP — JSON mapping calendar ID → account ("work" or "personal").
 
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -104,14 +104,28 @@ function toLocalTime(dateTimeStr) {
   return d.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
+function readExistingEvents() {
+  try {
+    const raw = readFileSync(OUT_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 async function main() {
   const tokens = {};
+  const fetchedAccounts = new Set();
+
   if (WORK_REFRESH_TOKEN) {
     tokens.work = await getAccessToken(WORK_REFRESH_TOKEN);
+    fetchedAccounts.add('work');
     console.log('Work account token obtained.');
   }
   if (PERSONAL_REFRESH_TOKEN) {
     tokens.personal = await getAccessToken(PERSONAL_REFRESH_TOKEN);
+    fetchedAccounts.add('personal');
     console.log('Personal account token obtained.');
   }
 
@@ -121,7 +135,30 @@ async function main() {
   const timeMax = new Date(timeMin);
   timeMax.setDate(timeMax.getDate() + 14);
 
-  const allEvents = [];
+  // Build set of categories we CAN'T fetch (account token missing).
+  const skippedCategories = new Set();
+  for (const calId of CALENDAR_IDS) {
+    const account = getAccountForCalendar(calId);
+    if (!fetchedAccounts.has(account)) {
+      const cat = calendarCategoryMap[calId];
+      if (cat) skippedCategories.add(cat);
+    }
+  }
+
+  // Preserve existing events from categories we can't refresh.
+  let preserved = [];
+  if (skippedCategories.size > 0) {
+    const existing = readExistingEvents();
+    const todayStr = timeMin.toISOString().slice(0, 10);
+    preserved = existing.filter(ev =>
+      skippedCategories.has(ev.calendar) && ev.date >= todayStr
+    );
+    if (preserved.length > 0) {
+      console.log(`Preserving ${preserved.length} existing events from unfetched categories: ${[...skippedCategories].join(', ')}`);
+    }
+  }
+
+  const allEvents = [...preserved];
   for (const calId of CALENDAR_IDS) {
     const account = getAccountForCalendar(calId);
     const accessToken = tokens[account];
