@@ -32,8 +32,10 @@ const statusColor: Record<string, string> = {
       <div class="project-hero-top">
         <span class="pcard-health" style={`background: ${statusColor[project.status] || 'var(--color-accent)'}22; color: ${statusColor[project.status] || 'var(--color-accent)'}`}>{project.status}</span>
         <span class="project-priority">{project.type}</span>
+        {project.genre && <span class="project-priority">{project.genre}</span>}
       </div>
       <h1>{project.name}</h1>
+      {project.logline && <p class="creative-logline">{project.logline}</p>}
     </header>
 
     <div class="project-grid">
@@ -47,10 +49,77 @@ const statusColor: Record<string, string> = {
         </form>
         <p class="top-sync" id="creative-action-feedback" role="status"></p>
       </section>
+
       <section class="panel project-section">
-        <h2>Project summary</h2>
-        <p>{project.summary}</p>
+        <h2>Summary</h2>
+        <p class="project-status-summary">{project.summary}</p>
+        {project.notes && <div class="project-notes"><h3>Notes</h3><p>{project.notes}</p></div>}
       </section>
+
+      {(project.collaborators && project.collaborators.length > 0) && (
+        <section class="panel project-section">
+          <h2>Collaborators</h2>
+          <dl class="creative-collab-list">
+            {project.collaborators.map(c => (
+              <div><dt>{c.role}</dt><dd>{c.name}</dd></div>
+            ))}
+          </dl>
+        </section>
+      )}
+
+      {(project.awards && project.awards.length > 0) && (
+        <section class="panel project-section">
+          <h2>Awards</h2>
+          <ul class="creative-awards">
+            {project.awards.map(a => (
+              <li>
+                <strong>{a.award}</strong>
+                <span>{a.festival}, {a.year}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(project.festivals && project.festivals.length > 0) && (
+        <section class="panel project-section">
+          <h2>Festival circuit</h2>
+          <ul class="creative-festivals">
+            {project.festivals.map(f => (
+              <li>
+                <span class="pill" data-festival-status={f.status.toLowerCase()}>{f.status}</span>
+                <span>{f.name}</span>
+                <span class="creative-year">{f.year}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {(project.timeline && project.timeline.length > 0) && (
+        <section class="panel project-section project-section--wide">
+          <h2>Development timeline</h2>
+          <ol class="creative-timeline">
+            {project.timeline.map(t => (
+              <li>
+                <time>{t.date}</time>
+                <span>{t.event}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {(project.links && project.links.length > 0) && (
+        <section class="panel project-section">
+          <h2>Links</h2>
+          <ul class="creative-links">
+            {project.links.map(l => (
+              <li><a href={l.url} target="_blank" rel="noopener noreferrer">{l.label}</a></li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   </div>
 </Base>

@@ -210,10 +210,86 @@ const snapshot: Dashboard = {
     weeklyStructure: '2 runs + 2 gym (2+2)',
   },
   creativeProjects: [
-    { name: 'Dinner, Diamonds and Death', type: 'Short film', status: 'Post-production', summary: 'Picture lock achieved. Sound design, colouring, composing, IMDb credits, festival strategy in progress. Targeting Sundance London.' },
-    { name: 'Break A Leg', type: 'TV series (6x30)', status: 'Development', summary: 'Dark comedy thriller. In development with Netflix, ITV, Hager Moss. Pilot rewrite next.' },
-    { name: 'Brain Drain', type: 'TV series (6x25)', status: 'Optioned', summary: 'Apocalyptic adventure comedy. Optioned by Fandango Productions.' },
-    { name: 'Aortic', type: 'Short film', status: 'Festival circulation', summary: 'Jury Award for Best Performance, Rob Knox London Film Festival 2025.' },
+    {
+      name: 'Dinner, Diamonds and Death',
+      type: 'Short film',
+      status: 'Post-production',
+      genre: 'Crime comedy',
+      logline: 'A dinner party turns deadly when the host reveals one of the guests is a killer — and nobody is leaving until the truth comes out.',
+      summary: 'Picture lock achieved. Sound design, colouring, composing, IMDb credits, festival strategy in progress. Targeting Sundance London.',
+      collaborators: [
+        { role: 'Writer / Producer', name: 'Will Jarvis' },
+      ],
+      festivals: [
+        { name: 'Sundance London', status: 'Targeting', year: 2027 },
+      ],
+      timeline: [
+        { date: '2026', event: 'Picture lock achieved' },
+        { date: '2026', event: 'Sound design, colouring and composing in progress' },
+        { date: '2026', event: 'IMDb credits being finalised' },
+        { date: '2027', event: 'Festival strategy — targeting Sundance London' },
+      ],
+      notes: 'Currently in final post-production stages. All picture edits locked. Remaining work covers sound design, colour grading, original score composition and festival preparation. IMDb page in progress.',
+    },
+    {
+      name: 'Break A Leg',
+      type: 'TV series (6x30)',
+      status: 'Development',
+      genre: 'Dark comedy thriller',
+      logline: 'When an understudy finally gets their shot at the lead role, the theatre world reveals itself to be far more dangerous than any stage.',
+      summary: 'Dark comedy thriller. In development with Netflix, ITV, Hager Moss. Pilot rewrite next.',
+      collaborators: [
+        { role: 'Writer', name: 'Will Jarvis' },
+        { role: 'Development', name: 'Netflix' },
+        { role: 'Development', name: 'ITV' },
+        { role: 'Development', name: 'Hager Moss' },
+      ],
+      timeline: [
+        { date: '2025', event: 'Series concept developed' },
+        { date: '2026', event: 'In active development with Netflix, ITV and Hager Moss' },
+        { date: '2026', event: 'Pilot rewrite underway' },
+      ],
+      notes: 'Six-part, 30-minute dark comedy thriller for television. Multiple broadcasters and production companies engaged. Next milestone is completing the pilot rewrite.',
+    },
+    {
+      name: 'Brain Drain',
+      type: 'TV series (6x25)',
+      status: 'Optioned',
+      genre: 'Apocalyptic adventure comedy',
+      logline: 'In a world where intellect has literally vanished, a mismatched group of survivors must navigate the absurd new reality with whatever wits they have left.',
+      summary: 'Apocalyptic adventure comedy. Optioned by Fandango Productions.',
+      collaborators: [
+        { role: 'Writer', name: 'Will Jarvis' },
+        { role: 'Production company', name: 'Fandango Productions' },
+      ],
+      timeline: [
+        { date: '2025', event: 'Series concept developed and written' },
+        { date: '2026', event: 'Optioned by Fandango Productions' },
+      ],
+      notes: 'Six-part, 25-minute apocalyptic adventure comedy. Currently optioned by Fandango Productions for development.',
+    },
+    {
+      name: 'Aortic',
+      type: 'Short film',
+      status: 'Festival circulation',
+      genre: 'Drama',
+      summary: 'Award-winning short film currently on the festival circuit. Jury Award for Best Performance at the Rob Knox London Film Festival 2025.',
+      collaborators: [
+        { role: 'Writer / Producer', name: 'Will Jarvis' },
+      ],
+      awards: [
+        { festival: 'Rob Knox London Film Festival', award: 'Jury Award for Best Performance', year: 2025 },
+      ],
+      festivals: [
+        { name: 'Rob Knox London Film Festival', status: 'Won', year: 2025 },
+      ],
+      timeline: [
+        { date: '2025', event: 'Completed and entered festival circuit' },
+        { date: '2025', event: 'Jury Award for Best Performance — Rob Knox London Film Festival' },
+        { date: '2026', event: 'Continued festival circulation' },
+      ],
+      notes: 'Short drama. Recognised at the Rob Knox London Film Festival with the Jury Award for Best Performance. Continuing to submit to festivals.',
+    },
   ],
   personalGoals: [
     { name: 'London Marathon 2027', category: 'Fitness', status: 'On track', detail: 'Sub-4 target. 2+2 plan week 3. Longest run back to 14 km. Z2 running unlocked.' },

@@ -1110,6 +1110,39 @@ body {
 
 .project-notes { margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-border); }
 
+/* ===== CREATIVE PROJECT DETAIL ===== */
+.creative-logline { font-size: .9rem; line-height: 1.55; color: var(--color-fg-muted); margin-top: .35rem; font-style: italic; max-width: 44rem; }
+
+.creative-collab-list { display: grid; gap: .5rem; }
+.creative-collab-list div { display: flex; align-items: baseline; gap: .5rem; padding: .45rem .65rem; border-radius: var(--radius); background: var(--color-surface); }
+.creative-collab-list dt { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--color-fg-subtle); white-space: nowrap; min-width: 8rem; }
+.creative-collab-list dd { font-size: .85rem; font-weight: 600; color: var(--color-fg); }
+
+.creative-awards { list-style: none; padding: 0; display: grid; gap: .5rem; }
+.creative-awards li { display: flex; flex-direction: column; gap: .2rem; padding: .65rem .75rem; border-radius: var(--radius); background: linear-gradient(135deg, color-mix(in srgb, #a78bfa 8%, transparent), var(--color-surface) 60%); border-left: 3px solid #a78bfa; }
+.creative-awards strong { font-size: .88rem; }
+.creative-awards span { font-family: var(--font-mono); font-size: .72rem; color: var(--color-fg-muted); }
+
+.creative-festivals { list-style: none; padding: 0; display: grid; gap: .4rem; }
+.creative-festivals li { display: flex; align-items: center; gap: .65rem; padding: .45rem .65rem; border-radius: var(--radius); background: var(--color-surface); font-size: .85rem; }
+.creative-festivals .pill { font-size: .62rem; min-width: 5rem; text-align: center; }
+.creative-festivals .pill[data-festival-status="won"] { background: color-mix(in srgb, var(--color-success) 15%, transparent); color: var(--color-success); }
+.creative-festivals .pill[data-festival-status="selected"] { background: color-mix(in srgb, #a78bfa 15%, transparent); color: #a78bfa; }
+.creative-festivals .pill[data-festival-status="targeting"] { background: color-mix(in srgb, var(--color-warn) 15%, transparent); color: var(--color-warn); }
+.creative-festivals .pill[data-festival-status="submitted"] { background: color-mix(in srgb, var(--color-accent) 15%, transparent); color: var(--color-accent); }
+.creative-year { font-family: var(--font-mono); font-size: .72rem; color: var(--color-fg-subtle); margin-left: auto; }
+
+.creative-timeline { list-style: none; padding: 0; display: grid; gap: 0; position: relative; padding-left: 1rem; }
+.creative-timeline::before { content: ''; position: absolute; left: .25rem; top: .55rem; bottom: .55rem; width: 1px; background: var(--color-border-hover); }
+.creative-timeline li { display: flex; align-items: baseline; gap: .75rem; padding: .4rem 0; position: relative; }
+.creative-timeline li::before { content: ''; position: absolute; left: -.85rem; top: .65rem; width: 7px; height: 7px; border-radius: 50%; background: var(--area-accent, var(--color-accent)); flex-shrink: 0; }
+.creative-timeline time { font-family: var(--font-mono); font-size: .72rem; color: var(--color-fg-subtle); min-width: 3rem; }
+.creative-timeline span { font-size: .85rem; color: var(--color-fg); line-height: 1.45; }
+
+.creative-links { list-style: none; padding: 0; display: grid; gap: .35rem; }
+.creative-links a { display: block; padding: .45rem .65rem; border-radius: var(--radius); background: var(--color-surface); color: var(--color-accent); font-size: .85rem; text-decoration: none; transition: background var(--transition-ui); }
+.creative-links a:hover { background: var(--color-surface-hover); text-decoration: underline; }
+
 .project-milestone-card { background: var(--color-surface-hover); border-radius: var(--radius); padding: var(--space-md) var(--space-lg); display: flex; flex-direction: column; gap: .25rem; }
 .project-milestone-card strong { font-size: .95rem; }
 .project-due { font-family: var(--font-mono); font-size: .75rem; color: var(--color-accent); }

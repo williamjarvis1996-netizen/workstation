@@ -85,6 +85,14 @@ export interface CreativeProject {
   summary: string;
   artwork?: string;
   nextAction?: string;
+  genre?: string;
+  logline?: string;
+  collaborators?: { role: string; name: string }[];
+  awards?: { festival: string; award: string; year: number }[];
+  festivals?: { name: string; status: 'Selected' | 'Submitted' | 'Targeting' | 'Won' | 'Screened'; year: number }[];
+  timeline?: { date: string; event: string }[];
+  notes?: string;
+  links?: { label: string; url: string }[];
 }
 
 export interface PersonalGoal {
