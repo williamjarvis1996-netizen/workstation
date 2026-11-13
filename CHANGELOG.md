@@ -1,14 +1,15 @@
 # Changelog
 
-## Automated data sync pipeline — 13 November 2026
+## Automated data sync, creative enrichment and snapshot sync — 12-13 November 2026
 
 - Added a GitHub Actions workflow (`.github/workflows/sync.yml`) that runs daily at 06:42 UTC to sync external data and commit the results to `main`, which triggers a fresh deploy.
 - Created `scripts/sync-todoist.mjs` — fetches active tasks from the Todoist REST API v2, maps priorities and project names, sorts by due date (overdue first), and writes `src/content/sync/tasks.json`. Exits cleanly if no token is configured.
 - Created `scripts/sync-calendar.mjs` — uses a Google Calendar OAuth refresh token to fetch a 14-day event window across multiple calendars, filters cancelled/declined events, converts times to London timezone, deduplicates, and writes `src/content/sync/calendar.json`. Exits cleanly if credentials are missing.
+- Created `scripts/google-auth-helper.mjs` — one-time helper to generate a Google OAuth refresh token. Starts a local HTTP server, walks through the consent flow, and prints the token with `gh secret set` instructions.
 - Refactored `src/content/dashboard.ts` to import synced JSON files and use them when populated, falling back to the manual snapshot when the sync arrays are empty (i.e. before API tokens are configured).
-- Seeded `src/content/sync/tasks.json` and `src/content/sync/calendar.json` with empty arrays so the build works immediately.
-- The workflow can also be triggered manually via `workflow_dispatch`.
-- **Setup required**: add `TODOIST_API_TOKEN`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, and `GOOGLE_CALENDAR_REFRESH_TOKEN` as GitHub repository secrets. Optionally set `GOOGLE_CALENDAR_IDS` as a repository variable (comma-separated calendar IDs; defaults to `primary`).
+- Enriched all six creative projects with vault data: loglines, themes, characters with suggested actors, collaborators, recognition, references, links, festival strategies and collective tags. Added The Master Plan and GGG as new entries.
+- Synced snapshot against live Todoist and Google Calendar: fixed drifted due dates, added missing tasks and corrected calendar events.
+- **Setup required**: add `TODOIST_API_TOKEN`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, and `GOOGLE_CALENDAR_REFRESH_TOKEN` as GitHub repository secrets. Optionally set `GOOGLE_CALENDAR_IDS` as a repository variable (comma-separated calendar IDs; defaults to `primary`). Run `scripts/google-auth-helper.mjs` to generate the refresh token.
 
 ## Day planner in Tasks
 
