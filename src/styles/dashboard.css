@@ -1353,10 +1353,11 @@ body :where(main, dialog, .site-header, .year-table-scroll, .timeline-week, .fee
   .pcard:hover, .slate-tile:hover { transform: translateY(-1px); }
 }
 
-.action-task[data-priority="high"] { --priority-color: var(--color-danger); }
-.action-task[data-priority="medium"] { --priority-color: var(--color-warn); }
-.action-task[data-priority="low"] { --priority-color: var(--color-success); }
-.action-task[data-priority] strong { color: var(--priority-color); }
+.action-task[data-category="work"] { --task-color: #82b6ff; }
+.action-task[data-category="life"] { --task-color: #f5d466; }
+.action-task[data-category="training"] { --task-color: #4ade80; }
+.action-task[data-category="creative"] { --task-color: #e05555; }
+.action-task[data-category] strong { color: var(--task-color, var(--color-fg)); }
 .action-task:has(input:checked) strong { color: var(--color-fg-subtle); }
 
 .portfolio-risk { background: linear-gradient(130deg, color-mix(in srgb, var(--color-warn) 8%, transparent), transparent 72%); }

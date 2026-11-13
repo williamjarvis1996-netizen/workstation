@@ -2,6 +2,18 @@ import { addDays, londonDay } from './time.mjs';
 import { queueChanges, syncInfo, completeTodoist } from './shared.mjs';
 import { make } from './storage.mjs';
 
+const lifePattern = /^(personal|shopping|home|admin|finance|life|family|health|errands|chores)$/i;
+const trainingPattern = /^(training|fitness|running|gym|marathon|exercise|swimming|cycling)$/i;
+const creativePattern = /^(creative|film|screenplay|writing|script|theatre|novel|poetry|music)$/i;
+
+export function taskCategory(project) {
+  if (!project) return 'work';
+  if (lifePattern.test(project)) return 'life';
+  if (trainingPattern.test(project)) return 'training';
+  if (creativePattern.test(project)) return 'creative';
+  return 'work';
+}
+
 const key = 'workstation-life-v1';
 const empty = () => ({ tasks: [], workouts: [], ideas: [], completed: {}, goals: {}, habits: {}, creativeActions: {}, taskPlans: {}, projectPlans: {}, dayPlans: {}, portfolio: {} });
 
@@ -54,6 +66,7 @@ export function taskRow(task, detail) {
   if (['high', 'medium', 'low'].includes(task.priority)) {
     row.dataset.priority = task.priority;
   }
+  row.dataset.category = taskCategory(task.project);
   check.checked = Boolean(task.completed);
   check.addEventListener('change', async () => {
     try {
