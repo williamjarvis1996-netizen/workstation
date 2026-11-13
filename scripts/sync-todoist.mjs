@@ -24,6 +24,30 @@ async function fetchJSON(url) {
   return res.json();
 }
 
+async function fetchAllTasks() {
+  const all = [];
+  let cursor = null;
+  do {
+    const url = cursor
+      ? `https://api.todoist.com/api/v1/tasks?cursor=${cursor}`
+      : 'https://api.todoist.com/api/v1/tasks';
+    const data = await fetchJSON(url);
+    if (Array.isArray(data)) {
+      return data;
+    }
+    all.push(...(data.results || data.items || []));
+    cursor = data.next_cursor || null;
+  } while (cursor);
+  return all;
+}
+
+async function fetchAllProjects() {
+  const url = 'https://api.todoist.com/api/v1/projects';
+  const data = await fetchJSON(url);
+  if (Array.isArray(data)) return data;
+  return data.results || data.items || [];
+}
+
 // Map Todoist priority (4=urgent, 1=none) to our model.
 function mapPriority(todoistPriority) {
   if (todoistPriority === 4) return 'high';
@@ -32,11 +56,8 @@ function mapPriority(todoistPriority) {
 }
 
 async function main() {
-  // Fetch all active (non-completed) tasks.
-  const tasks = await fetchJSON('https://api.todoist.com/rest/v2/tasks');
-
-  // Fetch projects so we can map project IDs to names.
-  const projects = await fetchJSON('https://api.todoist.com/rest/v2/projects');
+  const tasks = await fetchAllTasks();
+  const projects = await fetchAllProjects();
   const projectMap = Object.fromEntries(projects.map(p => [p.id, p.name]));
 
   const mapped = tasks.map(t => ({
