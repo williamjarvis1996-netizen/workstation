@@ -1,4 +1,6 @@
 import training2026 from './training-2026.json';
+import syncedTasks from './sync/tasks.json';
+import syncedCalendar from './sync/calendar.json';
 import type { CalendarEvent, CreativeProject, ExerciseSession, LogEntry, MarathonTraining, PersonalGoal, Project, QuickLink, Task } from './model';
 
 type Dashboard = {
@@ -13,6 +15,38 @@ type Dashboard = {
   personalGoals: PersonalGoal[];
   lastUpdated: string;
 };
+
+// Manual fallback data used when sync JSON files are empty (no API tokens configured yet).
+const manualTasks: Task[] = [
+  { title: 'Incorporate Abask storyboard feedback from Chloe', project: 'Abask Q3515', priority: 'high', due: '2026-11-12', completed: false },
+  { title: 'Confirm exact shoot day w/c 16 Nov', project: 'Abask Q3515', priority: 'high', due: '2026-11-12', completed: false },
+  { title: 'Confirm shoot location', project: 'Abask Q3515', priority: 'high', due: '2026-11-12', completed: false },
+  { title: 'Finalise product list with Abask (12 confirmed)', project: 'Abask Q3515', priority: 'medium', due: '2026-11-12', completed: false },
+  { title: 'Arrange product shipping from Abask', project: 'Abask Q3515', priority: 'medium', due: '2026-11-13', completed: false },
+  { title: 'Book equipment (Alexa Mini + Cooke Speed Panchros TBC)', project: 'Abask Q3515', priority: 'medium', due: '2026-11-13', completed: false },
+  { title: 'Build shot list and schedule', project: 'Abask Q3515', priority: 'medium', due: '2026-11-14', completed: false },
+  { title: 'Send call sheet', project: 'Abask Q3515', priority: 'medium', due: '2026-11-14', completed: false },
+  { title: 'Invoice Abask 50% on confirmation', project: 'Abask Q3515', priority: 'low', due: '2026-11-14', completed: false },
+  { title: 'Review Alex photorealistic 3D mockups', project: 'IKTVA 2027', priority: 'high', due: '2026-11-14', completed: false },
+  { title: 'Add team members to IKTVA repo', project: 'IKTVA 2027', priority: 'medium', due: '2026-11-14', completed: false },
+  { title: 'Upload Slack images to IKTVA assets page', project: 'IKTVA 2027', priority: 'medium', completed: false },
+  { title: 'Review Fora V2 edit with Ruby', project: 'Fora RDNY1082', priority: 'medium', due: '2026-11-14', completed: false },
+  { title: 'Push Maudsley creative direction further with James', project: 'Maudsley Q3518', priority: 'medium', due: '2026-11-18', completed: false },
+  { title: 'Close out Ares retainer admin — Nikhil 3 content options for H1', project: 'Ares RDC1058a', priority: 'low', due: '2026-12-05', completed: false },
+  { title: 'Submit milestones by Friday midday', priority: 'high', due: '2026-11-14', completed: false },
+  { title: 'Book dentist', project: 'Personal', priority: 'medium', due: '2026-11-14', completed: false },
+  { title: 'Join run club', project: 'Personal', priority: 'low', due: '2026-11-17', completed: false },
+  { title: 'Get bedsheets', project: 'Shopping', priority: 'low', completed: false },
+];
+
+const manualCalendar: CalendarEvent[] = [
+  { title: 'Gym - Back', date: '2026-11-11', startTime: '18:30', endTime: '20:00', calendar: 'fitness' },
+  { title: 'Weekly Production Scheduling Meeting', date: '2026-11-12', startTime: '10:30', endTime: '11:30', location: 'Meeting Room 2 / Google Meet', calendar: 'work' },
+  { title: 'Spotify — £12.99', date: '2026-11-13', calendar: 'personal' },
+  { title: 'Gym - Chest', date: '2026-11-14', startTime: '11:30', endTime: '13:00', calendar: 'fitness' },
+  { title: 'Apple subscription — £8.99', date: '2026-11-16', calendar: 'personal' },
+  { title: 'Run', date: '2026-11-17', startTime: '18:30', endTime: '20:00', calendar: 'fitness' },
+];
 
 const snapshot: Dashboard = {
   projects: [
@@ -111,27 +145,7 @@ const snapshot: Dashboard = {
       health: 'on-track',
     },
   ],
-  tasks: [
-    { title: 'Incorporate Abask storyboard feedback from Chloe', project: 'Abask Q3515', priority: 'high', due: '2026-11-12', completed: false },
-    { title: 'Confirm exact shoot day w/c 16 Nov', project: 'Abask Q3515', priority: 'high', due: '2026-11-12', completed: false },
-    { title: 'Confirm shoot location', project: 'Abask Q3515', priority: 'high', due: '2026-11-12', completed: false },
-    { title: 'Finalise product list with Abask (12 confirmed)', project: 'Abask Q3515', priority: 'medium', due: '2026-11-12', completed: false },
-    { title: 'Arrange product shipping from Abask', project: 'Abask Q3515', priority: 'medium', due: '2026-11-13', completed: false },
-    { title: 'Book equipment (Alexa Mini + Cooke Speed Panchros TBC)', project: 'Abask Q3515', priority: 'medium', due: '2026-11-13', completed: false },
-    { title: 'Build shot list and schedule', project: 'Abask Q3515', priority: 'medium', due: '2026-11-14', completed: false },
-    { title: 'Send call sheet', project: 'Abask Q3515', priority: 'medium', due: '2026-11-14', completed: false },
-    { title: 'Invoice Abask 50% on confirmation', project: 'Abask Q3515', priority: 'low', due: '2026-11-14', completed: false },
-    { title: 'Review Alex photorealistic 3D mockups', project: 'IKTVA 2027', priority: 'high', due: '2026-11-14', completed: false },
-    { title: 'Add team members to IKTVA repo', project: 'IKTVA 2027', priority: 'medium', due: '2026-11-14', completed: false },
-    { title: 'Upload Slack images to IKTVA assets page', project: 'IKTVA 2027', priority: 'medium', completed: false },
-    { title: 'Review Fora V2 edit with Ruby', project: 'Fora RDNY1082', priority: 'medium', due: '2026-11-14', completed: false },
-    { title: 'Push Maudsley creative direction further with James', project: 'Maudsley Q3518', priority: 'medium', due: '2026-11-18', completed: false },
-    { title: 'Close out Ares retainer admin — Nikhil 3 content options for H1', project: 'Ares RDC1058a', priority: 'low', due: '2026-12-05', completed: false },
-    { title: 'Submit milestones by Friday midday', priority: 'high', due: '2026-11-14', completed: false },
-    { title: 'Book dentist', project: 'Personal', priority: 'medium', due: '2026-11-14', completed: false },
-    { title: 'Join run club', project: 'Personal', priority: 'low', due: '2026-11-17', completed: false },
-    { title: 'Get bedsheets', project: 'Shopping', priority: 'low', completed: false },
-  ],
+  tasks: (syncedTasks as Task[]).length > 0 ? syncedTasks as Task[] : manualTasks,
   log: [
     { date: '2026-11-11', title: 'Ares sizzle confirmed — live on LinkedIn and Instagram', source: 'email', content: 'Charlie Sweeney (Ares) confirmed both horizontal and vertical sizzle reels are live on Ares LinkedIn and Instagram. Project complete.' },
     { date: '2026-11-11', title: 'Abask client reviewing storyboard — feedback incoming', source: 'email', content: 'Chloe Hill reviewed storyboard and references with Abask team. Feedback expected. Atlanta Anley back in office and re-engaged on the project.' },
@@ -146,47 +160,7 @@ const snapshot: Dashboard = {
     { date: '2026-11-10', title: 'IKTVA knowledge base live', source: 'manual', content: 'Set up rd-code-storage/iktva repo with Astro site, GitHub Pages deployment, assets catalog, and Google Drive integration. CLAUDE.md added for team onboarding.' },
     { date: '2026-11-09', title: 'Script v03 shared by James', source: 'slack', content: 'James updated the IKTVA script based on the messaging document. Company locations to be populated once shared by client. Storyboard to follow.' },
   ],
-  calendarEvents: [
-    {
-      title: 'Gym - Back',
-      date: '2026-11-11',
-      startTime: '18:30',
-      endTime: '20:00',
-      calendar: 'fitness',
-    },
-    {
-      title: 'Weekly Production Scheduling Meeting',
-      date: '2026-11-12',
-      startTime: '10:30',
-      endTime: '11:30',
-      location: 'Meeting Room 2 / Google Meet',
-      calendar: 'work',
-    },
-    {
-      title: 'Spotify — £12.99',
-      date: '2026-11-13',
-      calendar: 'personal',
-    },
-    {
-      title: 'Gym - Chest',
-      date: '2026-11-14',
-      startTime: '11:30',
-      endTime: '13:00',
-      calendar: 'fitness',
-    },
-    {
-      title: 'Apple subscription — £8.99',
-      date: '2026-11-16',
-      calendar: 'personal',
-    },
-    {
-      title: 'Run',
-      date: '2026-11-17',
-      startTime: '18:30',
-      endTime: '20:00',
-      calendar: 'fitness',
-    },
-  ],
+  calendarEvents: (syncedCalendar as CalendarEvent[]).length > 0 ? syncedCalendar as CalendarEvent[] : manualCalendar,
   quickLinks: [
     { label: 'Portfolio', url: 'https://willjarvis.co', category: 'Personal' },
     { label: 'Claude Code', url: 'https://claude.ai/code', category: 'Tools' },

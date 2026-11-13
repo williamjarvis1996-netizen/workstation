@@ -1,5 +1,15 @@
 # Changelog
 
+## Automated data sync pipeline — 13 November 2026
+
+- Added a GitHub Actions workflow (`.github/workflows/sync.yml`) that runs daily at 06:42 UTC to sync external data and commit the results to `main`, which triggers a fresh deploy.
+- Created `scripts/sync-todoist.mjs` — fetches active tasks from the Todoist REST API v2, maps priorities and project names, sorts by due date (overdue first), and writes `src/content/sync/tasks.json`. Exits cleanly if no token is configured.
+- Created `scripts/sync-calendar.mjs` — uses a Google Calendar OAuth refresh token to fetch a 14-day event window across multiple calendars, filters cancelled/declined events, converts times to London timezone, deduplicates, and writes `src/content/sync/calendar.json`. Exits cleanly if credentials are missing.
+- Refactored `src/content/dashboard.ts` to import synced JSON files and use them when populated, falling back to the manual snapshot when the sync arrays are empty (i.e. before API tokens are configured).
+- Seeded `src/content/sync/tasks.json` and `src/content/sync/calendar.json` with empty arrays so the build works immediately.
+- The workflow can also be triggered manually via `workflow_dispatch`.
+- **Setup required**: add `TODOIST_API_TOKEN`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, and `GOOGLE_CALENDAR_REFRESH_TOKEN` as GitHub repository secrets. Optionally set `GOOGLE_CALENDAR_IDS` as a repository variable (comma-separated calendar IDs; defaults to `primary`).
+
 ## Day planner in Tasks
 
 - Added Today and Tomorrow planning, calendar source labels, suggested blocks, unscheduled work and saved plans inside Tasks.
