@@ -1,5 +1,11 @@
 # Changelog
 
+## Multi-calendar sync — 13 November 2026
+
+- Synced all four Google Calendars into `calendar.json` via the Claude connector: work (Office days, scheduling meetings), personal (subscription payment reminders), fitness (gym sessions, runs) and create.
+- Previously only the work calendar synced because the OAuth token is scoped to the work Google account. Personal, fitness and create calendars live on the personal Gmail account and returned 404 from the automated sync.
+- The automated daily sync (`sync.yml`) continues to pull the work calendar via OAuth. Cross-account calendars are supplemented via the Claude connector when this session runs.
+
 ## Automated data sync, creative enrichment and snapshot sync — 12-13 November 2026
 
 - Added a GitHub Actions workflow (`.github/workflows/sync.yml`) that runs daily at 06:42 UTC to sync external data and commit the results to `main`, which triggers a fresh deploy.

@@ -5,9 +5,33 @@
     "calendar": "work"
   },
   {
+    "title": "Spotify - £12.99",
+    "date": "2026-11-13",
+    "calendar": "personal"
+  },
+  {
+    "title": "Gym - Chest",
+    "date": "2026-11-14",
+    "startTime": "11:30",
+    "endTime": "13:00",
+    "calendar": "fitness"
+  },
+  {
+    "title": "Apple subscription - £8.99",
+    "date": "2026-11-16",
+    "calendar": "personal"
+  },
+  {
     "title": "Office",
     "date": "2026-11-16",
     "calendar": "work"
+  },
+  {
+    "title": "Run",
+    "date": "2026-11-17",
+    "startTime": "18:30",
+    "endTime": "20:00",
+    "calendar": "fitness"
   },
   {
     "title": "Office",
@@ -15,13 +39,20 @@
     "calendar": "work"
   },
   {
-    "title": "Office",
+    "title": "Claude subscription - £18.00",
     "date": "2026-11-18",
-    "calendar": "work"
+    "calendar": "personal"
+  },
+  {
+    "title": "Gym - Back",
+    "date": "2026-11-18",
+    "startTime": "18:30",
+    "endTime": "20:00",
+    "calendar": "fitness"
   },
   {
     "title": "Office",
-    "date": "2026-11-19",
+    "date": "2026-11-18",
     "calendar": "work"
   },
   {
@@ -29,6 +60,11 @@
     "date": "2026-11-19",
     "startTime": "10:30",
     "endTime": "11:30",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-19",
     "calendar": "work"
   },
   {
@@ -37,9 +73,28 @@
     "calendar": "work"
   },
   {
+    "title": "Gym - Chest",
+    "date": "2026-11-21",
+    "startTime": "11:30",
+    "endTime": "13:00",
+    "calendar": "fitness"
+  },
+  {
+    "title": "Disney+ subscription - £9.99",
+    "date": "2026-11-23",
+    "calendar": "personal"
+  },
+  {
     "title": "Office",
     "date": "2026-11-23",
     "calendar": "work"
+  },
+  {
+    "title": "Run",
+    "date": "2026-11-24",
+    "startTime": "18:30",
+    "endTime": "20:00",
+    "calendar": "fitness"
   },
   {
     "title": "Office",
@@ -47,13 +102,15 @@
     "calendar": "work"
   },
   {
-    "title": "Office",
+    "title": "Gym - Back",
     "date": "2026-11-25",
-    "calendar": "work"
+    "startTime": "18:30",
+    "endTime": "20:00",
+    "calendar": "fitness"
   },
   {
     "title": "Office",
-    "date": "2026-11-26",
+    "date": "2026-11-25",
     "calendar": "work"
   },
   {
@@ -61,6 +118,11 @@
     "date": "2026-11-26",
     "startTime": "10:30",
     "endTime": "11:30",
+    "calendar": "work"
+  },
+  {
+    "title": "Office",
+    "date": "2026-11-26",
     "calendar": "work"
   }
 ]
