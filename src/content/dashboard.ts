@@ -271,7 +271,7 @@ const snapshot: Dashboard = {
     { name: 'London Library', category: 'Creative', status: 'Active', detail: 'Emerging Writer. Reader for 2026/27 programme.' },
     { name: 'Fundraising for Shelter', category: 'Charity', status: 'Active', detail: 'Marathon fundraising on Enthuse. Target 2,500 GBP for Team Shelter.' },
   ],
-  lastUpdated: '2026-11-11',
+  lastUpdated: new Date().toISOString().slice(0, 10),
 };
 
 // The local development server can optionally load a private snapshot.

@@ -78,11 +78,11 @@ const server = createServer(async (req, res) => {
     }
 
     console.log('\n--- Refresh token obtained ---\n');
-    console.log(`GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}\n`);
-    console.log('Add it to GitHub Secrets:\n');
-    console.log(`  gh secret set GOOGLE_REFRESH_TOKEN --body "${tokens.refresh_token}"`);
-    console.log(`  gh secret set GOOGLE_CLIENT_ID --body "${clientId}"`);
-    console.log(`  gh secret set GOOGLE_CLIENT_SECRET --body "${clientSecret}"\n`);
+    console.log(`GOOGLE_CALENDAR_REFRESH_TOKEN=${tokens.refresh_token}\n`);
+    console.log('Add these to GitHub Secrets (names must match sync.yml):\n');
+    console.log(`  gh secret set GOOGLE_CALENDAR_REFRESH_TOKEN --body "${tokens.refresh_token}"`);
+    console.log(`  gh secret set GOOGLE_CALENDAR_CLIENT_ID --body "${clientId}"`);
+    console.log(`  gh secret set GOOGLE_CALENDAR_CLIENT_SECRET --body "${clientSecret}"\n`);
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'text/html' });
     res.end('<h1>Error</h1><p>Check the terminal.</p>');
