@@ -28,8 +28,10 @@ jobs:
           GOOGLE_CALENDAR_CLIENT_ID: ${{ secrets.GOOGLE_CALENDAR_CLIENT_ID }}
           GOOGLE_CALENDAR_CLIENT_SECRET: ${{ secrets.GOOGLE_CALENDAR_CLIENT_SECRET }}
           GOOGLE_CALENDAR_REFRESH_TOKEN: ${{ secrets.GOOGLE_CALENDAR_REFRESH_TOKEN }}
+          GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN: ${{ secrets.GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN }}
           GOOGLE_CALENDAR_IDS: "will.jarvis@rdcontent.com,williamjarvis1996@gmail.com,mp2nj3alr30f36uoan8585r1mp67kb91@import.calendar.google.com,3149faf4ef70812be77b26ccbfbd422038e76b3997af61b4f85db2fa3a4f2288@group.calendar.google.com"
           GOOGLE_CALENDAR_MAP: '{"will.jarvis@rdcontent.com":"work","williamjarvis1996@gmail.com":"personal","mp2nj3alr30f36uoan8585r1mp67kb91@import.calendar.google.com":"fitness","3149faf4ef70812be77b26ccbfbd422038e76b3997af61b4f85db2fa3a4f2288@group.calendar.google.com":"create"}'
+          GOOGLE_CALENDAR_ACCOUNT_MAP: '{"will.jarvis@rdcontent.com":"work","williamjarvis1996@gmail.com":"personal","mp2nj3alr30f36uoan8585r1mp67kb91@import.calendar.google.com":"personal","3149faf4ef70812be77b26ccbfbd422038e76b3997af61b4f85db2fa3a4f2288@group.calendar.google.com":"personal"}'
         run: node scripts/sync-calendar.mjs
 
       - name: Commit and push if changed

@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 // Fetch upcoming Google Calendar events and write src/content/sync/calendar.json.
-// Requires GOOGLE_CALENDAR_REFRESH_TOKEN, GOOGLE_CALENDAR_CLIENT_ID and
-// GOOGLE_CALENDAR_CLIENT_SECRET in the environment.
-// Optionally set GOOGLE_CALENDAR_IDS as a comma-separated list of calendar IDs.
+//
+// Supports two Google accounts (work + personal) with separate refresh tokens.
+// Requires at least one of GOOGLE_CALENDAR_REFRESH_TOKEN (work) or
+// GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN (personal), plus the shared
+// GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET.
+//
+// GOOGLE_CALENDAR_IDS — comma-separated calendar IDs to fetch.
+// GOOGLE_CALENDAR_MAP — JSON mapping calendar ID → category (work/personal/fitness/create).
+// GOOGLE_CALENDAR_ACCOUNT_MAP — JSON mapping calendar ID → account ("work" or "personal").
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -14,9 +20,10 @@ const OUT_FILE = join(OUT_DIR, 'calendar.json');
 
 const CLIENT_ID = process.env.GOOGLE_CALENDAR_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
-const REFRESH_TOKEN = process.env.GOOGLE_CALENDAR_REFRESH_TOKEN;
+const WORK_REFRESH_TOKEN = process.env.GOOGLE_CALENDAR_REFRESH_TOKEN;
+const PERSONAL_REFRESH_TOKEN = process.env.GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN;
 
-if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
+if (!CLIENT_ID || !CLIENT_SECRET || (!WORK_REFRESH_TOKEN && !PERSONAL_REFRESH_TOKEN)) {
   console.error('Google Calendar credentials not set — skipping calendar sync.');
   process.exit(0);
 }
@@ -26,11 +33,14 @@ const CALENDAR_IDS = (process.env.GOOGLE_CALENDAR_IDS || 'primary')
   .map(s => s.trim())
   .filter(Boolean);
 
-// Calendar ID → our category mapping.
-// The user can customise this via GOOGLE_CALENDAR_MAP (JSON object).
 let calendarCategoryMap = {};
 try {
   calendarCategoryMap = JSON.parse(process.env.GOOGLE_CALENDAR_MAP || '{}');
+} catch { /* use empty map */ }
+
+let calendarAccountMap = {};
+try {
+  calendarAccountMap = JSON.parse(process.env.GOOGLE_CALENDAR_ACCOUNT_MAP || '{}');
 } catch { /* use empty map */ }
 
 function guessCategory(calendarId, summary) {
@@ -41,14 +51,18 @@ function guessCategory(calendarId, summary) {
   return 'work';
 }
 
-async function getAccessToken() {
+function getAccountForCalendar(calendarId) {
+  return calendarAccountMap[calendarId] || 'work';
+}
+
+async function getAccessToken(refreshToken) {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
-      refresh_token: REFRESH_TOKEN,
+      refresh_token: refreshToken,
       grant_type: 'refresh_token',
     }),
   });
@@ -81,21 +95,26 @@ async function fetchEvents(accessToken, calendarId, timeMin, timeMax) {
 }
 
 function toLocalDate(dateStr) {
-  // Google returns 'YYYY-MM-DD' for all-day or 'YYYY-MM-DDTHH:MM:SS+ZZ:ZZ' for timed.
   return dateStr.slice(0, 10);
 }
 
 function toLocalTime(dateTimeStr) {
   if (!dateTimeStr || dateTimeStr.length <= 10) return undefined;
-  // Parse and convert to London time.
   const d = new Date(dateTimeStr);
   return d.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 async function main() {
-  const accessToken = await getAccessToken();
+  const tokens = {};
+  if (WORK_REFRESH_TOKEN) {
+    tokens.work = await getAccessToken(WORK_REFRESH_TOKEN);
+    console.log('Work account token obtained.');
+  }
+  if (PERSONAL_REFRESH_TOKEN) {
+    tokens.personal = await getAccessToken(PERSONAL_REFRESH_TOKEN);
+    console.log('Personal account token obtained.');
+  }
 
-  // Fetch a 14-day window.
   const now = new Date();
   const timeMin = new Date(now);
   timeMin.setHours(0, 0, 0, 0);
@@ -104,10 +123,15 @@ async function main() {
 
   const allEvents = [];
   for (const calId of CALENDAR_IDS) {
+    const account = getAccountForCalendar(calId);
+    const accessToken = tokens[account];
+    if (!accessToken) {
+      console.warn(`Calendar ${calId} mapped to "${account}" account but no token — skipping.`);
+      continue;
+    }
     const events = await fetchEvents(accessToken, calId, timeMin, timeMax);
     for (const ev of events) {
       if (ev.status === 'cancelled') continue;
-      // Skip declined events.
       const self = ev.attendees?.find(a => a.self);
       if (self?.responseStatus === 'declined') continue;
 
@@ -127,14 +151,12 @@ async function main() {
     }
   }
 
-  // Sort by date, then startTime.
   allEvents.sort((a, b) => {
     const dc = a.date.localeCompare(b.date);
     if (dc !== 0) return dc;
     return (a.startTime || '').localeCompare(b.startTime || '');
   });
 
-  // Deduplicate (same title + date + startTime from different calendars).
   const seen = new Set();
   const unique = allEvents.filter(ev => {
     const key = `${ev.title}|${ev.date}|${ev.startTime || ''}`;

@@ -1,5 +1,13 @@
 # Changelog
 
+## Dual-account calendar sync — 13 November 2026
+
+- Updated `scripts/sync-calendar.mjs` to support two Google accounts with separate OAuth refresh tokens. Each calendar ID is mapped to an account ("work" or "personal") via `GOOGLE_CALENDAR_ACCOUNT_MAP`, and the script fetches the right access token per calendar.
+- Updated `scripts/google-auth-helper.mjs` with a `--personal` flag that generates `GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN` for the personal Gmail account and prints setup instructions for test-user configuration.
+- Updated `.github/workflows/sync.yml` with the new `GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN` secret and `GOOGLE_CALENDAR_ACCOUNT_MAP` env var.
+- Updated `CLAUDE.md` with dual-account setup instructions and the new secrets table.
+- **Setup required**: run `scripts/google-auth-helper.mjs --personal` logged into the personal Gmail account and store the token as `GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN` in GitHub Secrets. If the OAuth app is in "Testing" mode, add the personal Gmail as a test user first.
+
 ## Multi-calendar sync — 13 November 2026
 
 - Synced all four Google Calendars into `calendar.json` via the Claude connector: work (Office days, scheduling meetings), personal (subscription payment reminders), fitness (gym sessions, runs) and create.

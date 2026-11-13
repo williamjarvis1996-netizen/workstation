@@ -19,10 +19,21 @@ sync scripts → src/content/sync/*.json → dashboard.ts imports JSON → Astro
 ### Sync scripts
 
 - `scripts/sync-todoist.mjs` — Todoist API v1 with cursor-based pagination. Writes `src/content/sync/tasks.json`.
-- `scripts/sync-calendar.mjs` — Google Calendar OAuth refresh token flow, 14-day window, multiple calendars. Writes `src/content/sync/calendar.json`.
-- `scripts/google-auth-helper.mjs` — One-time local helper to generate a Google OAuth refresh token.
+- `scripts/sync-calendar.mjs` — Google Calendar OAuth refresh token flow, 14-day window, multiple calendars, dual-account support (work + personal). Writes `src/content/sync/calendar.json`.
+- `scripts/google-auth-helper.mjs` — One-time local helper to generate a Google OAuth refresh token. Supports `--personal` flag for the personal Gmail account.
 
 Scripts exit cleanly (code 0) when their API tokens are missing, so the workflow never fails due to unconfigured secrets.
+
+### Dual-account calendar sync
+
+The work calendar lives on the work Google account, while personal, fitness and create calendars live on the personal Gmail account. The sync script supports two separate OAuth refresh tokens and maps each calendar ID to an account via `GOOGLE_CALENDAR_ACCOUNT_MAP`.
+
+To set up the personal account token:
+
+1. If the OAuth app is in "Testing" mode, add the personal Gmail as a test user in Google Cloud Console → APIs & Services → OAuth consent screen.
+2. Run `GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... node scripts/google-auth-helper.mjs --personal`
+3. Sign in with the personal Gmail account when prompted.
+4. Store the token: `gh secret set GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN --body "<token>"`
 
 ### Fallback pattern
 
@@ -39,6 +50,5 @@ tasks: (syncedTasks as Task[]).length > 0 ? syncedTasks as Task[] : manualTasks,
 | `TODOIST_API_TOKEN` | Todoist Settings → Integrations → Developer |
 | `GOOGLE_CALENDAR_CLIENT_ID` | Google Cloud Console OAuth client |
 | `GOOGLE_CALENDAR_CLIENT_SECRET` | Google Cloud Console OAuth client |
-| `GOOGLE_CALENDAR_REFRESH_TOKEN` | Run `scripts/google-auth-helper.mjs` locally |
-
-Optional repository variable: `GOOGLE_CALENDAR_IDS` (comma-separated calendar IDs; defaults to `primary`).
+| `GOOGLE_CALENDAR_REFRESH_TOKEN` | Run `scripts/google-auth-helper.mjs` (work account) |
+| `GOOGLE_CALENDAR_PERSONAL_REFRESH_TOKEN` | Run `scripts/google-auth-helper.mjs --personal` (personal Gmail) |
